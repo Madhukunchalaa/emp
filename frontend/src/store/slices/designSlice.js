@@ -5,7 +5,7 @@ import api from '../../services/api';
 export const submitDesign = createAsyncThunk(
   'designs/submit',
   async (formData) => {
-    const response = await api.post('/designs/submit', formData, {
+    const response = await api.post('/employee/designs/submit', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -17,7 +17,7 @@ export const submitDesign = createAsyncThunk(
 export const fetchDesignerSubmissions = createAsyncThunk(
   'designs/fetchDesignerSubmissions',
   async () => {
-    const response = await api.get('/designs/my-submissions');
+    const response = await api.get('/employee/designs/my-submissions');
     return response.data;
   }
 );
@@ -31,7 +31,7 @@ export const fetchAllDesigns = createAsyncThunk(
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
-    const response = await api.get(`/designs/all?${params.toString()}`);
+    const response = await api.get(`/manager/designs/all?${params.toString()}`);
     return response.data;
   }
 );
@@ -39,7 +39,7 @@ export const fetchAllDesigns = createAsyncThunk(
 export const reviewDesign = createAsyncThunk(
   'designs/review',
   async ({ designId, status, managerComment }) => {
-    const response = await api.patch(`/designs/${designId}/review`, {
+    const response = await api.patch(`/manager/designs/${designId}/review`, {
       status,
       managerComment,
     });

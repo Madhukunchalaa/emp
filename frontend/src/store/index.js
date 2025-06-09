@@ -4,6 +4,7 @@ import employeeReducer from './slices/employeeSlice';
 import managerReducer from './slices/managerSlice';
 import designReducer from './slices/designSlice';
 import taskReducer from './slices/taskSlice';
+import projectReducer from './slices/projectSlice';
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     manager: managerReducer,
     designs: designReducer,
     tasks: taskReducer,
+    projects: projectReducer,
   },
 });
 
