@@ -33,7 +33,7 @@ export const punchIn = createAsyncThunk(
   'employee/punchIn',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.post('/employee/punch-in');
+      const response = await api.post('/employee/attendance/punch-in');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Error punching in');
@@ -41,11 +41,35 @@ export const punchIn = createAsyncThunk(
   }
 );
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token'); // or however you store it
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const punchOut = createAsyncThunk(
   'employee/punchOut',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.post('/employee/punch-out');
+      const response = await api.post('/employee/attendance/punch-out');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Error punching out');
@@ -81,7 +105,10 @@ const employeeSlice = createSlice({
   name: 'employee',
   initialState: {
     projects: [],
-    attendance: [],
+    attendance: {
+      today: null,
+      history: []
+    },
     loading: false,
     error: null,
     success: null,
@@ -120,12 +147,15 @@ const employeeSlice = createSlice({
       })
       .addCase(fetchAttendance.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = Array.isArray(action.payload) ? action.payload : [];
+        state.attendance = action.payload;
       })
       .addCase(fetchAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.attendance = [];
+        state.attendance = {
+          today: null,
+          history: []
+        };
       })
       // Punch In
       .addCase(punchIn.pending, (state) => {
@@ -134,7 +164,7 @@ const employeeSlice = createSlice({
       })
       .addCase(punchIn.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = Array.isArray(action.payload) ? action.payload : [];
+        state.attendance.today = action.payload;
         state.success = 'Punched in successfully';
       })
       .addCase(punchIn.rejected, (state, action) => {
@@ -148,7 +178,7 @@ const employeeSlice = createSlice({
       })
       .addCase(punchOut.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = Array.isArray(action.payload) ? action.payload : [];
+        state.attendance.today = action.payload;
         state.success = 'Punched out successfully';
       })
       .addCase(punchOut.rejected, (state, action) => {

@@ -38,6 +38,7 @@ import {
   alpha,
   Snackbar,
   Alert,
+  Pagination,
 } from '@mui/material';
 import {
   Schedule as ScheduleIcon,
@@ -191,6 +192,8 @@ const ManagerDashboard = () => {
   const [designs, setDesigns] = useState([]);
   const [designLoading, setDesignLoading] = useState(false);
   const [designError, setDesignError] = useState(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 9; // Show 9 employees per page (3x3 grid)
 
   useEffect(() => {
     dispatch(fetchEmployees());
@@ -539,19 +542,38 @@ const ManagerDashboard = () => {
   };
 
   const renderEmployeeList = () => {
+    if (loading) {
+      return (
+        <Box display="flex" justifyContent="center" p={3}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    // Calculate pagination
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedEmployees = employees.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(employees.length / itemsPerPage);
+
     return (
       <Fade in key="employees">
         <Box>
-          <Box display="flex" alignItems="center" mb={3}>
-            <GroupIcon sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h5" fontWeight="bold">
-              Team Members
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box display="flex" alignItems="center">
+              <GroupIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h5" fontWeight="bold">
+                Team Members
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Total Employees: {employees.length}
             </Typography>
           </Box>
           
           <Grid container spacing={2}>
-            {employees && employees.length > 0 ? (
-              employees.map((employee, index) => (
+            {paginatedEmployees.length > 0 ? (
+              paginatedEmployees.map((employee, index) => (
                 <Grid item xs={12} sm={6} md={4} key={employee._id}>
                   <Zoom in timeout={500} style={{ transitionDelay: `${index * 100}ms` }}>
                     <GlassCard>
@@ -565,7 +587,7 @@ const ManagerDashboard = () => {
                               mr: 2,
                             }}
                           >
-                            {employee.name.charAt(0)}
+                            {employee.name?.charAt(0)}
                           </Avatar>
                           <Box flex={1}>
                             <Typography variant="h6" fontWeight="bold">
@@ -579,23 +601,65 @@ const ManagerDashboard = () => {
                         <Typography variant="body2" color="text.secondary" mb={2}>
                           {employee.email}
                         </Typography>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          startIcon={<VisibilityIcon />}
-                          onClick={() => {
-                            handleEmployeeSelect(employee);
-                            setTabValue(2);
-                          }}
-                          sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                          }}
-                        >
-                          View Hours
-                        </Button>
+                        {employee.attendance?.today && (
+                          <Box mb={2}>
+                            <Chip
+                              label={`Today: ${employee.attendance.today.status}`}
+                              color={
+                                employee.attendance.today.status === 'Present' ? 'success' :
+                                employee.attendance.today.status === 'Late' ? 'warning' :
+                                'error'
+                              }
+                              size="small"
+                              sx={{ mb: 1 }}
+                            />
+                            {employee.attendance.today.punchIn && (
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                Punch In: {new Date(employee.attendance.today.punchIn).toLocaleTimeString()}
+                              </Typography>
+                            )}
+                            {employee.attendance.today.punchOut && (
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                Punch Out: {new Date(employee.attendance.today.punchOut).toLocaleTimeString()}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                        <Box display="flex" gap={1}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => {
+                              handleEmployeeSelect(employee);
+                              setTabValue(2);
+                            }}
+                            sx={{
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              borderRadius: '12px',
+                              textTransform: 'none',
+                              fontWeight: 600,
+                            }}
+                          >
+                            View Hours
+                          </Button>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<ProjectIcon />}
+                            onClick={() => {
+                              handleEmployeeSelect(employee);
+                              setTabValue(3);
+                            }}
+                            sx={{
+                              borderRadius: '12px',
+                              textTransform: 'none',
+                              fontWeight: 600,
+                            }}
+                          >
+                            View Projects
+                          </Button>
+                        </Box>
                       </CardContent>
                     </GlassCard>
                   </Zoom>
@@ -612,12 +676,38 @@ const ManagerDashboard = () => {
               </Grid>
             )}
           </Grid>
+
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={3}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '12px',
+                    margin: '0 4px',
+                  },
+                }}
+              />
+            </Box>
+          )}
         </Box>
       </Fade>
     );
   };
 
   const renderProjectList = () => {
+    if (loading) {
+      return (
+        <Box display="flex" justifyContent="center" p={3}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
     return (
       <Fade in key="projects">
         <Box>
@@ -656,6 +746,7 @@ const ManagerDashboard = () => {
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Deadline</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Comment</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -701,12 +792,26 @@ const ManagerDashboard = () => {
                               {project.comment || 'No comment'}
                             </Typography>
                           </TableCell>
+                          <TableCell>
+                            <Box display="flex" gap={1}>
+                              <Tooltip title="View Details">
+                                <IconButton size="small" color="primary">
+                                  <VisibilityIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Edit Project">
+                                <IconButton size="small" color="primary">
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
                         </TableRow>
                       </Fade>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                         <AssignmentIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
                         <Typography variant="h6" color="text.secondary">
                           No projects found

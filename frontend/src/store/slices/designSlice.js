@@ -24,15 +24,13 @@ export const fetchDesignerSubmissions = createAsyncThunk(
 
 export const fetchAllDesigns = createAsyncThunk(
   'designs/fetchAll',
-  async ({ status, designerId, startDate, endDate }) => {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    if (designerId) params.append('designerId', designerId);
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-
-    const response = await api.get(`/manager/designs/all?${params.toString()}`);
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/designs/all');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch designs');
+    }
   }
 );
 
