@@ -41,6 +41,10 @@ console.log('req.user:', req.user);
       return res.status(400).json({ message: 'Already punched in today' });
     }
 
+    // Create new punch record
+    punch = new Punch({
+      employee: req.user.user.id,
+      date: today,
     // New punch
     const punch = new Punch({
       employee: req.user.user.id,

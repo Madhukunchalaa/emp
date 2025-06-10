@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-
-// Async thunks
 export const fetchEmployeeProjects = createAsyncThunk(
   'employee/fetchProjects',
   async (_, { rejectWithValue }) => {
