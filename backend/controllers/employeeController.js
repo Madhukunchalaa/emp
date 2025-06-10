@@ -37,7 +37,7 @@ exports.punchIn = async (req, res) => {
 
     // Create new punch record
     punch = new Punch({
-      employee: req.user.id,
+      employee: req.user.user.id,
       date: today,
       punchIn: new Date(),
       status: new Date().getHours() >= 9 ? 'Late' : 'Present'
