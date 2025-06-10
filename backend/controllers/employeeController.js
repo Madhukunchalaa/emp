@@ -22,37 +22,40 @@ exports.getProfile = async (req, res) => {
 // Punch in
 exports.punchIn = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
-    // Check if already punched in today
-    let punch = await Punch.findOne({
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Check for existing punch today
+    const existingPunch = await Punch.findOne({
       employee: req.user.id,
-      date: today
+      date: { $gte: startOfDay, $lte: endOfDay }
     });
+    console.log('Punch In API hit');
+console.log('req.user:', req.user);
 
-    if (punch) {
+
+    if (existingPunch) {
       return res.status(400).json({ message: 'Already punched in today' });
     }
 
-    // Create new punch record
-    punch = new Punch({
-      employee: req.user.id,
-      date: today,
+    // New punch
+    const punch = new Punch({
+      employee: req.user.user.id,
       punchIn: new Date(),
       status: new Date().getHours() >= 9 ? 'Late' : 'Present'
     });
 
     await punch.save();
-    res.json(punch);
+    res.status(201).json(punch);
   } catch (err) {
-    console.error('Error in punchIn:', err);
-    if (err.code === 11000) {
-      return res.status(400).json({ message: 'Already punched in today' });
-    }
+    console.error('Punch-in error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 // Punch out
 exports.punchOut = async (req, res) => {
