@@ -33,11 +33,9 @@ const Login = () => {
     setError('');
 
     try {
+      console.log('Submitting login form with data:', formData);
       const result = await dispatch(login(formData)).unwrap();
-      
-      // Store token and user data
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
+      console.log('Login successful:', result);
       
       // Redirect based on role
       switch (result.user.role) {
@@ -53,7 +51,7 @@ const Login = () => {
           break;
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login error in component:', err);
       setError(err.message || 'Login failed. Please check your credentials and try again.');
     }
   };

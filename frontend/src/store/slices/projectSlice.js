@@ -6,7 +6,7 @@ export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/manager/projects');
+      const response = await api.get('/designer/projects');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Error fetching projects');

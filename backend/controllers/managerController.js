@@ -20,7 +20,8 @@ const getProfile = async (req, res) => {
 // Get all employees
 const getEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: 'employee' }).select('-password');
+   const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
+
     
     // Get today's attendance for each employee
     const employeesWithAttendance = await Promise.all(
@@ -104,7 +105,6 @@ const assignProject = async (req, res) => {
         message: 'Employee not found or is not an employee' 
       });
     }
-
     // Create new project with createdBy field
     const project = new Project({
       title,

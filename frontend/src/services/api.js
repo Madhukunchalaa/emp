@@ -30,10 +30,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+    return Promise.reject(error.response?.data || error);
   }
 );
 
@@ -41,16 +41,24 @@ api.interceptors.response.use(
 export const authService = {
   login: async (credentials) => {
     try {
-      console.log('Making login request to:', `${API_URL}/auth/login`);
+      console.log('Making login request with credentials:', credentials);
       const response = await api.post('/auth/login', credentials);
-      console.log('Login API response:', response);
+      console.log('Login API response:', response.data);
       return response;
     } catch (error) {
-      console.error('Login API error:', error);
+      console.error('Login API error:', error.response?.data || error);
+      throw error.response?.data || error;
+    }
+  },
+  register: async (userData) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response;
+    } catch (error) {
+      console.error('Register API error:', error);
       throw error;
     }
   },
-  register: (userData) => api.post('/auth/register', userData),
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

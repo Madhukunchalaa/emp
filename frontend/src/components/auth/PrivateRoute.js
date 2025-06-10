@@ -14,16 +14,24 @@ const PrivateRoute = ({ children }) => {
   if (user) {
     const currentPath = location.pathname;
     
-    if (user.role === 'manager' && currentPath !== '/manager-dashboard') {
-      return <Navigate to="/manager-dashboard" replace />;
-    }
-    
-    if (user.role === 'designer' && currentPath !== '/designer-dashboard') {
-      return <Navigate to="/designer-dashboard" replace />;
-    }
-    
-    if (user.role === 'employee' && currentPath !== '/dashboard') {
-      return <Navigate to="/dashboard" replace />;
+    switch (user.role) {
+      case 'manager':
+        if (currentPath !== '/manager-dashboard') {
+          return <Navigate to="/manager-dashboard" replace />;
+        }
+        break;
+      case 'designer':
+        if (currentPath !== '/designer-dashboard') {
+          return <Navigate to="/designer-dashboard" replace />;
+        }
+        break;
+      case 'developer':
+        if (currentPath !== '/dashboard') {
+          return <Navigate to="/dashboard" replace />;
+        }
+        break;
+      default:
+        return <Navigate to="/login" replace />;
     }
   }
 

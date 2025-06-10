@@ -12,9 +12,21 @@ export const register = createAsyncThunk(
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials) => {
-    const response = await authService.login(credentials);
-    return response.data;
+  async (credentials, { rejectWithValue }) => {
+    try {
+      console.log('Login attempt with credentials:', credentials);
+      const response = await authService.login(credentials);
+      console.log('Login response:', response.data);
+      
+      // Store token and user data in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      return response.data;
+    } catch (error) {
+      console.error('Login error in thunk:', error);
+      return rejectWithValue(error.message || 'Login failed');
+    }
   }
 );
 
@@ -22,12 +34,14 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async () => {
     await authService.logout();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 );
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null
 };

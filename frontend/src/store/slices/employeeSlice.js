@@ -79,7 +79,7 @@ const employeeSlice = createSlice({
   name: 'employee',
   initialState: {
     projects: [],
-    attendance: null,
+    attendance: [],
     loading: false,
     error: null,
     success: null,
@@ -118,11 +118,12 @@ const employeeSlice = createSlice({
       })
       .addCase(fetchAttendance.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = action.payload;
+        state.attendance = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.attendance = [];
       })
       // Punch In
       .addCase(punchIn.pending, (state) => {
@@ -131,7 +132,7 @@ const employeeSlice = createSlice({
       })
       .addCase(punchIn.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = action.payload;
+        state.attendance = Array.isArray(action.payload) ? action.payload : [];
         state.success = 'Punched in successfully';
       })
       .addCase(punchIn.rejected, (state, action) => {
@@ -145,7 +146,7 @@ const employeeSlice = createSlice({
       })
       .addCase(punchOut.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = action.payload;
+        state.attendance = Array.isArray(action.payload) ? action.payload : [];
         state.success = 'Punched out successfully';
       })
       .addCase(punchOut.rejected, (state, action) => {
