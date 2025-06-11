@@ -642,7 +642,7 @@ const Dashboard = () => {
                           <GlassCard>
                             <CardContent>
                               <Typography variant="h6" fontWeight="bold" mb={2}>
-                                Today's Details
+                                Today Details
                               </Typography>
                               <Box>
                                 <Box display="flex" justifyContent="space-between" mb={1}>
