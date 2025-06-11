@@ -162,7 +162,7 @@ const DesignerDashboard = () => {
   useEffect(() => {
     dispatch(fetchDesignerSubmissions());
     dispatch(fetchDesignerTasks());
-    dispatch(fetchAttendance());
+    
     dispatch(fetchProjects());
   }, [dispatch]);
 
@@ -315,14 +315,13 @@ const DesignerDashboard = () => {
           <StatCard
             icon={<AccessTimeIcon />}
             title="Hours"
-            value={attendance?.reduce((acc, curr) => acc + (curr.hours || 0), 0) || 0}
+           value={Array.isArray(attendance) ? attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0) : 0}
             subtitle="Total hours worked"
             color="info"
             delay={300}
           />
         </Grid>
       </Grid>
-
       {/* Tabs Section */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange}>
@@ -625,7 +624,6 @@ const DesignerDashboard = () => {
           </Grid>
         </Grid>
       )}
-
       {/* Submit Design Dialog */}
       <Dialog open={openSubmitDialog} onClose={() => setOpenSubmitDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Submit New Design</DialogTitle>

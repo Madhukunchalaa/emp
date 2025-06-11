@@ -583,7 +583,7 @@ const Dashboard = () => {
                           <GlassCard>
                             <CardContent>
                               <Typography variant="h6" fontWeight="bold" mb={2}>
-                                Today's Status
+                                Today' Status
                               </Typography>
                               <Box display="flex" alignItems="center" mb={2}>
                                 <Avatar
