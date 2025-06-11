@@ -39,7 +39,7 @@ const punchSchema = new mongoose.Schema({
 punchSchema.pre('save', function(next) {
   if (this.punchOut && this.punchIn) {
     const diffMs = this.punchOut - this.punchIn;
-    this.hours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // Round to 2 decimal places
+    this.hours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; 
   }
   next();
 });

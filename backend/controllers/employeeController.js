@@ -19,47 +19,57 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Punch in
+//punchin
 exports.punchIn = async (req, res) => {
   try {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    console.log('=== PUNCH IN DEBUG ===');
+    console.log('req.user:', req.user);
+    console.log('req.headers:', req.headers.authorization);
+    console.log('======================');
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    // Validate req.user
+    if (!req.user || !req.user.id) {
+      console.log('User validation failed:', { user: req.user });
+      return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    }
 
-    // Check for existing punch today
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    console.log('Punch In API hit, user:', req.user.id);
+    console.log('Date range:', startOfDay, endOfDay);
+
+    // Check if already punched in today
     const existingPunch = await Punch.findOne({
-      employee: req.user.id,
+      employee: req.user.id,  // ← Make sure this is req.user.id
       date: { $gte: startOfDay, $lte: endOfDay }
     });
-    console.log('Punch In API hit');
-console.log('req.user:', req.user);
-
 
     if (existingPunch) {
       return res.status(400).json({ message: 'Already punched in today' });
     }
 
     // Create new punch record
-    punch = new Punch({
-      employee: req.user.user.id,
-      date: today,
-    // New punch
     const punch = new Punch({
-      employee: req.user.user.id,
+      employee: req.user.id,  // ← Make sure this is req.user.id, not req.userId
       punchIn: new Date(),
+      date: startOfDay,
       status: new Date().getHours() >= 9 ? 'Late' : 'Present'
     });
 
+    console.log('About to save punch:', punch); // Add this debug log
+
     await punch.save();
-    res.status(201).json(punch);
+    return res.status(201).json(punch);
   } catch (err) {
-    console.error('Punch-in error:', err);
+    console.error('Error in punchIn:', err.stack);
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Already punched in today' });
+    }
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 
 // Punch out
 exports.punchOut = async (req, res) => {
