@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import {
   Container,
   Grid,
@@ -79,6 +80,45 @@ import {
 import EmployeeCalendar from './EmployeeCalendar';
 import api from '../../services/api';
 
+// *********************************************************
+
+const desginHandler=async()=>{
+  try{
+     const token=localStorage.getItem('token')
+  const response=await axios.get('http://localhost:5000/api/designs/all',{
+    headers:{
+      Authorization:`Bearer ${token}`
+    }
+  })
+  response.data.forEach((res)=>{
+    console.log(res.title)
+  })
+
+
+  }
+  catch(err){
+    console.error('data fetch failed')
+
+  }
+ 
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const GlassCard = ({ children, sx = {}, ...props }) => {
   const theme = useTheme();
   return (
@@ -102,6 +142,7 @@ const GlassCard = ({ children, sx = {}, ...props }) => {
     </Card>
   );
 };
+
 
 const StatCard = ({ icon, title, value, subtitle, color = 'primary', delay = 0 }) => (
   <Zoom in timeout={1000} style={{ transitionDelay: `${delay}ms` }}>
@@ -287,6 +328,7 @@ const ManagerDashboard = () => {
       setDesignLoading(true);
       const response = await dispatch(fetchAllDesigns({})).unwrap();
       setDesigns(response);
+      
     } catch (error) {
       setDesignError(error.message);
     } finally {
@@ -867,14 +909,14 @@ const ManagerDashboard = () => {
                         <TableCell>
                           <Box display="flex" alignItems="center">
                             <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
-                              {design.designer?.name?.charAt(0)}
+                              {design.name}
                             </Avatar>
-                            {design.designer?.name}
+                            {design.designerId?.name}
                           </Box>
                         </TableCell>
-                        <TableCell>{design.project?.title}</TableCell>
+                        <TableCell>{design.title}</TableCell>
                         <TableCell>
-                          {new Date(design.submittedAt).toLocaleDateString()}
+                          {new Date(design.submittedDate).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -888,9 +930,9 @@ const ManagerDashboard = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          {design.imageUrl && (
+                          {design.fileURL && (
                             <IconButton
-                              onClick={() => window.open(design.imageUrl, '_blank')}
+                              onClick={() => window.open(design.fileURL, '_blank')}
                               size="small"
                             >
                               <ImageIcon />

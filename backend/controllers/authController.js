@@ -89,6 +89,7 @@ exports.login = async (req, res) => {
     }
 
     console.log('User found:', {
+      
       id: user.id,
       email: user.email,
       role: user.role
@@ -108,6 +109,7 @@ exports.login = async (req, res) => {
     // Create JWT token
     const payload = {
       user: {
+         _id: user._id, 
         id: user.id,
         role: user.role
       }
