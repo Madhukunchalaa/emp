@@ -43,7 +43,7 @@ const Login = () => {
           navigate('/manager-dashboard');
           break;
         case 'designer':
-          navigate('/designer-dashboard');
+          navigate('/dashboard');
           break;
         case 'developer':
         default:

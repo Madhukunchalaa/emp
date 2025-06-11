@@ -52,8 +52,9 @@ exports.submitDesign = (req, res) => {
         title: req.body.title,
         description: req.body.description,
         fileURL: req.file.path,
-        designerId: req.user._id
+        designerId: req.user.id,
       });
+      console.log(req.body)
 
       await design.save();
       res.status(201).json(design);
