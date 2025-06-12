@@ -1,6 +1,6 @@
 import React, { useState , useEffect } from 'react';
 import { Users, Clock, FileText, Palette, User, LogOut, Menu, X } from 'lucide-react';
-
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 
@@ -129,54 +129,112 @@ useEffect(() => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'employees':
-        return (
-          <div>
-            <h3 className="mb-4 fw-semibold text-dark">Employee List</h3>
-            <div className="row g-3">
-            {Array.isArray(employees) && employees.map(emp => (
-            <div key={emp._id} className="col-12">
-                <div className="card shadow-sm">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 className="card-title mb-1">{emp.name}</h5>
-                        <p className="text-muted mb-0">{emp.role}</p>
-                    </div>
-                    <span className={`badge rounded-pill ${
-                        emp.status === 'Active' ? 'bg-success' : 'bg-warning'
-                    }`}>
-                        {emp.status}
-                    </span>
-                    </div>
-                </div>
-                </div>
-            </div>
-            ))}
+     case 'employees':
+      const getRandomColorClass = () => {
+        const colors = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'];
+        const random = Math.floor(Math.random() * colors.length);
+        return `bg-${colors[random]}`;
+      };
+      const getRandomShadow = () => {
+        const shadows = ['shadow-sm', 'shadow', 'shadow-lg'];
+        return shadows[Math.floor(Math.random() * shadows.length)];
+      };
 
-            </div>
+      return (
+        <div>
+          <h3 className="mb-4 fw-semibold text-dark">Employee List</h3>
+          <div className="row g-4">
+            {Array.isArray(employees) && employees.map(emp => {
+              const randomBadgeClass = getRandomColorClass();
+              const randomShadowClass = getRandomShadow();
+              return (
+                <div key={emp._id} className="col-md-6 col-lg-4">
+                  <div className={`card border-0 rounded-4 ${randomShadowClass}`}>
+                    <div className="card-body p-4">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <div
+                            className="avatar text-white rounded-circle d-flex align-items-center justify-content-center"
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              fontSize: '20px',
+                              backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                            }}
+                          >
+                            {emp.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h5 className="card-title mb-1 text-dark fw-bold">{emp.name}</h5>
+                            <p className="text-muted mb-0 small">{emp.role}</p>
+                          </div>
+                        </div>
+                        <span className={`badge rounded-pill px-3 py-2 text-white ${randomBadgeClass}`}>
+                          {emp.status}
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <p className="mb-1"><strong>Email:</strong> {emp.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      
+        </div>
+      );
+
+
       case 'projects':
+        const getStatusButton = (status) => {
+          switch (status.toLowerCase()) {
+            case 'active':
+              return <button className="btn btn-success btn-sm rounded-pill px-3">Active</button>;
+            case 'in progress':
+              return <button className="btn btn-warning btn-sm rounded-pill px-3 text-dark">In Progress</button>;
+            case 'completed':
+              return <button className="btn btn-primary btn-sm rounded-pill px-3">Completed</button>;
+            default:
+              return <button className="btn btn-secondary btn-sm rounded-pill px-3">Unknown</button>;
+          }
+        };
+
         return (
           <div>
             <h3 className="mb-4 fw-semibold text-dark">Projects</h3>
-            <div className="row g-3">
-              {Array.isArray(projects) && projects.map(project=> (
-                <div key={project.id} className="col-12">
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title">{project.title}</h5>
-                        <small className="text-muted">Due: {setProjects.deadline}</small>
-                      </div>
-                      <p className="text-muted mb-3">{project.description}</p>
-                      <div className="mb-2">
-                        <div className="d-flex justify-content-between mb-1">
-                          <small>Progress</small>
-                          <small>{project.status}%</small>
+            <div className="row g-4">
+              {Array.isArray(projects) && projects.map(project => (
+                <div key={project.id} className="col-md-6 col-lg-4">
+                  <div className="card border-0 shadow-lg rounded-4">
+                    <div className="card-body p-4">
+                      <div className="d-flex flex-column justify-content-between align-items-start mb-2">
+                        <div>
+                          <h5 className="card-title fw-bold text-dark">{project.title}</h5>
                         </div>
+                        <small className="text-muted">Due: {project.deadline}</small>
+                        <p className="text-muted small mb-2">{project.description}</p>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between mb-1">
+                          <small className="text-dark">Progress</small>
+                          <small className="text-dark">{project.status}%</small>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div
+                            className={`progress-bar ${project.status >= 100 ? 'bg-success' : 'bg-info'}`}
+                            role="progressbar"
+                            style={{ width: `${project.status}%` }}
+                            aria-valuenow={project.status}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-end">
+                        {getStatusButton(project.phase || 'in progress')}
                       </div>
                     </div>
                   </div>
@@ -185,6 +243,7 @@ useEffect(() => {
             </div>
           </div>
         );
+
       
       case 'hours':
         return (
@@ -217,53 +276,66 @@ useEffect(() => {
           </div>
         );
       
-      case 'updates':
-        return (
-          <div>
-            <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
-            <div className="row g-3">
-              {Array.isArray(updates) && updates.map(dailyUpdates => (
-            <div key={dailyUpdates._id} className="col-12">
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <h6 className="card-title mb-0 text-info"><b>Name:</b> 
-                       {dailyUpdates.employee ? dailyUpdates.employee.name : 'Unknown'}
-                    </h6>
-                    <small className="text-muted">
-                      {new Date(dailyUpdates.date).toLocaleDateString()}
-                    </small>
-                  </div>
-                   <p className="card-title mb-0"><b>Email:</b>
-                       {dailyUpdates.employee ? dailyUpdates.employee.email : 'Unknown'}
-                    </p>
-
-                  {Array.isArray(dailyUpdates.tasks) && dailyUpdates.tasks.length > 0 ? (
-                    dailyUpdates.tasks.map(task => (
-                      <div key={task._id} className="mb-2">
-                        <p className="mb-1 text-dark"><b>Project:</b> {task.project?.name || 'N/A'}</p>
-                        <p className="mb-1 text-dark"><b>Status:</b> {task.status}</p>
-                        <p className="text-dark mb-0"><b>Description:</b> {task.description}</p>
-                        <small className="text-dark"><b>Hours Spent:</b> {task.hoursSpent}</small>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted">No tasks recorded.</p>
-                  )}
-
-                  {dailyUpdates.comments && (
-                    <p className="text-info mt-2 mb-0">
-                      <em>Comment:</em> {dailyUpdates.comments}
-                    </p>
-                  )}
+     case 'updates':
+  return (
+    <div>
+      <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
+      <div className="row g-3">
+        {Array.isArray(updates) && updates.map(dailyUpdates => (
+          <div key={dailyUpdates._id} className="col-12">
+            <div className="card shadow-sm border-start border-4 border-info">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <h6 className="card-title mb-0 text-primary">
+                    <b>Name:</b> {dailyUpdates.employee ? dailyUpdates.employee.name : 'Unknown'}
+                  </h6>
+                  <small className="text-muted">
+                    {new Date(dailyUpdates.date).toLocaleDateString()}
+                  </small>
                 </div>
+
+                <p className="mb-2 text-dark">
+                  <b>Email:</b> {dailyUpdates.employee ? dailyUpdates.employee.email : 'Unknown'}
+                </p>
+
+                {Array.isArray(dailyUpdates.tasks) && dailyUpdates.tasks.length > 0 ? (
+                  dailyUpdates.tasks.map(task => (
+                    <div key={task._id} className="mb-3 p-2 rounded bg-light">
+                     <p className="mb-1 text-success">
+  <b>Project:</b>{' '}
+  <Link
+    to="/project-details"
+    state={{
+      project: task.project?.name || 'N/A',
+      status: task.status,
+      description: task.description,
+      hoursSpent: task.hoursSpent,
+      comments: dailyUpdates.comments,
+    }}
+    className="text-decoration-none text-success fw-semibold"
+  >
+    {task.project?.name || 'N/A'}
+  </Link>
+</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted">No tasks recorded.</p>
+                )}
+
+                {dailyUpdates.comments && (
+                  <p className="text-info bg-info-subtle px-2 py-1 rounded mt-2 mb-0">
+                    <em><b>Comment:</b> {dailyUpdates.comments}</em>
+                  </p>
+                )}
               </div>
             </div>
-          ))}
-
-            </div>
           </div>
-        );
+        ))}
+      </div>
+    </div>
+  );
+
       
       case 'designs':
         return (
