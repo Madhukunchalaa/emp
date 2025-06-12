@@ -64,6 +64,22 @@ export const fetchAttendanceHistory = createAsyncThunk(
     }
   }
 );
+export const fetchEmployeeDailyUpdates = createAsyncThunk(
+  'manager/fetchEmployeeDailyUpdates',
+  async ({ employeeId, startDate, endDate }, { rejectWithValue }) => {
+    try {
+      const response = await managerService.getEmployeeDailyUpdates({ employeeId, startDate, endDate });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch employee daily updates');
+    }
+  }
+);
+
+
+
+
+
 
 const initialState = {
   employees: [],
@@ -71,6 +87,7 @@ const initialState = {
   attendanceHistory: [],
   loading: false,
   error: null,
+  employeeUpdates: [],
   success: null,
 };
 
@@ -144,6 +161,21 @@ const managerSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // Fetch Employee Daily Updates
+.addCase(fetchEmployeeDailyUpdates.pending, (state) => {
+  state.loading = true;
+  state.error = null;
+})
+.addCase(fetchEmployeeDailyUpdates.fulfilled, (state, action) => {
+  state.loading = false;
+  state.employeeUpdates = action.payload;
+})
+.addCase(fetchEmployeeDailyUpdates.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
       // Fetch Attendance History
       .addCase(fetchAttendanceHistory.pending, (state) => {
         state.loading = true;

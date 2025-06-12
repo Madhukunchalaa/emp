@@ -15,6 +15,8 @@ const ManagerDashboard = () => {
   const [designs,setDesigns]=useState()
   const [user,setUser]=useState()
   const [updates,setUpdates]=useState()
+  const [manager,setManager]=useState()
+  const [email,setEmail]=useState()
 
 useEffect(() => {
   const token = localStorage.getItem("token");
@@ -31,6 +33,29 @@ useEffect(() => {
   //   const decoded=jwtDecode(token)
   //   console.log(decoded.name)
   // })
+
+  useEffect(()=>{
+    const manager=async()=>{
+      try{
+        const response=await axios.get("http://localhost:5000/api/manager/profile",{
+          headers:{
+            Authorization:`Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        setManager(response.data.name)
+        setEmail(response.data.email)
+      }
+      catch{
+
+      }
+    }
+    manager()
+  },[])
+
+
+
+
+
 
 useEffect(() => {
     const emp = async () => {
@@ -438,8 +463,8 @@ useEffect(() => {
               </div>
               
               <div className="mb-4">
-                <h5 className="fw-semibold mb-1">{user?.name}</h5>
-                <p className="text-muted mb-1">manager@company.com</p>
+                <h5 className="fw-semibold mb-1">{manager}</h5>
+                <p className="text-muted mb-1">{email}</p>
                 <small className="text-muted">Senior Manager</small>
               </div>
 
