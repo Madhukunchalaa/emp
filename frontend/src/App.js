@@ -10,6 +10,7 @@ import Dashboard from './components/dashboard/Employee2';
 import ManagerDashboard from './components/dashboard/Manager2';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
 import PrivateRoute from './components/auth/PrivateRoute';
+import ProjectDetails from './components/dashboard/ProjectDetails';
 
 const theme = createTheme({
   palette: {
@@ -56,6 +57,8 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/project-details" element={<ProjectDetails />} />
+
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>
