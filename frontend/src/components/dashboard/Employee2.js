@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Clock, FolderOpen, FileText, CheckCircle, Play, Timer, User, LogOut, Menu, X, CalendarCheck } from 'lucide-react';
+import { punchIn } from '../../store/slices/employeeSlice';
+import { useDispatch } from 'react-redux';
+import { employeeService } from '../../services/api';
+
 
 const EmployeeDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -9,6 +14,51 @@ const EmployeeDashboard = () => {
   const [punchInTime, setPunchInTime] = useState(null);
   const [punchOutTime, setPunchOutTime] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [name,setName]=useState()
+  const [userEmail,setUserEmail]=useState()
+  const [role,setRole]=useState()
+  const [punchStatus,setPunchStatus]=useState()
+
+  //employeee profile
+useEffect(()=>{
+  const empl=async()=>{
+    try{
+
+      const response=await employeeService.getProfile()
+      setName(response.data.name)
+      setUserEmail(response.data.email)
+      setRole(response.data.role)
+
+    }
+    catch(err){
+      console.error('failed to fetch employee profile details',err)
+    }
+  }
+  empl()
+},[])
+
+  //punchin details
+const handlePunch=async()=>{
+  try{
+
+    const response=await employeeService.punchIn()
+    console.log(response.data)
+    setIsWorking(true)
+    alert('punched in success')
+    
+  }
+  catch(err){
+    console.error('failed to punc in please try again',err)
+    alert(err.message)
+
+  }
+}
+
+
+
+
+
+
 
   // Update current time every second
   useEffect(() => {
@@ -119,7 +169,7 @@ const EmployeeDashboard = () => {
                     </div>
                     <div className="d-grid gap-2">
                       <button 
-                        onClick={handlePunchIn}
+                        onClick={handlePunch}
                         disabled={isWorking}
                         className="btn btn-success"
                       >
@@ -552,9 +602,9 @@ const EmployeeDashboard = () => {
               </div>
               
               <div className="mb-4">
-                <h5 className="fw-semibold mb-1">John Doe</h5>
-                <p className="text-muted mb-1">john.doe@company.com</p>
-                <small className="text-muted">Frontend Developer</small>
+                <h5 className="fw-semibold mb-1">{name}</h5>
+                <p className="text-muted mb-1">{userEmail}</p>
+                <small className="text-muted">{role}</small>
                 {isWorking && (
                   <div className="mt-2">
                     <span className="badge bg-success working-status">Currently Working</span>

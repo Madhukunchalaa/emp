@@ -71,6 +71,7 @@ exports.punchIn = async (req, res) => {
   }
 };
 
+
 // Punch out
 exports.punchOut = async (req, res) => {
   try {
