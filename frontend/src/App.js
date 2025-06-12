@@ -6,9 +6,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import store from './store';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-import Dashboard from './components/dashboard/Dashboard';
-import ManagerDashboard from './components/dashboard/ManagerDashboard';
-import DesignerDashboard from './components/dashboard/DesignerDashboard';
+import Dashboard from './components/dashboard/Employee2';
+import ManagerDashboard from './components/dashboard/Manager2';
+import DesignerDashboard from './components/dashboard/Designers';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 const theme = createTheme({

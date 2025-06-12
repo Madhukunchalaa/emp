@@ -33,11 +33,7 @@ const Login = () => {
     setError('');
 
     try {
-      console.log('Submitting login form with data:', formData);
       const result = await dispatch(login(formData)).unwrap();
-      console.log('Login successful:', result);
-      
-      // Redirect based on role
       switch (result.user.role) {
         case 'manager':
           navigate('/manager-dashboard');
@@ -51,75 +47,175 @@ const Login = () => {
           break;
       }
     } catch (err) {
-      console.error('Login error in component:', err);
       setError(err.message || 'Login failed. Please check your credentials and try again.');
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Box
         sx={{
-          marginTop: 8,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          fontFamily: `'Poiret One', cursive`,
+          letterSpacing: '2px',
+          animation: 'slideIn 1s ease',
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom>
-            Sign In
-          </Typography>
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            width: '100%',
+            bgcolor: 'blue',
+            color: 'white',
+            p: 2,
+            mb: 3,
+            borderRadius: '0 100px 0 100px',
+            boxShadow: '15px 15px 25px black',
+            fontWeight: 'bold'
+          }}
+        >
+          Login Form Javascript Validation
+        </Typography>
+
+        <Paper
+          elevation={6}
+          sx={{
+            p: 4,
+            width: '100%',
+            borderRadius: '150px 0 150px 0',
+            border: '2px solid blue',
+            boxShadow: '9px 9px 25px black',
+            animation: 'boxSlide 1s ease',
+          }}
+        >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <Box
+              component="label"
+              sx={{
+                display: 'block',
+                bgcolor: 'blue',
+                color: 'white',
+                borderRadius: '50px 0 50px 0',
+                px: 4,
+                py: 1,
+                mb: 1,
+                boxShadow: '9px 9px 25px black',
+                width: 'fit-content',
+              }}
+            >
+              Username
+            </Box>
             <TextField
-              margin="normal"
+              name="email"
               required
               fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
               value={formData.email}
               onChange={handleChange}
+              sx={{
+                mb: 3,
+                borderRadius: '30px 0 30px 0',
+                boxShadow: '9px 9px 25px black',
+                '& .MuiOutlinedInput-root': {
+                  px: 2,
+                },
+                '& .Mui-focused fieldset': {
+                  borderColor: 'red',
+                }
+              }}
             />
+
+            <Box
+              component="label"
+              sx={{
+                display: 'block',
+                bgcolor: 'blue',
+                color: 'white',
+                borderRadius: '50px 0 50px 0',
+                px: 4,
+                py: 1,
+                mb: 1,
+                boxShadow: '9px 9px 25px black',
+                width: 'fit-content',
+              }}
+            >
+              Password
+            </Box>
             <TextField
-              margin="normal"
+              name="password"
+              type="password"
               required
               fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              sx={{
+                mb: 3,
+                borderRadius: '30px 0 30px 0',
+                boxShadow: '9px 9px 25px black',
+                '& .MuiOutlinedInput-root': {
+                  px: 2,
+                },
+                '& .Mui-focused fieldset': {
+                  borderColor: 'red',
+                }
+              }}
             />
+
             <Button
               type="submit"
               fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{
+                mt: 2,
+                bgcolor: 'white',
+                color: 'black',
+                border: '2px solid blue',
+                borderRadius: '50px 0 50px 0',
+                fontWeight: 'bold',
+                boxShadow: '9px 9px 25px black',
+                '&:hover': {
+                  bgcolor: '#e1ffe1',
+                  borderColor: 'red',
+                }
+              }}
             >
-              Sign In
+              Login
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Link to="/register" style={{ textDecoration: 'none' }}>
                 <Typography variant="body2" color="primary">
-                  Don't have an account? Sign Up
+                  Don’t have an account? Sign Up
                 </Typography>
               </Link>
             </Box>
           </Box>
         </Paper>
       </Box>
+
+      {/* Animations */}
+      <style>
+        {`
+        @keyframes slideIn {
+          0% { transform: translateX(210px); opacity: 0; }
+          100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes boxSlide {
+          0% { transform: translateX(-210px); opacity: 0; }
+          100% { transform: translateX(0); opacity: 1; }
+        }
+        `}
+      </style>
     </Container>
   );
 };
 
-export default Login; 
+export default Login;
