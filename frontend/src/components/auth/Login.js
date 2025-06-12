@@ -68,7 +68,7 @@ const Login = () => {
           align="center"
           sx={{
             width: '100%',
-            bgcolor: 'blue',
+            bgcolor: '#7353ae',
             color: 'white',
             p: 2,
             mb: 3,
@@ -77,7 +77,7 @@ const Login = () => {
             fontWeight: 'bold'
           }}
         >
-          Login Form Javascript Validation
+          Login Form
         </Typography>
 
         <Paper
@@ -86,7 +86,7 @@ const Login = () => {
             p: 4,
             width: '100%',
             borderRadius: '150px 0 150px 0',
-            border: '2px solid blue',
+            border: '2px solid #7353ae',
             boxShadow: '9px 9px 25px black',
             animation: 'boxSlide 1s ease',
           }}
@@ -102,12 +102,13 @@ const Login = () => {
               component="label"
               sx={{
                 display: 'block',
-                bgcolor: 'blue',
+                bgcolor: '#7353ae',
                 color: 'white',
                 borderRadius: '50px 0 50px 0',
                 px: 4,
                 py: 1,
                 mb: 1,
+                mx:3,
                 boxShadow: '9px 9px 25px black',
                 width: 'fit-content',
               }}
@@ -137,7 +138,7 @@ const Login = () => {
               component="label"
               sx={{
                 display: 'block',
-                bgcolor: 'blue',
+                bgcolor: '#7353ae',
                 color: 'white',
                 borderRadius: '50px 0 50px 0',
                 px: 4,
@@ -174,15 +175,15 @@ const Login = () => {
               fullWidth
               sx={{
                 mt: 2,
-                bgcolor: 'white',
-                color: 'black',
-                border: '2px solid blue',
+                bgcolor: '#7353ae',
+                color: 'white',
+                // border: '2px solid #7353ae',
                 borderRadius: '50px 0 50px 0',
                 fontWeight: 'bold',
                 boxShadow: '9px 9px 25px black',
                 '&:hover': {
-                  bgcolor: '#e1ffe1',
-                  borderColor: 'red',
+                  bgcolor: '#7353ae',
+                  // borderColor: 'red',
                 }
               }}
             >
