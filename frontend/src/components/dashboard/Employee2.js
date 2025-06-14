@@ -20,6 +20,21 @@ const EmployeeDashboard = () => {
   const [userEmail,setUserEmail]=useState()
   const [role,setRole]=useState()
   const [punchStatus,setPunchStatus]=useState()
+  const [attendanceData, setAttendanceData] = useState(null);
+  const [message,setMessage]=useState()
+  const [formData,setFormData]=useState({
+    project:'',
+    status:'',
+    update:'',
+    finishBy:''
+  })
+  const [image, setImage] = useState(null);
+
+
+
+const myProjects=[]
+const finishedProjects=[]
+  
 
   const hour = new Date().getHours();
 const greeting =
@@ -28,27 +43,69 @@ const greeting =
   "Good Evening";
 
   //employeee profile
-useEffect(()=>{
-  const empl=async()=>{
-    try{
-
-      const response=await employeeService.getProfile()
-      setName(response.data.name)
-      setUserEmail(response.data.email)
-      setRole(response.data.role)
-
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const response = await employeeService.getProfile();
+      setName(response.data.name);
+      setUserEmail(response.data.email);
+      setRole(response.data.role);
+      setIsWorking(response.data.isWorking); // 👈 Add this line
+    } catch (err) {
+      // console.error('Failed to fetch employee profile details', err);
     }
-    catch(err){
-      console.error('failed to fetch employee profile details',err)
-    }
+  };
+  fetchProfile();
+}, []);
+
+
+const dailyUpdate=async()=>{
+  try{
+     const payload = {
+      project: "Landing Page Redesign",
+      status: "In Progress",
+      update: "Completed responsive layout",
+      finishBy: "2025-06-15"
+     }
+
+
+    const response=await employeeService.addDailyUpdate(payload)
+    console.log(response.data)
+
   }
-  empl()
+  catch{
+    console.log('failed to fetch daily updates data')
+
+  }
+
+}
+useEffect(()=>{
+  dailyUpdate()
 },[])
+
+
+useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await employeeService.getAttendance();
+        setAttendanceData(res.data);
+        // console.log(res.data)
+      } catch (err) {
+        // console.error('Failed to fetch attendance:', err);
+      }
+    };
+    fetchData();
+  }, []);
+
+
+
+
+
+
 
   //punchin details
 const handlePunch=async()=>{
   try{
-
     const response=await employeeService.punchIn()
     console.log(response.data)
     setIsWorking(true)
@@ -61,11 +118,25 @@ const handlePunch=async()=>{
 
   }
 }
+//punchout details
+const handlepunchOut=async()=>{
+  try{
+    const response=await employeeService.punchOut()
+    alert('punched out success')
+    setIsWorking(false)
+  }
+  catch(err){
+    alert('punched out failed please try again after some time')
+  }
+}
 
 
 
+const formatDate = (isoDate) =>
+    isoDate ? new Date(isoDate).toLocaleDateString() : 'N/A';
 
-
+  const formatTime = (isoDate) =>
+isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
 
 
   // Update current time every second
@@ -76,31 +147,67 @@ const handlePunch=async()=>{
     return () => clearInterval(timer);
   }, []);
 
-  // Sample data
-  const myProjects = [
-    { id: 1, name: 'User Authentication System', status: 'In Progress', progress: 65, deadline: '2025-07-20', priority: 'High' },
-    { id: 2, name: 'Dashboard UI Components', status: 'Active', progress: 40, deadline: '2025-08-15', priority: 'Medium' },
-    { id: 3, name: 'API Integration', status: 'Active', progress: 80, deadline: '2025-06-25', priority: 'High' },
-  ];
 
-  const finishedProjects = [
-    { id: 1, name: 'Login Page Design', completedDate: '2025-06-05', duration: '2 weeks' },
-    { id: 2, name: 'Database Schema', completedDate: '2025-05-28', duration: '1 week' },
-    { id: 3, name: 'Testing Framework Setup', completedDate: '2025-05-15', duration: '3 days' },
-  ];
+  //dailyupdates
+  const handleChange=(e)=>{
+    const{name,value}=e.target
+    setFormData(prev=>({...prev,[name]:value}))
 
-  const dailyUpdates = [
-    { id: 1, date: '2025-06-11', update: 'Completed user registration form validation and error handling', status: 'completed' },
-    { id: 2, date: '2025-06-10', update: 'Working on authentication middleware and JWT token implementation', status: 'in-progress' },
-    { id: 3, date: '2025-06-09', update: 'Fixed responsive design issues on mobile devices', status: 'completed' },
-  ];
+  }
 
-  const attendanceRecords = [
-    { date: '2025-06-11', punchIn: '09:15 AM', punchOut: '06:30 PM', totalHours: '8.25', status: 'Present' },
-    { date: '2025-06-10', punchIn: '09:00 AM', punchOut: '06:15 PM', totalHours: '8.25', status: 'Present' },
-    { date: '2025-06-09', punchIn: '09:30 AM', punchOut: '06:45 PM', totalHours: '8.25', status: 'Present' },
-    { date: '2025-06-08', punchIn: '10:00 AM', punchOut: '07:00 PM', totalHours: '8.00', status: 'Late' },
-  ];
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const data = new FormData();
+    data.append('project', formData.project);
+    data.append('status', formData.status);
+    data.append('update', formData.update);
+    data.append('finishBy', formData.finishBy);
+
+    if (image) {
+      data.append('image', image);
+    }
+
+    await employeeService.addDailyUpdate(data); // 👈 Now using your service!
+    setMessage(`Today's update submitted successfully`);
+    setFormData({
+      project: '',
+      status: '',
+      update: '',
+      finishBy: ''
+    });
+    setImage(null);
+  } catch (err) {
+    setMessage(`Something went wrong`);
+    console.error('Form not submitted:', err);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const totalHoursData = {
     today: 8.5,
@@ -185,7 +292,7 @@ const handlePunch=async()=>{
                         Punch In
                       </button>
                       <button 
-                        onClick={handlePunchOut}
+                        onClick={handlepunchOut}
                         disabled={!isWorking}
                         className="btn btn-danger"
                       >
@@ -199,41 +306,53 @@ const handlePunch=async()=>{
             </div>
 
             {/* Attendance History */}
-            <div className="card shadow-sm">
-              <div className="card-header">
-                <h5 className="mb-0">Attendance History</h5>
-              </div>
-              <div className="table-responsive">
-                <table className="table table-striped mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Date</th>
-                      <th>Punch In</th>
-                      <th>Punch Out</th>
-                      <th>Total Hours</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceRecords.map((record, index) => (
-                      <tr key={index}>
-                        <td className="fw-medium">{record.date}</td>
-                        <td className="text-muted">{record.punchIn}</td>
-                        <td className="text-muted">{record.punchOut}</td>
-                        <td className="text-muted">{record.totalHours}h</td>
-                        <td>
-                          <span className={`badge ${
-                            record.status === 'Present' ? 'bg-success' : 'bg-warning'
-                          }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+             <div className="card shadow-sm">
+      <div className="card-header">
+        <h5 className="mb-0">Attendance History</h5>
+      </div>
+      <div className="table-responsive">
+        <table className="table table-striped mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Punch In</th>
+              <th>Punch Out</th>
+              <th>Total Hours</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendanceData?.history?.length > 0 ? (
+              attendanceData.history.map((record, index) => (
+                <tr key={index}>
+                  <td className="fw-medium">{formatDate(record.date)}</td>
+                  <td className="text-muted">{formatTime(record.punchIn)}</td>
+                  <td className="text-muted">{formatTime(record.punchOut)}</td>
+                  <td className="text-muted">{record.hours ?? 0}h</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        record.status === 'Present' || record.status === 'Late'
+                          ? 'bg-success'
+                          : 'bg-warning'
+                      }`}
+                    >
+                      {record.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center">
+                  No records found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
           </div>
         );
       
@@ -289,48 +408,74 @@ const handlePunch=async()=>{
       
       case 'updates':
         return (
-          <div>
-            <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
-            <div className="mb-4">
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">Add New Update</h5>
-                  <div className="mb-3">
-                    <textarea 
-                      className="form-control" 
-                      rows="3" 
-                      placeholder="Enter your daily update..."
-                    ></textarea>
-                  </div>
-                  <button className="btn btn-primary">
-                    <FileText size={16} className="me-2" />
-                    Add Update
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="row g-3">
-              {dailyUpdates.map(update => (
-                <div key={update.id} className="col-12">
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h6 className="card-title mb-0">{update.date}</h6>
-                        <span className={`badge ${
-                          update.status === 'completed' ? 'bg-success' : 'bg-warning'
-                        }`}>
-                          {update.status === 'completed' ? 'Completed' : 'In Progress'}
-                        </span>
-                      </div>
-                      <p className="card-text text-secondary mb-0">{update.update}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+             <div className="container mt-4">
+      <h3>Submit Daily Update</h3>
+      <form onSubmit={handleSubmit} className="card p-4 shadow-sm">
+        <div className="mb-3">
+          <label className="form-label">Project Name</label>
+          <input
+            type="text"
+            name="project"
+            className="form-control"
+            value={formData.project}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Status</label>
+          <select
+            name="status"
+            className="form-select"
+            value={formData.status}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select Status</option>
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Update Description</label>
+          <textarea
+            name="update"
+            className="form-control"
+            rows="3"
+            value={formData.update}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Finish By</label>
+          <input
+            type="date"
+            name="finishBy"
+            className="form-control"
+            value={formData.finishBy}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <label>Upload Screenshot:</label>
+<input
+  type="file"
+  accept="image/*"
+  onChange={(e) => setImage(e.target.files[0])}
+/>
+
+
+        <button type="submit" className="btn btn-primary">Submit Update</button>
+        {message && <p className="mt-3 text-success">{message}</p>}
+      </form>
+    </div>
         );
-      
+    
       case 'finished':
         return (
           <div>

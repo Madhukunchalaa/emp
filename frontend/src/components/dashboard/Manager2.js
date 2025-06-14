@@ -3,6 +3,8 @@ import { Users, Clock, FileText, Palette, User, LogOut, Menu, X } from 'lucide-r
 import {useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
+import { managerService } from '../../services/api';
+import { useParams } from 'react-router-dom';
 
 
 
@@ -19,12 +21,16 @@ const ManagerDashboard = () => {
   const [manager,setManager]=useState()
   const [email,setEmail]=useState()
 
+<<<<<<< HEAD
   const hour = new Date().getHours();
 const greeting =
   hour < 12 ? "Good Morning" :
   hour < 18 ? "Good Afternoon" :
   "Good Evening";
 
+=======
+const { employeeId } = useParams();
+>>>>>>> 48c4085eba5891fc0192acd3e8ff371487971728
 
 useEffect(() => {
   const token = localStorage.getItem("token");
@@ -34,6 +40,20 @@ useEffect(() => {
   }
 }, []);
 
+useEffect(() => {
+  const allAttend = async () => {
+    try {
+      const res = await managerService.getAttendanceHistory(employeeId);
+      console.log(res.data.history); // Now should show the data
+    } catch (err) {
+      console.log('failed to fetch data', err);
+    }
+  };
+
+  if (employeeId) {
+    allAttend();
+  }
+}, [employeeId]);
 
 
   // useEffect(()=>{
@@ -45,11 +65,7 @@ useEffect(() => {
   useEffect(()=>{
     const manager=async()=>{
       try{
-        const response=await axios.get("http://localhost:5000/api/manager/profile",{
-          headers:{
-            Authorization:`Bearer ${localStorage.getItem('token')}`
-          }
-        })
+        const response=await managerService.getProfile()
         setManager(response.data.name)
         setEmail(response.data.email)
       }
@@ -68,11 +84,7 @@ useEffect(() => {
 useEffect(() => {
     const emp = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/employees", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getEmployees()
         setEmployees(response.data);
       } catch (error) {
         console.error('Error fetching employees:', error);
@@ -85,11 +97,7 @@ useEffect(() => {
   useEffect(() => {
     const project = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/projects", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getProjects()
         setProjects(response.data);
       } catch (error) {
         console.error('Error fetching projects:', error);
@@ -100,34 +108,13 @@ useEffect(() => {
   }, []);
 
 
-  useEffect(() => {
-    const design = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/designs/all", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setDesigns(response.data);
-      } catch (error) {
-        console.error('Error fetching designs:', error);
-      }
-    };
-
-    design(); 
-  }, []);
-
-
+  //daily uodates
   useEffect(() => {
     const dailyUpdates= async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/employee-updates", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getEmployeeDailyUpdates()
         setUpdates(response.data);
-        console.log(response.data)
+        
       } catch (error) {
         console.error('Error fetching dailyupdates:', error);
       }
@@ -138,7 +125,7 @@ useEffect(() => {
   
   
   
-
+// working hours here is sample data that need to change as actual databse
   const workingHours = [
     { employee: 'John Doe', hoursToday: 8, hoursWeek: 40, overtime: 2 },
     { employee: 'Jane Smith', hoursToday: 7.5, hoursWeek: 37.5, overtime: 0 },
@@ -160,6 +147,8 @@ useEffect(() => {
     { id: 'designs', label: 'Designs', icon: Palette },
   ];
 
+
+  //random colors for employee profile cards
   const renderContent = () => {
     switch (activeSection) {
      case 'employees':
