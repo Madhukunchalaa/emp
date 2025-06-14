@@ -1,8 +1,12 @@
 import React, { useState , useEffect } from 'react';
 import { Users, Clock, FileText, Palette, User, LogOut, Menu, X } from 'lucide-react';
+
 import {useNavigate, Link } from 'react-router-dom';
+
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
+import { managerService } from '../../services/api';
+import { useParams } from 'react-router-dom';
 
 
 
@@ -19,7 +23,9 @@ const ManagerDashboard = () => {
   const [manager,setManager]=useState()
   const [email,setEmail]=useState()
 
-  const hour = new Date().getHours();
+const { employeeId } = useParams();
+
+const hour = new Date().getHours();
 const greeting =
   hour < 12 ? "Good Morning" :
   hour < 18 ? "Good Afternoon" :
@@ -34,6 +40,20 @@ useEffect(() => {
   }
 }, []);
 
+useEffect(() => {
+  const allAttend = async () => {
+    try {
+      const res = await managerService.getAttendanceHistory(employeeId);
+      console.log(res.data.history); // Now should show the data
+    } catch (err) {
+      console.log('failed to fetch data', err);
+    }
+  };
+
+  if (employeeId) {
+    allAttend();
+  }
+}, [employeeId]);
 
 
   // useEffect(()=>{
@@ -45,11 +65,7 @@ useEffect(() => {
   useEffect(()=>{
     const manager=async()=>{
       try{
-        const response=await axios.get("http://localhost:5000/api/manager/profile",{
-          headers:{
-            Authorization:`Bearer ${localStorage.getItem('token')}`
-          }
-        })
+        const response=await managerService.getProfile()
         setManager(response.data.name)
         setEmail(response.data.email)
       }
@@ -68,11 +84,7 @@ useEffect(() => {
 useEffect(() => {
     const emp = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/employees", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getEmployees()
         setEmployees(response.data);
       } catch (error) {
         console.error('Error fetching employees:', error);
@@ -85,11 +97,7 @@ useEffect(() => {
   useEffect(() => {
     const project = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/projects", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getProjects()
         setProjects(response.data);
       } catch (error) {
         console.error('Error fetching projects:', error);
@@ -100,34 +108,13 @@ useEffect(() => {
   }, []);
 
 
-  useEffect(() => {
-    const design = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/designs/all", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setDesigns(response.data);
-      } catch (error) {
-        console.error('Error fetching designs:', error);
-      }
-    };
-
-    design(); 
-  }, []);
-
-
+  //daily uodates
   useEffect(() => {
     const dailyUpdates= async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/manager/employee-updates", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const response = await managerService.getEmployeeDailyUpdates()
         setUpdates(response.data);
-        console.log(response.data)
+        
       } catch (error) {
         console.error('Error fetching dailyupdates:', error);
       }
@@ -138,7 +125,7 @@ useEffect(() => {
   
   
   
-
+// working hours here is sample data that need to change as actual databse
   const workingHours = [
     { employee: 'John Doe', hoursToday: 8, hoursWeek: 40, overtime: 2 },
     { employee: 'Jane Smith', hoursToday: 7.5, hoursWeek: 37.5, overtime: 0 },
@@ -160,6 +147,8 @@ useEffect(() => {
     { id: 'designs', label: 'Designs', icon: Palette },
   ];
 
+
+  //random colors for employee profile cards
   const renderContent = () => {
     switch (activeSection) {
      case 'employees':
@@ -308,14 +297,12 @@ useEffect(() => {
             </div>
           </div>
         );
-      
-  case 'updates':
+case 'updates':
   return (
     <div>
       <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
       <div className="row g-4">
         {Array.isArray(updates) && updates.map((dailyUpdates, index) => {
-          // Define soft color classes (you can customize as needed)
           const bgColorClasses = [
             'bg-gradient bg-light',
             'bg-gradient bg-primary bg-opacity-10',
@@ -363,12 +350,46 @@ useEffect(() => {
 
                   <div className="mb-2 text-secondary">
                     <i className="bi bi-clock me-2"></i>
-                    <strong>Finish By:</strong> {dailyUpdates.finishBy.slice(0, 10)}
+                    <strong>Finish By:</strong> {dailyUpdates.finishBy?.slice(0, 10)}
                   </div>
 
-                  <div className="text-muted small fst-italic mb-2">
-                    <i className="bi bi-exclamation-circle me-1"></i>No tasks recorded.
-                  </div>
+                  {dailyUpdates.imageUrl && (
+                    <div className="mb-2">
+                      <img
+                        src={dailyUpdates.imageUrl}
+                        alt="Update"
+                        className="img-fluid rounded border shadow-sm"
+                        style={{ maxHeight: '150px' }}
+                      />
+                    </div>
+                  )}
+
+                  {Array.isArray(dailyUpdates.tasks) && dailyUpdates.tasks.length > 0 ? (
+                    dailyUpdates.tasks.map(task => (
+                      <div key={task._id} className="mb-2 p-2 bg-white rounded">
+                        <p className="mb-1 text-success">
+                          <strong>Task Project:</strong>{' '}
+                          <Link
+                            to="/project-details"
+                            state={{
+                              project: task.project?.name || 'N/A',
+                              status: task.status,
+                              description: task.description,
+                              hoursSpent: task.hoursSpent,
+                              comments: dailyUpdates.comments
+                            }}
+                            className="text-decoration-none text-success fw-semibold"
+                          >
+                            {task.project?.name || 'N/A'}
+                          </Link>
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted small fst-italic mb-2">
+                      <i className="bi bi-exclamation-circle me-1"></i>No tasks recorded.
+                    </div>
+                  )}
 
                   {dailyUpdates.comments && (
                     <div className="bg-white rounded-3 px-3 py-2 mt-2 text-dark shadow-sm">
@@ -384,8 +405,6 @@ useEffect(() => {
       </div>
     </div>
   );
-
-
 
       
       case 'designs':

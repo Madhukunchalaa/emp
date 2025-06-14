@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Project = require('../models/Project');
 const Punch = require('../models/Punch');
-const DailyUpdate = require('../models/DailyUpdate');
+const DailyUpdate = require('../models/DailyUpdate');  
 
 // Get manager profile
 const getProfile = async (req, res) => {
@@ -22,7 +22,7 @@ const getEmployees = async (req, res) => {
   try {
    const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
 
-    
+
     // Get today's attendance for each employee
     const employeesWithAttendance = await Promise.all(
       employees.map(async (employee) => {
@@ -161,7 +161,7 @@ const getEmployeeAttendance = async (req, res) => {
     const { employeeId } = req.params;
     
     // Verify employee exists
-    const employee = await User.findOne({ _id: employeeId, role: 'employee' });
+    const employee = await User.findOne({  role: { $in: ['developer', 'designer'] } });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -228,7 +228,10 @@ const getAttendanceHistory = async (req, res) => {
     const { employeeId } = req.params;
     
     // Verify employee exists
-    const employee = await User.findOne({ _id: employeeId, role: 'employee' });
+    const employee = await User.findOne({ 
+    _id: employeeId, 
+    role: { $in: [ 'developer', 'designer'] } 
+ });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
