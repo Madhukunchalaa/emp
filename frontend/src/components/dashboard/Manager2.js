@@ -1,6 +1,8 @@
 import React, { useState , useEffect } from 'react';
 import { Users, Clock, FileText, Palette, User, LogOut, Menu, X } from 'lucide-react';
+
 import {useNavigate, Link } from 'react-router-dom';
+
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { managerService } from '../../services/api';
@@ -21,16 +23,21 @@ const ManagerDashboard = () => {
   const [manager,setManager]=useState()
   const [email,setEmail]=useState()
 
-<<<<<<< HEAD
+
   const hour = new Date().getHours();
+
+const { employeeId } = useParams();
+
+const hour = new Date().getHours();
+
 const greeting =
   hour < 12 ? "Good Morning" :
   hour < 18 ? "Good Afternoon" :
   "Good Evening";
 
-=======
+
 const { employeeId } = useParams();
->>>>>>> 48c4085eba5891fc0192acd3e8ff371487971728
+
 
 useEffect(() => {
   const token = localStorage.getItem("token");
@@ -297,14 +304,12 @@ useEffect(() => {
             </div>
           </div>
         );
-      
-  case 'updates':
+case 'updates':
   return (
     <div>
       <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
       <div className="row g-4">
         {Array.isArray(updates) && updates.map((dailyUpdates, index) => {
-          // Define soft color classes (you can customize as needed)
           const bgColorClasses = [
             'bg-gradient bg-light',
             'bg-gradient bg-primary bg-opacity-10',
@@ -352,12 +357,46 @@ useEffect(() => {
 
                   <div className="mb-2 text-secondary">
                     <i className="bi bi-clock me-2"></i>
-                    <strong>Finish By:</strong> {dailyUpdates.finishBy.slice(0, 10)}
+                    <strong>Finish By:</strong> {dailyUpdates.finishBy?.slice(0, 10)}
                   </div>
 
-                  <div className="text-muted small fst-italic mb-2">
-                    <i className="bi bi-exclamation-circle me-1"></i>No tasks recorded.
-                  </div>
+                  {dailyUpdates.imageUrl && (
+                    <div className="mb-2">
+                      <img
+                        src={dailyUpdates.imageUrl}
+                        alt="Update"
+                        className="img-fluid rounded border shadow-sm"
+                        style={{ maxHeight: '150px' }}
+                      />
+                    </div>
+                  )}
+
+                  {Array.isArray(dailyUpdates.tasks) && dailyUpdates.tasks.length > 0 ? (
+                    dailyUpdates.tasks.map(task => (
+                      <div key={task._id} className="mb-2 p-2 bg-white rounded">
+                        <p className="mb-1 text-success">
+                          <strong>Task Project:</strong>{' '}
+                          <Link
+                            to="/project-details"
+                            state={{
+                              project: task.project?.name || 'N/A',
+                              status: task.status,
+                              description: task.description,
+                              hoursSpent: task.hoursSpent,
+                              comments: dailyUpdates.comments
+                            }}
+                            className="text-decoration-none text-success fw-semibold"
+                          >
+                            {task.project?.name || 'N/A'}
+                          </Link>
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted small fst-italic mb-2">
+                      <i className="bi bi-exclamation-circle me-1"></i>No tasks recorded.
+                    </div>
+                  )}
 
                   {dailyUpdates.comments && (
                     <div className="bg-white rounded-3 px-3 py-2 mt-2 text-dark shadow-sm">
@@ -373,8 +412,6 @@ useEffect(() => {
       </div>
     </div>
   );
-
-
 
       
       case 'designs':
