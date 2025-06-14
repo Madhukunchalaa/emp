@@ -71,6 +71,7 @@ exports.punchIn = async (req, res) => {
   }
 };
 
+
 // Punch out
 exports.punchOut = async (req, res) => {
   try {
@@ -78,7 +79,7 @@ exports.punchOut = async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     const punch = await Punch.findOne({
-      employee: req.user.user.id,
+      employee: req.user.id,
       date: today
     });
 

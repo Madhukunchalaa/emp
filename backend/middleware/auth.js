@@ -14,7 +14,7 @@ const auth = (req, res, next) => {
     
     // Add user from payload
     req.user = decoded.user;
-    console.log('Decoded JWT:', decoded);
+    
 
     next();
   } catch (err) {

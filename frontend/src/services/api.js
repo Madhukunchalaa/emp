@@ -106,6 +106,19 @@ export const managerService = {
       throw error;
     }
   },
+  getEmployeeDailyUpdates: async ({ employeeId, startDate, endDate }) => {
+  try {
+    const response = await api.get('/daily-updates', {
+      params: { employeeId, startDate, endDate }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching employee daily updates:', error.response?.data || error.message);
+    throw error;
+  }
+},
 };
+
+
 
 export default api; 
