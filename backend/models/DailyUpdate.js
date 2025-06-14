@@ -11,42 +11,28 @@ const dailyUpdateSchema = new mongoose.Schema({
     required: true,
     default: Date.now
   },
-  tasks: [{
-    project: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Project',
-      required: true
-    },
-    status: {
-      type: String,
-      enum: ['Not Started', 'In Progress', 'Completed'],
-      required: true
-    },
-    hoursSpent: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 24
-    },
-    description: {
-      type: String,
-      required: true
-    }
-  }],
-  totalHours: {
-    type: Number,
-    required: true,
-    min: 0,
-    max: 24
+  project: {
+    type: String,
+    required: true
   },
-  comments: {
-    type: String
+  status: {
+    type: String,
+    enum: ['Not Started', 'In Progress', 'Completed'],
+    required: true
+  },
+  imageUrl:{type:String},
+  update: {
+    type: String,
+    required: true
+  },
+  finishBy: {
+    type: Date,
+    required: true
   }
 }, {
   timestamps: true
 });
 
-// Create compound index for employee and date
 dailyUpdateSchema.index({ employee: 1, date: 1 }, { unique: true });
 
-module.exports = mongoose.model('DailyUpdate', dailyUpdateSchema); 
+module.exports = mongoose.model('DailyUpdate', dailyUpdateSchema);

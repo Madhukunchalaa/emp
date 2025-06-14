@@ -14,6 +14,18 @@ const {
   getDailyUpdates,
   getTodayUpdate
 } = require('../controllers/employeeController');
+const multer = require('multer');
+const path = require('path');
+
+// Configure Multer for file storage
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
 
 // Profile routes
 router.get('/profile', auth, getProfile);
@@ -30,7 +42,8 @@ router.post('/attendance/punch-out', auth, punchOut);
 router.get('/attendance', auth, getAttendance);
 
 // Daily update routes
-router.post('/daily-update', auth, submitDailyUpdate);
+router.post('/daily-update', auth, upload.single('image'), submitDailyUpdate);
+
 router.get('/daily-updates', auth, getDailyUpdates);
 router.get('/today-update', auth, getTodayUpdate);
 
