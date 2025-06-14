@@ -3,10 +3,12 @@ import axios from 'axios';
 import { Clock, FolderOpen, FileText, CheckCircle, Play, Timer, User, LogOut, Menu, X, CalendarCheck } from 'lucide-react';
 import { punchIn } from '../../store/slices/employeeSlice';
 import { useDispatch } from 'react-redux';
+import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
 
 
 const EmployeeDashboard = () => {
+  const navigate=useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState('attendance');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -33,6 +35,12 @@ const EmployeeDashboard = () => {
 const myProjects=[]
 const finishedProjects=[]
   
+
+  const hour = new Date().getHours();
+const greeting =
+  hour < 12 ? "Good Morning" :
+  hour < 18 ? "Good Afternoon" :
+  "Good Evening";
 
   //employeee profile
 useEffect(() => {
@@ -606,39 +614,7 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
   if (!isLoggedIn) {
     return (
-      <>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-        <div className="min-vh-100 bg-light d-flex align-items-center justify-content-center">
-          <div className="card shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
-            <div className="card-body p-4">
-              <h2 className="text-center mb-4 fw-bold">Employee Login</h2>
-              <div>
-                <div className="mb-3">
-                  <input 
-                    type="email" 
-                    className="form-control"
-                    placeholder="Employee ID or Email"
-                  />
-                </div>
-                <div className="mb-3">
-                  <input 
-                    type="password" 
-                    className="form-control"
-                    placeholder="Password"
-                  />
-                </div>
-                <button 
-                  type="button"
-                  onClick={handleLogin}
-                  className="btn btn-primary w-100"
-                >
-                  Login
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
+      navigate('/login')
     );
   }
 
@@ -724,19 +700,72 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
         {/* Main Content */}
         <div className="flex-fill d-flex flex-column">
-          {/* Header Banner */}
-          <header className="header-banner text-white p-4 shadow">
-            <div className="text-center">
-              <h1 className="display-4 fw-bold mb-2">Employee Dashboard</h1>
-              <p className="lead opacity-75 mb-0">Track your work, manage projects, and stay productive</p>
-            </div>
-          </header>
-
-          {/* Content Area */}
-          <main className="flex-fill p-4 main-content">
-            {renderContent()}
-          </main>
+  {/* Header Banner */}
+  <header
+    className="header-banner text-white p-4 shadow"
+    style={{
+      background: 'linear-gradient(135deg, #3a0ca3, #4361ee)', // Same purple-blue gradient
+      borderBottom: '4px solid rgb(255, 193, 7)', // Matching accent
+    }}
+  >
+    <div className="container">
+      <div className="row align-items-center">
+        {/* Left Side: Greeting and Intro */}
+        <div className="col-md-7 text-center text-md-start mb-4 mb-md-0">
+          <h4 className="fw-semibold">
+            👋 {greeting}, <span style={{ color: 'rgb(255, 193, 7)' }}>{name}</span>!
+          </h4>
+          <h1 className="display-5 fw-bold mt-2">Welcome back to the Employee Dashboard</h1>
+          <p className="lead text-white-50 mt-3">
+            View tasks, log updates, and track your daily progress.
+          </p>
         </div>
+
+        {/* Right Side: Illustration */}
+        <div className="col-md-5 text-center">
+          <img
+            src="https://cdn.dribbble.com/userupload/23691475/file/original-9d72eaaf0be2992f8c5d86cbcdac4a96.gif"
+            alt="Employee Illustration"
+            className="img-fluid rounded shadow"
+            style={{ maxHeight: '250px' }}
+          />
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="row mt-4 text-center">
+        {[
+          { label: 'Today\'s Hours', value: 5 },
+          { label: 'Pending Tasks', value: 2 },
+          { label: 'Completed Tasks', value: 4 },
+          { label: 'Weekly Total', value: 22 },
+        ].map((item, index) => (
+          <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
+            <div
+              className="p-3 rounded"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffffff',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              <h5 className="mb-0" style={{ color: 'rgb(255, 193, 7)' }}>{item.value}</h5>
+              <small>{item.label}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </header>
+
+  {/* Main Content */}
+  <main className="flex-fill p-4 main-content">
+    {renderContent()}
+  </main>
+</div>
+
+
 
         {/* Right Sidebar - Profile */}
         <div className="bg-white shadow" style={{ width: '320px' }}>
