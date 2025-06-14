@@ -6,18 +6,39 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Get employee profile
+// const Punch = require('../models/punchModel'); // Make sure to import this
+
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+
+    // Check if user already punched in today but not yet punched out
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of day
+
+    const existingPunch = await Punch.findOne({
+      employee: req.user.id,
+      date: today,
+      punchOut: { $exists: false } // Means still working
+    });
+
+    const isWorking = !!existingPunch; // true if found
+
+    res.json({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isWorking // Add this field
+    });
   } catch (err) {
     console.error('Error in getProfile:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 //punchin
 exports.punchIn = async (req, res) => {
@@ -345,68 +366,55 @@ exports.getAllProjects = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 // Submit daily update
+
 exports.submitDailyUpdate = async (req, res) => {
   try {
-    const { tasks, totalHours, comments } = req.body;
+    const { project, status, update, finishBy } = req.body;
 
-    // Validate required fields
-    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
-      return res.status(400).json({ message: 'Tasks are required' });
+    // Validate input
+    if (!project || !status || !update || !finishBy) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    if (typeof totalHours !== 'number' || totalHours < 0 || totalHours > 24) {
-      return res.status(400).json({ message: 'Total hours must be between 0 and 24' });
-    }
-
-    // Validate each task
-    for (const task of tasks) {
-      if (!task.project || !task.status || !task.hoursSpent || !task.description) {
-        return res.status(400).json({ 
-          message: 'Each task must have project, status, hoursSpent, and description' 
-        });
+    // Prevent duplicate for same user/date
+    const existing = await DailyUpdate.findOne({
+      employee: req.user.id,
+      date: {
+        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date().setHours(23, 59, 59, 999))
       }
+    });
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
-
-    // Create new daily update
     const dailyUpdate = new DailyUpdate({
       employee: req.user.id,
-      date: new Date(),
-      tasks,
-      totalHours,
-      comments: comments || ''
+      project,
+      status,
+      update,
+      finishBy,
+      imageUrl
     });
 
     await dailyUpdate.save();
-    console.log('Daily update saved:', dailyUpdate);
 
-    res.status(201).json({
-      message: 'Daily update submitted successfully',
-      dailyUpdate
-    });
+    res.status(201).json({ message: 'Daily update submitted successfully', dailyUpdate });
   } catch (err) {
-    console.error('Error in submitDailyUpdate:', err);
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: Object.values(err.errors).map(e => e.message)
-      });
-    }
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: err.message 
-    });
+    console.error('Submit update error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
+
+
 // Get employee's daily updates
+
 exports.getDailyUpdates = async (req, res) => {
   try {
-    const employeeId = req.user.id;
     const { startDate, endDate } = req.query;
-
-    let query = { employee: employeeId };
+    const query = { employee: req.user.id };
 
     if (startDate && endDate) {
       query.date = {
@@ -416,83 +424,153 @@ exports.getDailyUpdates = async (req, res) => {
     }
 
     const updates = await DailyUpdate.find(query)
-      .populate('employee', 'name email')
-      .populate('tasks.project', 'title description')
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .populate('employee', 'name email');
 
     res.json(updates);
-  } catch (error) {
-    console.error('Error fetching daily updates:', error);
-    res.status(500).json({ message: 'Error fetching daily updates' });
+  } catch (err) {
+    console.error('Error fetching updates:', err);
+    res.status(500).json({ message: 'Failed to fetch updates' });
   }
 };
+
+
+
 
 // Get today's update
+
 exports.getTodayUpdate = async (req, res) => {
+
   try {
+
     const employeeId = req.user.id;
+
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
+
     const tomorrow = new Date(today);
+
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+
+
     const update = await DailyUpdate.findOne({
+
       employee: employeeId,
+
       date: {
+
         $gte: today,
+
         $lt: tomorrow
+
       }
+
     })
+
     .populate('employee', 'name email')
+
     .populate('tasks.project', 'title description');
 
+
+
     res.json(update || { message: 'No update submitted for today' });
+
   } catch (error) {
+
     console.error('Error fetching today\'s update:', error);
+
     res.status(500).json({ message: 'Error fetching today\'s update' });
+
   }
+
 };
+
+
 
 // Update employee profile (placeholder)
+
 exports.updateProfile = async (req, res) => {
+
   res.status(200).json({ message: 'Profile updated (placeholder)' });
+
 };
 
+
+
 // Get employee updates for manager
+
 exports.getEmployeeUpdates = async (req, res) => {
+
   try {
+
     const { employeeId } = req.params;
+
     const { startDate, endDate } = req.query;
 
+
+
     // Validate dates
+
     const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 7));
+
     const end = endDate ? new Date(endDate) : new Date();
 
+
+
     // Get updates
+
     const updates = await DailyUpdate.find({
+
       employee: employeeId,
+
       date: { $gte: start, $lte: end }
+
     })
+
     .sort({ date: -1 })
+
     .populate('employee', 'name email')
+
     .lean();
 
+
+
     // Calculate summary
+
     const summary = {
+
       totalHours: updates.reduce((sum, update) => sum + update.totalHours, 0),
+
       completedTasks: updates.reduce((sum, update) => 
+
         sum + update.tasks.filter(task => task.status === 'Completed').length, 0
+
       ),
+
       lastUpdate: updates[0]?.date || null
+
     };
 
+
+
     console.log('Found updates:', { updates, summary });
+
     res.json({ updates, summary });
+
   } catch (err) {
+
     console.error('Error in getEmployeeUpdates:', err);
+
     res.status(500).json({ 
+
       message: 'Server error', 
+
       error: err.message 
+
     });
+
   }
-}; 
+
+};
