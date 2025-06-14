@@ -40,8 +40,10 @@ const Login = () => {
       <div className="container" style={{ maxWidth: '900px' }}>
         <div className="row g-0 shadow-lg rounded-4 overflow-hidden bg-white">
           {/* Left Side */}
-          <div className="col-md-6 d-flex flex-column justify-content-center text-white p-5"
-               style={{ background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}>
+          <div
+            className="col-md-6 d-flex flex-column justify-content-center text-white p-5"
+            style={{ background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}
+          >
             <h2 className="fw-bold mb-3">Welcome</h2>
             <h5 className="mb-3 fw-light">Your Workspace Portal</h5>
             <p className="mb-4 small" style={{ opacity: 0.85 }}>
