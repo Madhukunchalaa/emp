@@ -583,7 +583,7 @@ const Dashboard = () => {
                           <GlassCard>
                             <CardContent>
                               <Typography variant="h6" fontWeight="bold" mb={2}>
-                                Today's Status
+                                Today' Status
                               </Typography>
                               <Box display="flex" alignItems="center" mb={2}>
                                 <Avatar
@@ -642,7 +642,7 @@ const Dashboard = () => {
                           <GlassCard>
                             <CardContent>
                               <Typography variant="h6" fontWeight="bold" mb={2}>
-                                Today's Details
+                                Today Details
                               </Typography>
                               <Box>
                                 <Box display="flex" justifyContent="space-between" mb={1}>
@@ -657,7 +657,7 @@ const Dashboard = () => {
                                 </Box>
                                 <Box display="flex" justifyContent="space-between" mb={1}>
                                   <Typography variant="body2" color="text.secondary">
-                                    Punch Out
+                                    Punch Out 
                                   </Typography>
                                   <Typography variant="body2" fontWeight="600">
                                     {attendance?.today?.punchOut

@@ -5,7 +5,7 @@ import api from '../../services/api';
 export const submitDesign = createAsyncThunk(
   'designs/submit',
   async (formData) => {
-    const response = await api.post('/employee/designs/submit', formData, {
+    const response = await api.post('/designs/submit', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -17,7 +17,7 @@ export const submitDesign = createAsyncThunk(
 export const fetchDesignerSubmissions = createAsyncThunk(
   'designs/fetchDesignerSubmissions',
   async () => {
-    const response = await api.get('/employee/designs/my-submissions');
+    const response = await api.get('/designs/my-submissions');
     return response.data;
   }
 );
@@ -26,7 +26,13 @@ export const fetchAllDesigns = createAsyncThunk(
   'designs/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/designs/all');
+      const token=localStorage.getItem('token')
+      const response = await api.get('/designs/all',{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      });
+      console.log(response.data)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch designs');

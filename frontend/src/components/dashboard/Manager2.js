@@ -1,12 +1,13 @@
 import React, { useState , useEffect } from 'react';
 import { Users, Clock, FileText, Palette, User, LogOut, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import {useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 
 
 
 const ManagerDashboard = () => {
+  const navigate=useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState('employees');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -15,6 +16,15 @@ const ManagerDashboard = () => {
   const [designs,setDesigns]=useState()
   const [user,setUser]=useState()
   const [updates,setUpdates]=useState()
+  const [manager,setManager]=useState()
+  const [email,setEmail]=useState()
+
+  const hour = new Date().getHours();
+const greeting =
+  hour < 12 ? "Good Morning" :
+  hour < 18 ? "Good Afternoon" :
+  "Good Evening";
+
 
 useEffect(() => {
   const token = localStorage.getItem("token");
@@ -31,6 +41,29 @@ useEffect(() => {
   //   const decoded=jwtDecode(token)
   //   console.log(decoded.name)
   // })
+
+  useEffect(()=>{
+    const manager=async()=>{
+      try{
+        const response=await axios.get("http://localhost:5000/api/manager/profile",{
+          headers:{
+            Authorization:`Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        setManager(response.data.name)
+        setEmail(response.data.email)
+      }
+      catch{
+
+      }
+    }
+    manager()
+  },[])
+
+
+
+
+
 
 useEffect(() => {
     const emp = async () => {
@@ -276,65 +309,83 @@ useEffect(() => {
           </div>
         );
       
-     case 'updates':
+  case 'updates':
   return (
     <div>
       <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
-      <div className="row g-3">
-        {Array.isArray(updates) && updates.map(dailyUpdates => (
-          <div key={dailyUpdates._id} className="col-12">
-            <div className="card shadow-sm border-start border-4 border-info">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="card-title mb-0 text-primary">
-                    <b>Name:</b> {dailyUpdates.employee ? dailyUpdates.employee.name : 'Unknown'}
-                  </h6>
-                  <small className="text-muted">
-                    {new Date(dailyUpdates.date).toLocaleDateString()}
-                  </small>
-                </div>
+      <div className="row g-4">
+        {Array.isArray(updates) && updates.map((dailyUpdates, index) => {
+          // Define soft color classes (you can customize as needed)
+          const bgColorClasses = [
+            'bg-gradient bg-light',
+            'bg-gradient bg-primary bg-opacity-10',
+            'bg-gradient bg-warning bg-opacity-10',
+            'bg-gradient bg-success bg-opacity-10',
+            'bg-gradient bg-danger bg-opacity-10',
+            'bg-gradient bg-info bg-opacity-10'
+          ];
+          const cardClass = bgColorClasses[index % bgColorClasses.length];
 
-                <p className="mb-2 text-dark">
-                  <b>Email:</b> {dailyUpdates.employee ? dailyUpdates.employee.email : 'Unknown'}
-                </p>
+          return (
+            <div key={dailyUpdates._id} className="col-md-6 col-lg-4">
+              <div className={`card shadow-lg rounded-4 ${cardClass} p-3 h-100 border-0`}>
+                <div className="card-body p-0">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="text-dark fw-bold mb-0">
+                      <i className="bi bi-person-circle me-2 text-primary"></i>
+                      {dailyUpdates.employee?.name || 'Unknown'}
+                    </h5>
+                    <small className="text-muted">
+                      <i className="bi bi-calendar-date me-1"></i>
+                      {new Date(dailyUpdates.date).toLocaleDateString()}
+                    </small>
+                  </div>
 
-                {Array.isArray(dailyUpdates.tasks) && dailyUpdates.tasks.length > 0 ? (
-                  dailyUpdates.tasks.map(task => (
-                    <div key={task._id} className="mb-3 p-2 rounded bg-light">
-                     <p className="mb-1 text-success">
-  <b>Project:</b>{' '}
-  <Link
-    to="/project-details"
-    state={{
-      project: task.project?.name || 'N/A',
-      status: task.status,
-      description: task.description,
-      hoursSpent: task.hoursSpent,
-      comments: dailyUpdates.comments,
-    }}
-    className="text-decoration-none text-success fw-semibold"
-  >
-    {task.project?.name || 'N/A'}
-  </Link>
-</p>
+                  <div className="mb-2 text-secondary">
+                    <i className="bi bi-envelope me-2"></i>
+                    <strong>Email:</strong> {dailyUpdates.employee?.email || 'Unknown'}
+                  </div>
+
+                  <div className="mb-2 text-secondary">
+                    <i className="bi bi-briefcase me-2"></i>
+                    <strong>Project:</strong> {dailyUpdates.project}
+                  </div>
+
+                  <div className="mb-2 text-secondary">
+                    <i className="bi bi-clipboard-check me-2"></i>
+                    <strong>Status:</strong> {dailyUpdates.status}
+                  </div>
+
+                  <div className="mb-2 text-secondary">
+                    <i className="bi bi-journal-text me-2"></i>
+                    <strong>Update:</strong> {dailyUpdates.update}
+                  </div>
+
+                  <div className="mb-2 text-secondary">
+                    <i className="bi bi-clock me-2"></i>
+                    <strong>Finish By:</strong> {dailyUpdates.finishBy.slice(0, 10)}
+                  </div>
+
+                  <div className="text-muted small fst-italic mb-2">
+                    <i className="bi bi-exclamation-circle me-1"></i>No tasks recorded.
+                  </div>
+
+                  {dailyUpdates.comments && (
+                    <div className="bg-white rounded-3 px-3 py-2 mt-2 text-dark shadow-sm">
+                      <i className="bi bi-chat-left-quote text-info me-2"></i>
+                      <strong>Comment:</strong> {dailyUpdates.comments}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-muted">No tasks recorded.</p>
-                )}
-
-                {dailyUpdates.comments && (
-                  <p className="text-info bg-info-subtle px-2 py-1 rounded mt-2 mb-0">
-                    <em><b>Comment:</b> {dailyUpdates.comments}</em>
-                  </p>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
+
+
 
       
       case 'designs':
@@ -377,39 +428,7 @@ useEffect(() => {
 
   if (!isLoggedIn) {
     return (
-      <>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-        <div className="min-vh-100 bg-light d-flex align-items-center justify-content-center">
-          <div className="card shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
-            <div className="card-body p-4">
-              <h2 className="text-center mb-4 fw-bold">Manager Login</h2>
-              <form>
-                <div className="mb-3">
-                  <input 
-                    type="email" 
-                    className="form-control"
-                    placeholder="Email"
-                  />
-                </div>
-                <div className="mb-3">
-                  <input 
-                    type="password" 
-                    className="form-control"
-                    placeholder="Password"
-                  />
-                </div>
-                <button 
-                  type="button"
-                  onClick={handleLogin}
-                  className="btn btn-primary w-100"
-                >
-                  Login
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </>
+      navigate("/login")
     );
   }
 
@@ -486,20 +505,72 @@ useEffect(() => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-fill d-flex flex-column">
-          {/* Header Banner */}
-          <header className="header-banner text-white p-4 shadow">
-            <div className="text-center">
-              <h1 className="display-4 fw-bold mb-2">Manager Dashboard</h1>
-              <p className="lead opacity-75 mb-0">Manage your team and projects efficiently</p>
-            </div>
-          </header>
-
-          {/* Content Area */}
-          <main className="flex-fill p-4 main-content">
-            {renderContent()}
-          </main>
+       <div className="flex-fill d-flex flex-column">
+  {/* Header Banner */}
+  <header
+    className="header-banner text-white p-4 shadow"
+    style={{
+      background: 'linear-gradient(135deg, #3a0ca3, #4361ee)', // purple to blue gradient
+      borderBottom: '4px solid rgb(255, 193, 7)' // light teal
+    }}
+  >
+    <div className="container">
+      <div className="row align-items-center">
+        {/* Left Side: Greeting and Intro */}
+        <div className="col-md-7 text-center text-md-start mb-4 mb-md-0">
+          <h4 className="fw-semibold">
+            👋{greeting}, <span style={{ color:'rgb(255, 193, 7)' }}>Manager</span>!
+          </h4>
+          <h1 className="display-5 fw-bold mt-2">Welcome back to the Manager Dashboard</h1>
+          <p className="lead text-white-50 mt-3">
+            Track your team's progress, assign tasks, and ensure productivity.
+          </p>
         </div>
+
+        {/* Right Side: Illustration */}
+        <div className="col-md-5 text-center">
+          <img
+            src="https://cdn.dribbble.com/userupload/23691475/file/original-9d72eaaf0be2992f8c5d86cbcdac4a96.gif"
+            alt="Dashboard Illustration"
+            className="img-fluid rounded shadow"
+            style={{ maxHeight: '250px' }}
+          />
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="row mt-4 text-center">
+        {[
+          { label: 'Active Projects', value: 5 },
+          { label: 'Team Members', value: 12 },
+          { label: 'Pending Tasks', value: 3 },
+          { label: 'Reports Reviewed', value: 7 },
+        ].map((item, index) => (
+          <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
+            <div
+              className="p-3 rounded"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffffff',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              <h5 className="mb-0" style={{ color:'rgb(255, 193, 7)' }}>{item.value}</h5>
+              <small>{item.label}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </header>
+
+  {/* Content Area */}
+  <main className="flex-fill p-4 main-content">
+    {renderContent()}
+  </main>
+</div>
+
 
         {/* Right Sidebar - Profile */}
         <div className="bg-white shadow" style={{ width: '320px' }}>
@@ -510,9 +581,8 @@ useEffect(() => {
               </div>
               
               <div className="mb-4">
-                <h5 className="fw-semibold mb-1">{user?.name}</h5>
-                <p className="text-muted mb-1">manager@company.com</p>
-                <small className="text-muted">Senior Manager</small>
+                <h5 className="fw-semibold mb-1">{manager}</h5>
+                <p className="text-muted mb-1">{email}</p>
               </div>
 
               <div className="mb-4">
