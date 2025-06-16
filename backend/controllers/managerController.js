@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Project = require('../models/Project');
 const Punch = require('../models/Punch');
 const DailyUpdate = require('../models/DailyUpdate');  
+const Update = require('../models/EveryUpdate');
 
 // Get manager profile
 const getProfile = async (req, res) => {
@@ -280,12 +281,13 @@ const getEmployeeDailyUpdates = async (req, res) => {
       };
     }
 
-    const updates = await DailyUpdate.find(query)
-      .populate('employee', 'name email')
-      .populate('tasks.project', 'title description')
-      .sort({ date: -1 });
+  const updates = await DailyUpdate.find(query)
+  .populate('employee', 'name email')
+  .populate('project', 'title description') // ✅ populate correct path
+  .sort({ date: -1 });
 
-    res.json(updates);
+res.json(updates);
+
   } catch (error) {
     console.error('Error fetching employee daily updates:', error);
     res.status(500).json({ message: 'Error fetching employee daily updates' });
@@ -370,7 +372,93 @@ const getEmployeeProfile = async (req, res) => {
   res.status(200).json({ message: 'Employee profile (placeholder)' });
 };
 
+// Get project-based updates
+const getProjectUpdates = async (req, res) => {
+  try {
+    const { projectId, startDate, endDate } = req.query;
+    let query = {};
+
+    if (projectId) {
+      query['tasks.project'] = projectId;
+    }
+
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const updates = await DailyUpdate.find(query)
+      .populate('employee', 'name email')
+      .populate('tasks.project', 'title description')
+      .sort({ date: -1 });
+
+    // Calculate project summary
+    const projectSummary = {
+      totalUpdates: updates.length,
+      totalHours: updates.reduce((sum, update) => sum + update.totalHours, 0),
+      averageHoursPerDay: updates.length > 0 
+        ? updates.reduce((sum, update) => sum + update.totalHours, 0) / updates.length 
+        : 0,
+      employeeStats: {},
+      statusDistribution: {
+        'Not Started': 0,
+        'In Progress': 0,
+        'Completed': 0
+      }
+    };
+
+    // Calculate employee-specific statistics
+    updates.forEach(update => {
+      const employeeId = update.employee._id.toString();
+      if (!projectSummary.employeeStats[employeeId]) {
+        projectSummary.employeeStats[employeeId] = {
+          name: update.employee.name,
+          email: update.employee.email,
+          totalHours: 0,
+          totalUpdates: 0
+        };
+      }
+      projectSummary.employeeStats[employeeId].totalHours += update.totalHours;
+      projectSummary.employeeStats[employeeId].totalUpdates++;
+
+      update.tasks.forEach(task => {
+        if (task.project && task.project._id.toString() === projectId) {
+          projectSummary.statusDistribution[task.status]++;
+        }
+      });
+    });
+
+    res.json({
+      updates,
+      projectSummary
+    });
+  } catch (error) {
+    console.error('Error fetching project updates:', error);
+    res.status(500).json({ message: 'Error fetching project updates' });
+  }
+};
+const getAllEmployeeUpdates = async (req, res) => {
+  try {
+    const updates = await Update.find()
+      .populate('employee', 'name email') // include employee name & email
+      .select('project_title status update finishBy imageUrl employee createdAt') // specify all fields to return
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: updates.length,
+      updates,
+    });
+  } catch (err) {
+    console.error('Error fetching updates:', err);
+    res.status(500).json({ success: false, msg: 'Failed to fetch updates' });
+  }
+};
+
 module.exports = {
+  getAllEmployeeUpdates,
   getProfile,
   getEmployees,
   getProjects,
@@ -383,4 +471,5 @@ module.exports = {
   getEmployeeUpdateSummary,
   updateProfile,
   getEmployeeProfile,
+  getProjectUpdates,
 };
