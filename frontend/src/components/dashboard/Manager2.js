@@ -21,7 +21,6 @@ const ManagerDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-<<<<<<< HEAD
   const [employees,setEmployees]=useState()
   const [projects,setProjects]=useState()
   const [designs,setDesigns]=useState()
@@ -33,9 +32,9 @@ const ManagerDashboard = () => {
 
   const hour = new Date().getHours();
 
-const { employeeId } = useParams();
 
-const hour = new Date().getHours();
+
+
 
 const greeting =
   hour < 12 ? "Good Morning" :
@@ -43,7 +42,7 @@ const greeting =
   "Good Evening";
 
 
-const { employeeId } = useParams();
+// const { employeeId } = useParams();
 
 
 useEffect(() => {
@@ -53,31 +52,6 @@ useEffect(() => {
     setUser(decoded);
   }
 }, []);
-=======
-  const [employees, setEmployees] = useState();
-  const [projects, setProjects] = useState();
-  const [designs, setDesigns] = useState();
-  const [user, setUser] = useState();
-  const [updates, setUpdates] = useState();
-  const [manager, setManager] = useState();
-  const [email, setEmail] = useState();
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState();
-  const [attendanceHistory, setAttendanceHistory] = useState();
-  const { employeeId } = useParams();
-  const hour = new Date().getHours();
-
-
-  // Greetings function based on date
-  const greeting =
-    hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-    useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decoded = jwtDecode(token);
-      setUser(decoded);
-    }
-  }, []);
->>>>>>> 8c59f3da3f2ea711d8159ecfabbc8ae4c899fae2
 
   //attendence Histaory of employees
  // employee attendance details
@@ -148,29 +122,29 @@ useEffect(() => {
 
   //employee attendence details
   
-   const handleEmployeeChange = async (e) => {
-    const employeeId = e.target.value;
-    setSelectedEmployeeId(employeeId);
-    try {
-      const res = managerService.getAttendanceHistory();
-      setAttendanceHistory(res.data);
-    } catch (err) {
-      console.log("failed to fetch the employee attendence history");
-    }
-  };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedEmployeeId) return;
+  //  const handleEmployeeChange = async (e) => {
+  //   const employeeId = e.target.value;
+  //   setSelectedEmployeeId(employeeId);
+  //   try {
+  //     const res = managerService.getAttendanceHistory();
+  //     setAttendanceHistory(res.data);
+  //   } catch (err) {
+  //     console.log("failed to fetch the employee attendence history");
+  //   }
+  // };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!selectedEmployeeId) return;
 
-    try {
-      const res = await managerService.getAttendanceHistory(selectedEmployeeId);
-      setAttendanceHistory(res.data); // assuming array
+  //   try {
+  //     const res = await managerService.getAttendanceHistory(selectedEmployeeId);
+  //     setAttendanceHistory(res.data); // assuming array
       
-    } catch (err) {
-      console.log("Error fetching attendance:", err);
-    } finally {
-    }
-  };
+  //   } catch (err) {
+  //     console.log("Error fetching attendance:", err);
+  //   } finally {
+  //   }
+  // };
 
 
   const handleLogin = () => setIsLoggedIn(true);
@@ -375,7 +349,7 @@ useEffect(() => {
           <div className="container mt-4">
             <h3>Manager Attendance Dashboard</h3>
 
-            <form onSubmit={handleSubmit}>
+            <form>
               <div className="mb-3">
                 <label htmlFor="employeeSelect" className="form-label">
                   Select Employee:
@@ -383,8 +357,8 @@ useEffect(() => {
                 <select
                   id="employeeSelect"
                   className="form-select"
-                  value={selectedEmployeeId}
-                  onChange={handleEmployeeChange}
+                  // value={selectedEmployeeId}
+                  // onChange={handleEmployeeChange}
                 >
                   <option value="">-- Select Employee --</option>
                   {employees.map((emp) => (
@@ -402,7 +376,7 @@ useEffect(() => {
 
             {/* {loading && <p className="mt-3">Loading attendance...</p>} */}
 
-            {Array.isArray(attendanceHistory) &&
+            {Array.isArray() &&
               attendanceHistory.length > 0 && (
                 <table className="table table-bordered mt-3">
                   <thead>
