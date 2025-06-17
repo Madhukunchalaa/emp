@@ -21,6 +21,39 @@ const ManagerDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+<<<<<<< HEAD
+  const [employees,setEmployees]=useState()
+  const [projects,setProjects]=useState()
+  const [designs,setDesigns]=useState()
+  const [user,setUser]=useState()
+  const [updates,setUpdates]=useState()
+  const [manager,setManager]=useState()
+  const [email,setEmail]=useState()
+
+
+  const hour = new Date().getHours();
+
+const { employeeId } = useParams();
+
+const hour = new Date().getHours();
+
+const greeting =
+  hour < 12 ? "Good Morning" :
+  hour < 18 ? "Good Afternoon" :
+  "Good Evening";
+
+
+const { employeeId } = useParams();
+
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded = jwtDecode(token);
+    setUser(decoded);
+  }
+}, []);
+=======
   const [employees, setEmployees] = useState();
   const [projects, setProjects] = useState();
   const [designs, setDesigns] = useState();
@@ -44,6 +77,7 @@ const ManagerDashboard = () => {
       setUser(decoded);
     }
   }, []);
+>>>>>>> 8c59f3da3f2ea711d8159ecfabbc8ae4c899fae2
 
   //attendence Histaory of employees
  // employee attendance details
