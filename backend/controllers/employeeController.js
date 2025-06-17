@@ -172,15 +172,19 @@ exports.getAttendance = async (req, res) => {
 // Get assigned projects
 exports.getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({})  // ✅ Fetch all projects
-      .select('title _id'); // ✅ Only fetch title and _id (for dropdown)
+    const projects = await Project.find({})
+      .populate([
+        { path: 'assignedTo', select: 'name email role' },
+        { path: 'createdBy', select: 'name email' }
+      ]);
 
-    res.status(200).json(projects); // ✅ Send projects to frontend
+    res.status(200).json(projects); // Return full project details
   } catch (err) {
-    console.error('Error in getProjects:', err.message); // Log specific error
+    console.error('Error in getProjects:', err.message);
     res.status(500).json({ message: 'Server error', projects: [] });
   }
 };
+
 
 
 // Update project status

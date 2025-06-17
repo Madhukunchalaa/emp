@@ -30,6 +30,11 @@ const ManagerDashboard = () => {
   const [email,setEmail]=useState()
   const [selectedEmployeeId,setSelectedEmployeeId]=useState()
   const [attendanceHistory,setAttendanceHistory]=useState()
+  const[projectTitle,setProjectTitle]=useState()
+  const[projectDescription,setProjectDescription]=useState()
+  const[projectDeadline,setProjectDeadline]=useState()
+  const [employeeToAssign,setEmployeeToAssign]=useState()
+  const [taskMessage,setTaskMessage]=useState()
 
 const { employeeId } = useParams();
 
@@ -161,6 +166,7 @@ useEffect(() => {
   const sidebarItems = [
     { id: "employees", label: "Employee List", icon: Users },
     { id: "projects", label: "Projects", icon: FileText },
+     { id: "Task", label: "Assign task", icon: FileText },
     { id: "hours", label: "Working Hours", icon: Clock },
     { id: "updates", label: "Daily Updates", icon: FileText },
     { id: "designs", label: "Designs", icon: Palette },
@@ -242,6 +248,40 @@ const getStatusBadgeColor = (status) => {
       return 'bg-primary';
   }
 };
+
+
+
+//assign task to the employee
+
+const handleTaskSubmit = async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    title: projectTitle,
+    description: projectDescription,
+    deadline: projectDeadline,
+    assignedTo: employeeToAssign,
+  };
+
+  try {
+    const res = await managerService.assignProject(payload);
+    console.log('Project assigned:', res.data);
+    const assignedUser = employees.find(emp => emp._id === employeeToAssign);
+  setTaskMessage(`Task assigned successfully to ${assignedUser?.name || 'Employee'}`);
+
+    // ✅ Clear form fields
+    setProjectTitle('');
+    setProjectDescription('');
+    setProjectDeadline('');
+    setEmployeeToAssign('');
+
+    // Optional: show success message or toast here
+  } catch (error) {
+    console.error('Project assignment failed:', error.response?.data?.message || error.message);
+    // Optional: show error message or toast here
+  }
+};
+
 
 
 
@@ -337,6 +377,8 @@ const getStatusBadgeColor = (status) => {
           </div>
         );
 
+
+
       case "projects":
         const getStatusButton = (status) => {
           switch (status.toLowerCase()) {
@@ -421,6 +463,103 @@ const getStatusBadgeColor = (status) => {
             </div>
           </div>
         );
+        
+
+     case "Task":
+      return(
+       <div className="container mt-5">
+  <div className="row justify-content-center">
+    <div className="col-md-10 col-lg-8">
+      <div className="card border-0 shadow rounded-4">
+        <div className="card-header bg-gradient bg-primary text-white py-3 rounded-top-4">
+          <h3 className="mb-0 text-center">📋 Assign New Project</h3>
+        </div>
+        <div className="card-body px-4 py-4">
+          <form onSubmit={handleTaskSubmit}>
+            <div className="mb-4">
+              <label htmlFor="projectTitle" className="form-label fw-semibold">
+                Project Title
+              </label>
+              <input
+                type="text"
+                className="form-control rounded-pill px-3"
+                id="projectTitle"
+                value={projectTitle}
+                onChange={(e) => setProjectTitle(e.target.value)}
+                placeholder="Enter project title"
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="projectDescription" className="form-label fw-semibold">
+                Project Description
+              </label>
+              <textarea
+                className="form-control rounded-3 px-3"
+                id="projectDescription"
+                rows="4"
+                value={projectDescription}
+                onChange={(e) => setProjectDescription(e.target.value)}
+                placeholder="Enter project details"
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="projectDeadline" className="form-label fw-semibold">
+                Deadline
+              </label>
+              <input
+                type="date"
+                className="form-control rounded-pill px-3"
+                id="projectDeadline"
+                value={projectDeadline}
+                onChange={(e) => setProjectDeadline(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="employeeSelect" className="form-label fw-semibold">
+                Assign To
+              </label>
+              <select
+                className="form-select rounded-pill px-3"
+                id="employeeSelect"
+                value={employeeToAssign}
+                onChange={(e) => setEmployeeToAssign(e.target.value)}
+                required
+              >
+                <option value="">-- Select Employee --</option>
+                {employees.map((user) => (
+                  <option key={user._id} value={user._id}>
+                    {user.name} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="d-grid">
+              <button type="submit" className="btn btn-success rounded-pill py-2 fs-5">
+                🚀 Assign Project
+              </button>
+            </div>
+
+            {taskMessage && (
+              <div className="alert alert-success mt-4 mb-0 rounded-3 text-center">
+                ✅ {taskMessage}
+              </div>
+            )}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      )
 
      case "hours":
         return (

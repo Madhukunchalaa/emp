@@ -96,10 +96,13 @@ const assignProject = async (req, res) => {
     }
 
     // Check if assigned employee exists and is an employee
-    const employee = await User.findOne({ 
-      _id: assignedTo, 
-      role: 'employee' 
-    });
+  const validRoles = ['employee', 'developer', 'designer'];
+
+const employee = await User.findOne({ 
+  _id: assignedTo, 
+  role: { $in: validRoles }
+});
+
     
     if (!employee) {
       return res.status(404).json({ 
