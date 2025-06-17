@@ -5,6 +5,7 @@ import { punchIn } from '../../store/slices/employeeSlice';
 import { useDispatch } from 'react-redux';
 import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
+import UpdateForm from './UpdateForm';
 
 
 const EmployeeDashboard = () => {
@@ -22,11 +23,14 @@ const EmployeeDashboard = () => {
   const [punchStatus,setPunchStatus]=useState()
   const [attendanceData, setAttendanceData] = useState(null);
   const [message,setMessage]=useState()
+  const [projects, setProjects] = useState([]);
+
   const [formData,setFormData]=useState({
     project:'',
     status:'',
     update:'',
-    finishBy:''
+    finishBy:'',
+    project_title:''
   })
   const [image, setImage] = useState(null);
 
@@ -52,7 +56,7 @@ useEffect(() => {
       setRole(response.data.role);
       setIsWorking(response.data.isWorking); // 👈 Add this line
     } catch (err) {
-      // console.error('Failed to fetch employee profile details', err);
+      console.error('Failed to fetch employee profile details', err);
     }
   };
   fetchProfile();
@@ -61,15 +65,10 @@ useEffect(() => {
 
 const dailyUpdate=async()=>{
   try{
-     const payload = {
-      project: "Landing Page Redesign",
-      status: "In Progress",
-      update: "Completed responsive layout",
-      finishBy: "2025-06-15"
-     }
+     
 
 
-    const response=await employeeService.addDailyUpdate(payload)
+    const response=await employeeService.addDailyUpdate()
     console.log(response.data)
 
   }
@@ -119,16 +118,21 @@ const handlePunch=async()=>{
   }
 }
 //punchout details
-const handlepunchOut=async()=>{
-  try{
-    const response=await employeeService.punchOut()
-    alert('punched out success')
-    setIsWorking(false)
+const handlepunchOut = async () => {
+  try {
+    const response = await employeeService.punchOut();
+    if (response.data) {
+      setIsWorking(false);
+      // Update attendance data
+      const attendanceRes = await employeeService.getAttendance();
+      setAttendanceData(attendanceRes.data);
+      alert('Punched out successfully');
+    }
+  } catch (err) {
+    console.error('Punch out failed:', err);
+    alert(err.response?.data?.message || 'Failed to punch out. Please try again.');
   }
-  catch(err){
-    alert('punched out failed please try again after some time')
-  }
-}
+};
 
 
 
@@ -149,40 +153,105 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
 
   //dailyupdates
-  const handleChange=(e)=>{
-    const{name,value}=e.target
-    setFormData(prev=>({...prev,[name]:value}))
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
+  if (name === "project_title") {
+    const selectedProject = projects.find((p) => p.title === value);
+    setFormData((prev) => ({
+      ...prev,
+      project_title: value,
+      project: selectedProject?._id || "", // Store _id secretly for backend
+    }));
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   }
+};
 
- const handleSubmit = async (e) => {
+
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
-    const data = new FormData();
-    data.append('project', formData.project);
-    data.append('status', formData.status);
-    data.append('update', formData.update);
-    data.append('finishBy', formData.finishBy);
+    const formPayload = new FormData();
 
-    if (image) {
-      data.append('image', image);
-    }
+    formPayload.append('project', formData.project);          // hidden _id
+    formPayload.append('project_title', formData.project_title); // user sees this
+    formPayload.append('status', formData.status);
+    formPayload.append('update', formData.update);
+    formPayload.append('finishBy', formData.finishBy);
 
-    await employeeService.addDailyUpdate(data); 
+    await employeeService.addDailyUpdate(); 
     setMessage(`Today's update submitted successfully`);
+
+
+      formPayload.append('image', image);
+    
+
+    await employeeService.addDailyUpdate(formPayload);
+
+    setMessage("Today's update submitted successfully");
+
+
     setFormData({
       project: '',
+      project_title: '',
       status: '',
       update: '',
       finishBy: ''
     });
     setImage(null);
+
+    // Clear success message after 3 seconds
+    setTimeout(() => setMessage(null), 3000);
+    
   } catch (err) {
-    setMessage(`Something went wrong`);
     console.error('Form not submitted:', err);
+    setMessage("Something went wrong. Please try again.");
+    
+    // Clear error message after 3 seconds too (optional)
+    setTimeout(() => setMessage(null), 3000);
   }
 };
+
+
+
+
+useEffect(() => {
+  const getProject = async () => {
+    try {
+      const res = await employeeService.getProjects();
+      setProjects(res.data); // res.data should be an array of project objects
+    } catch (err) {
+      console.error('Failed to fetch projects', err);
+    }
+  };
+  getProject();
+}, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -385,73 +454,9 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
       
       case 'updates':
         return (
-             <div className="container mt-4">
-      <h3>Submit Daily Update</h3>
-      <form onSubmit={handleSubmit} className="card p-4 shadow-sm">
-        <div className="mb-3">
-          <label className="form-label">Project Name</label>
-          <input
-            type="text"
-            name="project"
-            className="form-control"
-            value={formData.project}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Status</label>
-          <select
-            name="status"
-            className="form-select"
-            value={formData.status}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select Status</option>
-            <option value="Not Started">Not Started</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Update Description</label>
-          <textarea
-            name="update"
-            className="form-control"
-            rows="3"
-            value={formData.update}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Finish By</label>
-          <input
-            type="date"
-            name="finishBy"
-            className="form-control"
-            value={formData.finishBy}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <label>Upload Screenshot:</label>
-<input
-  type="file"
-  accept="image/*"
-  onChange={(e) => setImage(e.target.files[0])}
-/>
-
-
-        <button type="submit" className="btn btn-primary">Submit Update</button>
-        {message && <p className="mt-3 text-success">{message}</p>}
-      </form>
-    </div>
+      <UpdateForm/>
         );
+        
     
       case 'finished':
         return (
@@ -814,6 +819,8 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
           </div>
         </div>
       </div>
+
+    
     </>
   );
 };

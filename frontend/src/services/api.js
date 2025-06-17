@@ -4,10 +4,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: API_URL
+ 
 });
 
 // Flag to prevent multiple redirects and unwanted behavior during logout
@@ -189,11 +187,17 @@ export const employeeService = {
   },
 
   addDailyUpdate: (updateData) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  if (!authService.isAuthenticated()) {
+    return Promise.reject(new Error('No auth token'));
+  }
+  
+  // For FormData, don't set Content-Type header - let axios handle it
+  return api.post('/employee/updates', updateData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
     }
-    return api.post('/employee/daily-update', updateData);
-  },
+  });
+},
 
   updateDailyUpdate: (updateId, updateData) => {
     if (!authService.isAuthenticated()) {
@@ -286,21 +290,22 @@ export const managerService = {
     }
   },
 
-  getEmployeeDailyUpdates: async ({ employeeId, startDate, endDate }) => {
-    if (!authService.isAuthenticated()) {
-      throw new Error('No auth token');
-    }
+  getEmployeeDailyUpdates: async (filters = {}) => {
+  if (!authService.isAuthenticated()) {
+    throw new Error('No auth token');
+  }
 
-    try {
-      const response = await api.get('/manager/daily-updates', {
-        params: { employeeId, startDate, endDate }
-      });
-      return response;
-    } catch (error) {
-      console.error('Error fetching employee daily updates:', error.response?.data || error.message);
-      throw error;
-    }
-  },
+  try {
+    const response = await api.get('/manager/all-updates', {
+      params: filters
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching employee daily updates:', error.response?.data || error.message);
+    throw error;
+  }
+},
+
 
   // Additional manager functions
   getEmployeeById: (employeeId) => {
