@@ -169,7 +169,7 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
       data.append('image', image);
     }
 
-    await employeeService.addDailyUpdate(data); // 👈 Now using your service!
+    await employeeService.addDailyUpdate(data); 
     setMessage(`Today's update submitted successfully`);
     setFormData({
       project: '',
@@ -183,29 +183,6 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
     console.error('Form not submitted:', err);
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
