@@ -27,6 +27,10 @@ const Login = () => {
         case 'designer':
           navigate('/designer-dashboard');
           break;
+        case 'Business':
+          navigate('/business-dashboard');
+        break;
+        
         default:
           navigate('/dashboard');
       }

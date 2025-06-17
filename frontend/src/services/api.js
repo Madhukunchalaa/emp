@@ -185,7 +185,7 @@ export const employeeService = {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.get('/employee/daily-updates');
+    return api.get('/employee/updates');
   },
 
   addDailyUpdate: (updateData) => {

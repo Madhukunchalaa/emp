@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
     console.log('Registration attempt for:', { name, email, role });
 
     // Validate role
-    const validRoles = ['developer', 'designer', 'manager'];
+    const validRoles = ['developer', 'designer', 'manager','Business'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: 'Invalid role specified' });
     }

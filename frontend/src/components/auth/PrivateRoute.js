@@ -30,6 +30,11 @@ const PrivateRoute = ({ children }) => {
           return <Navigate to="/dashboard" replace />;
         }
         break;
+         case 'Business':
+        if (currentPath !== '/business-dashboard') {
+          return <Navigate to="/business-dashboard" replace />;
+        }
+        break;
       default:
         return <Navigate to="/login" replace />;
     }
