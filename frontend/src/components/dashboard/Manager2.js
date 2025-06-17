@@ -422,12 +422,12 @@ const getStatusBadgeColor = (status) => {
           </div>
         );
 
-      case "hours":
+     case "hours":
         return (
           <div className="container mt-4">
             <h3>Manager Attendance Dashboard</h3>
 
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label htmlFor="employeeSelect" className="form-label">
                   Select Employee:
@@ -435,8 +435,8 @@ const getStatusBadgeColor = (status) => {
                 <select
                   id="employeeSelect"
                   className="form-select"
-                  // value={selectedEmployeeId}
-                  // onChange={handleEmployeeChange}
+                  value={selectedEmployeeId}
+                  onChange={handleEmployeeChange}
                 >
                   <option value="">-- Select Employee --</option>
                   {employees.map((emp) => (
@@ -454,7 +454,7 @@ const getStatusBadgeColor = (status) => {
 
             {/* {loading && <p className="mt-3">Loading attendance...</p>} */}
 
-            {Array.isArray() &&
+            {Array.isArray(attendanceHistory) &&
               attendanceHistory.length > 0 && (
                 <table className="table table-bordered mt-3">
                   <thead>
@@ -498,6 +498,12 @@ const getStatusBadgeColor = (status) => {
               )}
           </div>
         );
+
+
+
+
+
+
 
      case "updates":
   return (
