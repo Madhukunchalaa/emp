@@ -12,6 +12,7 @@ import {
 
 import { useNavigate, Link } from "react-router-dom";
 
+
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { managerService } from "../../services/api";
@@ -439,7 +440,7 @@ useEffect(() => {
           </div>
         );
 
-     case "updates":
+    case "updates":
   return (
     <div>
       <h3 className="mb-4 fw-bold text-primary">Daily Updates</h3>
@@ -462,63 +463,63 @@ useEffect(() => {
 
             return (
               <div key={dailyUpdates._id} className="col-md-6 col-lg-4">
-                <div className={`card ${cardClass} shadow-sm rounded-4 border-0 p-3 h-100`}>
-                  <div className="card-body d-flex flex-column justify-content-between p-0">
+                <div className={`card shadow-sm rounded-4 border-0 h-100 ${cardClass}`}>
+                  
+                  {/* Image Section */}
+                  {imageUrl && (
+                    <img
+                      src={`http://localhost:5000${dailyUpdates.imageUrl}`}
+                      alt="Update"
+                      className="card-img-top rounded-top-4"
+                      style={{ height: "180px", objectFit: "cover" }}
+                    />
+                  )}
 
-                    <div className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h5 className="fw-semibold text-dark mb-0">
-                          <i className="bi bi-person-circle me-2 text-primary"></i>
-                          {dailyUpdates.employee?.name || "Unknown"}
-                        </h5>
-                        <span className="badge bg-light text-muted">
-                          <i className="bi bi-calendar-date me-1"></i>
-                          {new Date(dailyUpdates.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
+                  {/* Card Body */}
+                  <div className="card-body d-flex flex-column justify-content-between">
 
-                      <div className="mb-1 text-secondary small">
-                        <i className="bi bi-envelope me-2"></i>
-                        <strong>Email:</strong> {dailyUpdates.employee?.email || "Unknown"}
-                      </div>
+                    {/* Header Info */}
+                    <div className="border-bottom pb-2 mb-2">
+                      <h5 className="fw-semibold text-dark d-flex align-items-center">
+                        <i className="bi bi-person-circle me-2 text-primary fs-5"></i>
+                        {dailyUpdates.employee?.name || "Unknown"}
+                      </h5>
+                      <p className="mb-0 small text-muted">
+                        <i className="bi bi-envelope me-1"></i>
+                        {dailyUpdates.employee?.email || "Unknown"}
+                      </p>
+                      <p className="mb-0 small text-muted">
+                        <i className="bi bi-calendar-date me-1"></i>
+                        {new Date(dailyUpdates.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
 
-                      <div className="mb-1 text-secondary small">
+                    {/* Details Section */}
+                    <div className="mb-2">
+                      <div className="small text-secondary mb-1">
                         <i className="bi bi-briefcase me-2"></i>
                         <strong>Project:</strong> {dailyUpdates.project_title || "Untitled"}
                       </div>
-
-                      <div className="mb-1 text-secondary small">
+                      <div className="small text-secondary mb-1">
                         <i className="bi bi-clipboard-check me-2"></i>
                         <strong>Status:</strong> {dailyUpdates.status}
                       </div>
-
-                      <div className="mb-1 text-secondary small">
+                      <div className="small text-secondary mb-1">
                         <i className="bi bi-journal-text me-2"></i>
                         <strong>Update:</strong> {dailyUpdates.update}
                       </div>
-
-                      <div className="mb-2 text-secondary small">
+                      <div className="small text-secondary">
                         <i className="bi bi-clock me-2"></i>
-                        <strong>Finish By:</strong>{" "}
-                        {dailyUpdates.finishBy?.slice(0, 10)}
+                        <strong>Finish By:</strong> {dailyUpdates.finishBy?.slice(0, 10)}
                       </div>
                     </div>
 
-                    {imageUrl && (
-                      <div className="mb-3">
-                        <img
-                          src={`http://localhost:5000${dailyUpdates.imageUrl}`}
-                          alt="Update"
-                          className="img-fluid rounded shadow-sm"
-                          style={{ maxHeight: "160px", objectFit: "cover", width: "100%" }}
-                        />
-                      </div>
-                    )}
-
-                    <div className="text-muted small fst-italic">
+                    {/* Footer */}
+                    <div className="mt-auto text-muted small fst-italic border-top pt-2">
                       <i className="bi bi-exclamation-circle me-1"></i>
                       No tasks recorded.
                     </div>
+
                   </div>
                 </div>
               </div>
