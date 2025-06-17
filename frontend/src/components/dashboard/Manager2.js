@@ -10,10 +10,7 @@ import {
   X,
 } from "lucide-react";
 
-import { useNavigate, Link } from "react-router-dom";
-
-
-import axios from "axios";
+import { useNavigate} from "react-router-dom";
 import jwtDecode from "jwt-decode";
 import { managerService } from "../../services/api";
 import { useParams } from "react-router-dom";
@@ -22,31 +19,6 @@ const ManagerDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  // const [employees,setEmployees]=useState()
-  // const [projects,setProjects]=useState()
-  // const [designs,setDesigns]=useState()
-  // const [user,setUser]=useState()
-  // const [updates,setUpdates]=useState()
-  // const [manager,setManager]=useState()
-  // const [email,setEmail]=useState()
-
-
-
-
-
-
-
-
-
-
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    const decoded = jwtDecode(token);
-    setUser(decoded);
-  }
-}, []);
-
   const [employees, setEmployees] = useState();
   const [projects, setProjects] = useState();
   const [designs, setDesigns] = useState();
@@ -57,8 +29,17 @@ useEffect(() => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [attendanceHistory, setAttendanceHistory] = useState();
   const { employeeId } = useParams();
+
   const hour = new Date().getHours();
 
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded = jwtDecode(token);
+    setUser(decoded);
+  }
+}, []);
 
   // Greetings function based on date
   const greeting =
@@ -440,94 +421,94 @@ useEffect(() => {
           </div>
         );
 
-    case "updates":
-  return (
-    <div>
-      <h3 className="mb-4 fw-bold text-primary">Daily Updates</h3>
-      <div className="row g-4">
-        {Array.isArray(updates) &&
-          updates.map((dailyUpdates, index) => {
-            const bgColorClasses = [
-              "bg-light",
-              "bg-primary bg-opacity-10",
-              "bg-warning bg-opacity-10",
-              "bg-success bg-opacity-10",
-              "bg-danger bg-opacity-10",
-              "bg-info bg-opacity-10",
-            ];
-            const cardClass = bgColorClasses[index % bgColorClasses.length];
+      case "updates":
+        return (
+          <div>
+  <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
+  <div className="row g-4">
+    {Array.isArray(updates) &&
+      updates.map((dailyUpdates, index) => {
+        const bgColorClasses = [
+          "bg-gradient bg-light",
+          "bg-gradient bg-primary bg-opacity-10",
+          "bg-gradient bg-warning bg-opacity-10",
+          "bg-gradient bg-success bg-opacity-10",
+          "bg-gradient bg-danger bg-opacity-10",
+          "bg-gradient bg-info bg-opacity-10",
+        ];
+        const cardClass = bgColorClasses[index % bgColorClasses.length];
 
-            const imageUrl = dailyUpdates.imageUrl
-              ? dailyUpdates.imageUrl.replace(/\\/g, "/").replace("C:/Users/Madhk/OneDrive/Desktop/emp/backend", "")
-              : null;
+        // Normalize image path
+        const imageUrl = dailyUpdates.imageUrl
+          ? dailyUpdates.imageUrl.replace(/\\/g, "/").replace("C:/Users/Madhk/OneDrive/Desktop/emp/backend", "")
+          : null;
 
-            return (
-              <div key={dailyUpdates._id} className="col-md-6 col-lg-4">
-                <div className={`card shadow-sm rounded-4 border-0 h-100 ${cardClass}`}>
-                  
-                  {/* Image Section */}
-                  {imageUrl && (
+        return (
+          <div key={dailyUpdates._id} className="col-md-6 col-lg-4">
+            <div className={`card shadow-lg rounded-4 ${cardClass} p-3 h-100 border-0`}>
+              <div className="card-body p-0">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="text-dark fw-bold mb-0">
+                    <i className="bi bi-person-circle me-2 text-primary"></i>
+                    {dailyUpdates.employee?.name || "Unknown"} 
+                  </h5>
+                  <small className="text-muted">
+                    <i className="bi bi-calendar-date me-1"></i>
+                    {new Date(dailyUpdates.createdAt).toLocaleDateString()}
+                  </small>
+                </div>
+
+                <div className="mb-2 text-secondary">
+                  <i className="bi bi-envelope me-2"></i>
+                  <strong>Email:</strong> {dailyUpdates.employee?.email || "Unknown"}
+                </div>
+
+                <div className="mb-2 text-secondary">
+                  <i className="bi bi-briefcase me-2"></i>
+                  <strong>Project:</strong> {dailyUpdates.project_title || "Untitled"}
+                </div>
+
+                <div className="mb-2 text-secondary">
+                  <i className="bi bi-clipboard-check me-2"></i>
+                  <strong>Status:</strong> {dailyUpdates.status}
+                </div>
+
+                <div className="mb-2 text-secondary">
+                  <i className="bi bi-journal-text me-2"></i>
+                  <strong>Update:</strong> {dailyUpdates.update}
+                </div>
+
+                <div className="mb-2 text-secondary">
+                  <i className="bi bi-clock me-2"></i>
+                  <strong>Finish By:</strong>{" "}
+                  {dailyUpdates.finishBy?.slice(0, 10)}
+                </div>
+
+                {imageUrl && (
+                  <div className="mb-2">
                     <img
                       src={`http://localhost:5000${dailyUpdates.imageUrl}`}
                       alt="Update"
-                      className="card-img-top rounded-top-4"
-                      style={{ height: "180px", objectFit: "cover" }}
+                      className="img-fluid rounded border shadow-sm"
+                      style={{ maxHeight: "150px" }}
                     />
-                  )}
-
-                  {/* Card Body */}
-                  <div className="card-body d-flex flex-column justify-content-between">
-
-                    {/* Header Info */}
-                    <div className="border-bottom pb-2 mb-2">
-                      <h5 className="fw-semibold text-dark d-flex align-items-center">
-                        <i className="bi bi-person-circle me-2 text-primary fs-5"></i>
-                        {dailyUpdates.employee?.name || "Unknown"}
-                      </h5>
-                      <p className="mb-0 small text-muted">
-                        <i className="bi bi-envelope me-1"></i>
-                        {dailyUpdates.employee?.email || "Unknown"}
-                      </p>
-                      <p className="mb-0 small text-muted">
-                        <i className="bi bi-calendar-date me-1"></i>
-                        {new Date(dailyUpdates.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    {/* Details Section */}
-                    <div className="mb-2">
-                      <div className="small text-secondary mb-1">
-                        <i className="bi bi-briefcase me-2"></i>
-                        <strong>Project:</strong> {dailyUpdates.project_title || "Untitled"}
-                      </div>
-                      <div className="small text-secondary mb-1">
-                        <i className="bi bi-clipboard-check me-2"></i>
-                        <strong>Status:</strong> {dailyUpdates.status}
-                      </div>
-                      <div className="small text-secondary mb-1">
-                        <i className="bi bi-journal-text me-2"></i>
-                        <strong>Update:</strong> {dailyUpdates.update}
-                      </div>
-                      <div className="small text-secondary">
-                        <i className="bi bi-clock me-2"></i>
-                        <strong>Finish By:</strong> {dailyUpdates.finishBy?.slice(0, 10)}
-                      </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-auto text-muted small fst-italic border-top pt-2">
-                      <i className="bi bi-exclamation-circle me-1"></i>
-                      No tasks recorded.
-                    </div>
-
                   </div>
+                )}
+
+                {/* Placeholder for tasks and comments if not present */}
+                <div className="text-muted small fst-italic mb-2">
+                  <i className="bi bi-exclamation-circle me-1"></i>
+                  No tasks recorded.
                 </div>
               </div>
-            );
-          })}
-      </div>
-    </div>
-  );
+            </div>
+          </div>
+        );
+      })}
+  </div>
+</div>
+
+        );
 
       case "designs":
         return (
