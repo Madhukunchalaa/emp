@@ -36,8 +36,65 @@ const EmployeeDashboard = () => {
 
 
 
-const myProjects=[]
+const myProjects=projects
 const finishedProjects=[]
+
+// Helper function to get status badge styling
+const getStatusBadgeStyle = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+    case 'in progress':
+      return 'bg-primary';
+    case 'completed':
+      return 'bg-success';
+    case 'not started':
+      return 'bg-secondary';
+    case 'on hold':
+      return 'bg-warning text-dark';
+    case 'cancelled':
+      return 'bg-danger';
+    default:
+      return 'bg-info';
+  }
+};
+
+// Helper function to format date
+const formatDat = (dateString) => {
+  if (!dateString) return 'Not set';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+// Helper function to calculate days until deadline
+const getDaysUntilDeadline = (deadline) => {
+  if (!deadline) return null;
+  const today = new Date();
+  const deadlineDate = new Date(deadline);
+  const diffTime = deadlineDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+// Helper function to get deadline indicator
+const getDeadlineIndicator = (deadline) => {
+  const days = getDaysUntilDeadline(deadline);
+  if (days === null) return { text: 'No deadline', class: 'text-muted' };
+  if (days < 0) return { text: `${Math.abs(days)} days overdue`, class: 'text-danger fw-bold' };
+  if (days === 0) return { text: 'Due today', class: 'text-warning fw-bold' };
+  if (days <= 3) return { text: `${days} days left`, class: 'text-warning' };
+  if (days <= 7) return { text: `${days} days left`, class: 'text-info' };
+  return { text: `${days} days left`, class: 'text-success' };
+};
+
+
+
+
+
+
+
   
 
   const hour = new Date().getHours();
@@ -221,6 +278,7 @@ useEffect(() => {
     try {
       const res = await employeeService.getProjects();
       setProjects(res.data); // res.data should be an array of project objects
+     
     } catch (err) {
       console.error('Failed to fetch projects', err);
     }
@@ -403,53 +461,165 @@ useEffect(() => {
       
       case 'myprojects':
         return (
-          <div>
-            <h3 className="mb-4 fw-semibold text-dark">My Projects</h3>
-            <div className="row g-3">
-              {myProjects.map(project => (
-                <div key={project.id} className="col-12">
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title">{project.name}</h5>
-                        <div>
-                          <span className={`badge me-2 ${
-                            project.priority === 'High' ? 'bg-danger' : 
-                            project.priority === 'Medium' ? 'bg-warning' : 'bg-info'
-                          }`}>
-                            {project.priority}
-                          </span>
-                          <span className={`badge ${
-                            project.status === 'Active' ? 'bg-primary' : 'bg-success'
-                          }`}>
-                            {project.status}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-muted mb-3">Deadline: {project.deadline}</p>
-                      <div className="mb-2">
-                        <div className="d-flex justify-content-between mb-1">
-                          <small>Progress</small>
-                          <small>{project.progress}%</small>
-                        </div>
-                        <div className="progress">
-                          <div 
-                            className="progress-bar bg-primary"
-                            role="progressbar"
-                            style={{ width: `${project.progress}%` }}
-                            aria-valuenow={project.progress}
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                          ></div>
-                        </div>
-                      </div>
+          <div className="container-fluid">
+  <div className="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 className="fw-bold text-dark mb-0">
+        <i className="bi bi-kanban me-2 text-primary"></i>
+        My Projects
+      </h3>
+      <p className="text-muted mb-0">Manage and track your assigned projects</p>
+    </div>
+    <div className="d-flex align-items-center">
+      <span className="badge bg-primary bg-opacity-10 text-primary fs-6 me-2">
+        <i className="bi bi-collection me-1"></i>
+        {myProjects?.length || 0} Projects
+      </span>
+    </div>
+  </div>
+
+  <div className="row g-4">
+    {myProjects && myProjects.length > 0 ? (
+      myProjects.map((project, index) => {
+        const deadlineInfo = getDeadlineIndicator(project.deadline);
+        const cardColors = [
+          'border-start border-primary border-4',
+          'border-start border-success border-4',
+          'border-start border-info border-4',
+          'border-start border-warning border-4',
+          'border-start border-danger border-4'
+        ];
+        const cardClass = cardColors[index % cardColors.length];
+
+        return (
+          <div key={project._id} className="col-lg-6 col-xl-4">
+            <div className={`card h-100 shadow-sm border-0 ${cardClass} hover-shadow`} 
+                 style={{ transition: 'all 0.3s ease' }}>
+              <div className="card-header bg-transparent border-0 pb-0">
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="flex-grow-1">
+                    <h5 className="card-title fw-bold text-dark mb-1 line-clamp-2">
+                      {project.title}
+                    </h5>
+                    <div className="d-flex flex-wrap gap-2 mb-2">
+                      <span className={`badge ${getStatusBadgeStyle(project.status)} rounded-pill`}>
+                        <i className="bi bi-circle-fill me-1" style={{ fontSize: '0.5rem' }}></i>
+                        {project.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="dropdown">
+                    <button className="btn btn-sm btn-outline-secondary border-0" 
+                            type="button" data-bs-toggle="dropdown">
+                      <i className="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul className="dropdown-menu">
+                      <li><a className="dropdown-item" href="#"><i className="bi bi-eye me-2"></i>View Details</a></li>
+                      <li><a className="dropdown-item" href="#"><i className="bi bi-pencil me-2"></i>Edit</a></li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li><a className="dropdown-item text-danger" href="#"><i className="bi bi-trash me-2"></i>Delete</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-body pt-2">
+                <p className="text-muted mb-3 line-clamp-3" style={{ fontSize: '0.9rem' }}>
+                  {project.description || 'No description provided'}
+                </p>
+
+                <div className="row g-2 mb-3">
+                  <div className="col-12">
+                    <div className="d-flex align-items-center text-muted mb-2">
+                      <i className="bi bi-calendar-event me-2 text-primary"></i>
+                      <small className="me-2">Deadline:</small>
+                      <small className={deadlineInfo.class}>
+                        {formatDate(project.deadline)}
+                        {deadlineInfo.text !== 'No deadline' && (
+                          <span className="ms-1">({deadlineInfo.text})</span>
+                        )}
+                      </small>
+                    </div>
+                  </div>
+                  
+                  <div className="col-12">
+                    <div className="d-flex align-items-center text-muted mb-2">
+                      <i className="bi bi-person-check me-2 text-success"></i>
+                      <small className="me-2">Assigned to:</small>
+                      <small className="fw-medium text-dark">
+                        {project.assignedTo?.name || 'Unassigned'}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="d-flex align-items-center text-muted mb-2">
+                      <i className="bi bi-person-plus me-2 text-info"></i>
+                      <small className="me-2">Created by:</small>
+                      <small className="fw-medium text-dark">
+                        {project.createdBy?.name || 'Unknown'}
+                      </small>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                {project.comment && (
+                  <div className="mb-3">
+                    <div className="bg-light rounded p-2">
+                      <small className="text-muted d-block mb-1">
+                        <i className="bi bi-chat-left-quote me-1"></i>
+                        Comment:
+                      </small>
+                      <small className="text-dark">{project.comment}</small>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="card-footer bg-transparent border-0 pt-0">
+                <div className="d-flex justify-content-between align-items-center">
+                  <small className="text-muted">
+                    <i className="bi bi-clock me-1"></i>
+                    Created {formatDate(project.createdAt)}
+                  </small>
+                  <div className="btn-group" role="group">
+                    <button type="button" className="btn btn-sm btn-outline-primary rounded-pill me-1">
+                      <i className="bi bi-eye me-1"></i>
+                      View
+                    </button>
+                    <button type="button" className="btn btn-sm btn-primary rounded-pill">
+                      <i className="bi bi-play-fill me-1"></i>
+                      Start
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );
+      })
+    ) : (
+      <div className="col-12">
+        <div className="text-center py-5">
+          <div className="mb-4">
+            <i className="bi bi-kanban display-1 text-muted"></i>
+          </div>
+          <h4 className="text-muted mb-2">No Projects Found</h4>
+          <p className="text-muted mb-4">You don't have any projects assigned yet.</p>
+          <button className="btn btn-primary rounded-pill px-4">
+            <i className="bi bi-plus-circle me-2"></i>
+            Request New Project
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+        );
+
+
+          
+  
       
       case 'updates':
         return (
