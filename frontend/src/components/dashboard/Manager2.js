@@ -10,7 +10,9 @@ import {
   X,
 } from "lucide-react";
 
-import { useNavigate} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+
+import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { managerService } from "../../services/api";
 import { useParams } from "react-router-dom";
@@ -19,18 +21,16 @@ const ManagerDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [employees, setEmployees] = useState();
-  const [projects, setProjects] = useState();
-  const [designs, setDesigns] = useState();
-  const [user, setUser] = useState();
-  const [updates, setUpdates] = useState();
-  const [manager, setManager] = useState();
-  const [email, setEmail] = useState();
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState();
-  const [attendanceHistory, setAttendanceHistory] = useState();
-  const { employeeId } = useParams();
+  const [employees,setEmployees]=useState()
+  const [projects,setProjects]=useState()
+  const [designs,setDesigns]=useState()
+  const [user,setUser]=useState()
+  const [updates,setUpdates]=useState()
+  const [manager,setManager]=useState()
+  const [email,setEmail]=useState()
 
-  const hour = new Date().getHours();
+
+
 
 
 useEffect(() => {
@@ -41,16 +41,10 @@ useEffect(() => {
   }
 }, []);
 
-  // Greetings function based on date
-  const greeting =
-    hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-    useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decoded = jwtDecode(token);
-      setUser(decoded);
-    }
-  }, []);
+
+
+
+ 
 
 
   //attendence Histaory of employees
@@ -120,31 +114,8 @@ useEffect(() => {
     project();
   }, []);
 
-  //employee attendence details
   
-   const handleEmployeeChange = async (e) => {
-    const employeeId = e.target.value;
-    setSelectedEmployeeId(employeeId);
-    try {
-      const res = managerService.getAttendanceHistory();
-      setAttendanceHistory(res.data);
-    } catch (err) {
-      console.log("failed to fetch the employee attendence history");
-    }
-  };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedEmployeeId) return;
-
-    try {
-      const res = await managerService.getAttendanceHistory(selectedEmployeeId);
-      setAttendanceHistory(res.data); // assuming array
-      
-    } catch (err) {
-      console.log("Error fetching attendance:", err);
-    } finally {
-    }
-  };
+ 
 
 
   const handleLogin = () => setIsLoggedIn(true);
