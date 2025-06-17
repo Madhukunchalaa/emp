@@ -28,6 +28,8 @@ const ManagerDashboard = () => {
   const [updates,setUpdates]=useState()
   const [manager,setManager]=useState()
   const [email,setEmail]=useState()
+  const [selectedEmployeeId,setSelectedEmployeeId]=useState()
+  const [attendanceHistory,setAttendanceHistory]=useState()
 
 const { employeeId } = useParams();
 
@@ -49,6 +51,17 @@ useEffect(() => {
 }, []);
 
   //attendence Histaory of employees
+
+
+
+
+
+
+
+
+
+
+
  // employee attendance details
  useEffect(() => {
   const fetchDailyUpdates = async () => {
@@ -117,29 +130,29 @@ useEffect(() => {
 
   //employee attendence details
   
-  //  const handleEmployeeChange = async (e) => {
-  //   const employeeId = e.target.value;
-  //   setSelectedEmployeeId(employeeId);
-  //   try {
-  //     const res = managerService.getAttendanceHistory();
-  //     setAttendanceHistory(res.data);
-  //   } catch (err) {
-  //     console.log("failed to fetch the employee attendence history");
-  //   }
-  // };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!selectedEmployeeId) return;
+   const handleEmployeeChange = async (e) => {
+    const employeeId = e.target.value;
+    setSelectedEmployeeId(employeeId);
+    try {
+      const res = managerService.getAttendanceHistory();
+      setAttendanceHistory(res.data);
+    } catch (err) {
+      console.log("failed to fetch the employee attendence history");
+    }
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedEmployeeId) return;
 
-  //   try {
-  //     const res = await managerService.getAttendanceHistory(selectedEmployeeId);
-  //     setAttendanceHistory(res.data); // assuming array
+    try {
+      const res = await managerService.getAttendanceHistory(selectedEmployeeId);
+      setAttendanceHistory(res.data); // assuming array
       
-  //   } catch (err) {
-  //     console.log("Error fetching attendance:", err);
-  //   } finally {
-  //   }
-  // };
+    } catch (err) {
+      console.log("Error fetching attendance:", err);
+    } finally {
+    }
+  };
 
 
   const handleLogin = () => setIsLoggedIn(true);
@@ -158,7 +171,77 @@ useEffect(() => {
 
 
 //getting  status of employee
+const [selectedUpdate, setSelectedUpdate] = useState(null);
+const [showModal, setShowModal] = useState(false);
+const [feedback, setFeedback] = useState('');
+const [actionType, setActionType] = useState(''); // 'approve' or 'reject'
 
+// Function to handle opening the modal
+const handleViewUpdate = (update) => {
+  setSelectedUpdate(update);
+  setShowModal(true);
+  setFeedback('');
+  setActionType('');
+};
+
+// Function to handle closing the modal
+const handleCloseModal = () => {
+  setShowModal(false);
+  setSelectedUpdate(null);
+  setFeedback('');
+  setActionType('');
+};
+
+// Function to handle approve/reject actions
+const handleAction = async (action) => {
+  if (!feedback.trim()) {
+    alert('Please provide feedback before proceeding.');
+    return;
+  }
+
+  try {
+    // Replace with your actual API endpoint
+    const response = await fetch(`/api/updates/${selectedUpdate._id}/${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        feedback: feedback.trim(),
+        reviewedAt: new Date().toISOString(),
+      }),
+    });
+
+    if (response.ok) {
+      alert(`Task ${action}d successfully!`);
+      handleCloseModal();
+      // Refresh the updates list or update state as needed
+      // window.location.reload(); // or call a refresh function
+    } else {
+      alert(`Failed to ${action} task. Please try again.`);
+    }
+  } catch (error) {
+    console.error(`Error ${action}ing task:`, error);
+    alert(`Error ${action}ing task. Please try again.`);
+  }
+};
+
+// Helper function to get status badge color
+const getStatusBadgeColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return 'bg-success';
+    case 'in progress':
+    case 'in-progress':
+      return 'bg-warning';
+    case 'pending':
+      return 'bg-secondary';
+    case 'blocked':
+      return 'bg-danger';
+    default:
+      return 'bg-primary';
+  }
+};
 
 
 
@@ -418,91 +501,261 @@ useEffect(() => {
 
      case "updates":
   return (
-    <div>
-      <h3 className="mb-4 fw-bold text-primary">Daily Updates</h3>
-      <div className="row g-4">
-        {Array.isArray(updates) &&
-          updates.map((dailyUpdates, index) => {
-            const bgColorClasses = [
-              "bg-light",
-              "bg-primary bg-opacity-10",
-              "bg-warning bg-opacity-10",
-              "bg-success bg-opacity-10",
-              "bg-danger bg-opacity-10",
-              "bg-info bg-opacity-10",
-            ];
-            const cardClass = bgColorClasses[index % bgColorClasses.length];
+   <div className="container-fluid">
+  <div className="d-flex justify-content-between align-items-center mb-4">
+    <h3 className="fw-bold text-primary mb-0">
+      <i className="bi bi-list-task me-2"></i>
+      Daily Updates
+    </h3>
+    <span className="badge bg-primary fs-6">
+      {Array.isArray(updates) ? updates.length : 0} Total Updates
+    </span>
+  </div>
 
-            const imageUrl = dailyUpdates.imageUrl
-              ? dailyUpdates.imageUrl.replace(/\\/g, "/").replace("C:/Users/Madhk/OneDrive/Desktop/emp/backend", "")
-              : null;
+  {/* List View */}
+  <div className="card border-0 shadow-sm">
+    <div className="card-header bg-light border-0 py-3">
+      <div className="row fw-semibold text-muted">
+        <div className="col-md-3">Employee</div>
+        <div className="col-md-2">Project</div>
+        <div className="col-md-2">Status</div>
+        <div className="col-md-2">Due Date</div>
+        <div className="col-md-2">Created</div>
+        <div className="col-md-1">Action</div>
+      </div>
+    </div>
+    <div className="card-body p-0">
+      {Array.isArray(updates) && updates.length > 0 ? (
+        updates.map((dailyUpdate, index) => {
+          const imageUrl = dailyUpdate.imageUrl
+            ? dailyUpdate.imageUrl.replace(/\\/g, "/").replace("C:/Users/Madhk/OneDrive/Desktop/emp/backend", "")
+            : null;
 
-            return (
-              <div key={dailyUpdates._id} className="col-md-6 col-lg-4">
-                <div className={`card ${cardClass} shadow-sm rounded-4 border-0 p-3 h-100`}>
-                  <div className="card-body d-flex flex-column justify-content-between p-0">
-
-                    <div className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h5 className="fw-semibold text-dark mb-0">
-                          <i className="bi bi-person-circle me-2 text-primary"></i>
-                          {dailyUpdates.employee?.name || "Unknown"}
-                        </h5>
-                        <span className="badge bg-light text-muted">
-                          <i className="bi bi-calendar-date me-1"></i>
-                          {new Date(dailyUpdates.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <div className="mb-1 text-secondary small">
-                        <i className="bi bi-envelope me-2"></i>
-                        <strong>Email:</strong> {dailyUpdates.employee?.email || "Unknown"}
-                      </div>
-
-                      <div className="mb-1 text-secondary small">
-                        <i className="bi bi-briefcase me-2"></i>
-                        <strong>Project:</strong> {dailyUpdates.project_title || "Untitled"}
-                      </div>
-
-                      <div className="mb-1 text-secondary small">
-                        <i className="bi bi-clipboard-check me-2"></i>
-                        <strong>Status:</strong> {dailyUpdates.status}
-                      </div>
-
-                      <div className="mb-1 text-secondary small">
-                        <i className="bi bi-journal-text me-2"></i>
-                        <strong>Update:</strong> {dailyUpdates.update}
-                      </div>
-
-                      <div className="mb-2 text-secondary small">
-                        <i className="bi bi-clock me-2"></i>
-                        <strong>Finish By:</strong>{" "}
-                        {dailyUpdates.finishBy?.slice(0, 10)}
-                      </div>
+          return (
+            <div 
+              key={dailyUpdate._id} 
+              className={`row py-3 px-3 border-bottom align-items-center hover-bg-light ${index % 2 === 0 ? 'bg-light bg-opacity-25' : ''}`}
+              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+              onMouseEnter={(e) => e.target.closest('.row').classList.add('bg-primary', 'bg-opacity-10')}
+              onMouseLeave={(e) => e.target.closest('.row').classList.remove('bg-primary', 'bg-opacity-10')}
+            >
+              <div className="col-md-3">
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                    <i className="bi bi-person-fill text-primary"></i>
+                  </div>
+                  <div>
+                    <div className="fw-semibold text-dark">
+                      {dailyUpdate.employee?.name || "Unknown"}
                     </div>
-
-                    {imageUrl && (
-                      <div className="mb-3">
-                        <img
-                          src={`http://localhost:5000${dailyUpdates.imageUrl}`}
-                          alt="Update"
-                          className="img-fluid rounded shadow-sm"
-                          style={{ maxHeight: "160px", objectFit: "cover", width: "100%" }}
-                        />
-                      </div>
-                    )}
-
-                    <div className="text-muted small fst-italic">
-                      <i className="bi bi-exclamation-circle me-1"></i>
-                      No tasks recorded.
+                    <div className="text-muted small">
+                      {dailyUpdate.employee?.email || "Unknown"}
                     </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
+              
+              <div className="col-md-2">
+                <div className="fw-medium text-dark">
+                  {dailyUpdate.project_title || "Untitled"}
+                </div>
+              </div>
+              
+              <div className="col-md-2">
+                <span className={`badge ${getStatusBadgeColor(dailyUpdate.status)} text-white`}>
+                  {dailyUpdate.status}
+                </span>
+              </div>
+              
+              <div className="col-md-2">
+                <div className="text-muted">
+                  <i className="bi bi-calendar me-1"></i>
+                  {dailyUpdate.finishBy ? dailyUpdate.finishBy.slice(0, 10) : 'Not set'}
+                </div>
+              </div>
+              
+              <div className="col-md-2">
+                <div className="text-muted">
+                  <i className="bi bi-clock me-1"></i>
+                  {new Date(dailyUpdate.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              
+              <div className="col-md-1">
+                <button
+                  className="btn btn-outline-primary btn-sm rounded-pill"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewUpdate(dailyUpdate);
+                  }}
+                  title="View Details"
+                >
+                  <i className="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div className="text-center py-5">
+          <i className="bi bi-inbox display-1 text-muted"></i>
+          <h5 className="text-muted mt-3">No updates found</h5>
+          <p className="text-muted">Updates will appear here once employees submit them.</p>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Modal for Review */}
+  {showModal && selectedUpdate && (
+    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content border-0 shadow">
+          <div className="modal-header bg-primary text-white border-0">
+            <h5 className="modal-title fw-bold">
+              <i className="bi bi-clipboard-check me-2"></i>
+              Review Daily Update
+            </h5>
+            <button 
+              type="button" 
+              className="btn-close btn-close-white" 
+              onClick={handleCloseModal}
+            ></button>
+          </div>
+          
+          <div className="modal-body">
+            <div className="row">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-person-circle me-2"></i>Employee
+                  </label>
+                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
+                    {selectedUpdate.employee?.name || "Unknown"}
+                  </p>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-envelope me-2"></i>Email
+                  </label>
+                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
+                    {selectedUpdate.employee?.email || "Unknown"}
+                  </p>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-briefcase me-2"></i>Project
+                  </label>
+                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
+                    {selectedUpdate.project_title || "Untitled"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-clipboard-check me-2"></i>Status
+                  </label>
+                  <p className="form-control-plaintext">
+                    <span className={`badge ${getStatusBadgeColor(selectedUpdate.status)} fs-6`}>
+                      {selectedUpdate.status}
+                    </span>
+                  </p>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-clock me-2"></i>Finish By
+                  </label>
+                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
+                    {selectedUpdate.finishBy ? selectedUpdate.finishBy.slice(0, 10) : 'Not set'}
+                  </p>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-calendar-date me-2"></i>Created
+                  </label>
+                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
+                    {new Date(selectedUpdate.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-3">
+              <label className="form-label fw-semibold text-primary">
+                <i className="bi bi-journal-text me-2"></i>Update Details
+              </label>
+              <p className="form-control-plaintext bg-light rounded px-3 py-3" style={{ minHeight: '80px' }}>
+                {selectedUpdate.update || 'No update provided'}
+              </p>
+            </div>
+            
+            {selectedUpdate.imageUrl && (
+              <div className="mb-3">
+                <label className="form-label fw-semibold text-primary">
+                  <i className="bi bi-image me-2"></i>Attached Image
+                </label>
+                <div className="text-center">
+                  <img
+                    src={`http://localhost:5000${selectedUpdate.imageUrl}`}
+                    alt="Update"
+                    className="img-fluid rounded shadow border"
+                    style={{ maxHeight: '300px', maxWidth: '100%' }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="mb-3">
+              <label className="form-label fw-semibold text-primary">
+                <i className="bi bi-chat-left-text me-2"></i>Your Feedback *
+              </label>
+              <textarea
+                className="form-control border-2"
+                rows="4"
+                placeholder="Provide your feedback for this update..."
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                style={{ resize: 'vertical' }}
+              ></textarea>
+            </div>
+          </div>
+          
+          <div className="modal-footer border-0 bg-light">
+            <button 
+              type="button" 
+              className="btn btn-secondary rounded-pill px-4"
+              onClick={handleCloseModal}
+            >
+              <i className="bi bi-x-circle me-2"></i>Cancel
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-danger rounded-pill px-4 me-2"
+              onClick={() => handleAction('reject')}
+              disabled={!feedback.trim()}
+            >
+              <i className="bi bi-x-octagon me-2"></i>Reject
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-success rounded-pill px-4"
+              onClick={() => handleAction('approve')}
+              disabled={!feedback.trim()}
+            >
+              <i className="bi bi-check-circle me-2"></i>Approve
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+  )}
+</div>
   );
 
       case "designs":
