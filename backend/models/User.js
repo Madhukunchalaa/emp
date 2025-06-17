@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  status: {
+  type: String,
+  enum: ['Online', 'Offline'],
+  default: 'Offline'
+},
+
   employeeID: { type: String, unique: true, sparse: true },
   role: { type: String, enum: ['developer', 'manager','designer','Business'], required: true },
   department: { type: String, default: '' },
