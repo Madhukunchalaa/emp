@@ -13,14 +13,11 @@ const UpdateForm = () => {
   const [image, setImage] = useState(null);
   const [message, setMessage] = useState('');
 
-  // ✅ Only one useEffect to fetch projects
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const res = await employeeService.getProjects();
         setProjects(res.data);
-        console.log(res.data)
-        
       } catch (err) {
         console.error('Failed to fetch projects:', err);
       }
@@ -41,7 +38,6 @@ const UpdateForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const data = new FormData();
     data.append('project_title', formData.project_title);
     data.append('status', formData.status);
@@ -58,13 +54,8 @@ const UpdateForm = () => {
         }
       });
 
-      setMessage(res.data.msg || 'Update submitted successfully!');
-      setFormData({
-        project_title: '',
-        status: '',
-        update: '',
-        finishBy: ''
-      });
+      setMessage(res.data.msg || '✅ Update submitted successfully!');
+      setFormData({ project_title: '', status: '', update: '', finishBy: '' });
       setImage(null);
     } catch (error) {
       console.error('Form error:', error.response?.data || error.message);
@@ -73,220 +64,139 @@ const UpdateForm = () => {
   };
 
   return (
-      <div className="min-vh-100 py-5" style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-lg-8 col-xl-6">
-            <div className="card border-0 shadow-lg" style={{
-              borderRadius: '20px',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              {/* Header */}
-              <div className="card-header text-white text-center py-4 border-0" style={{
-                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                borderRadius: '20px 20px 0 0'
-              }}>
-                <div className="h1 mb-3">📋</div>
-                <h3 className="mb-0 fw-bold">Submit Daily Update</h3>
-                <p className="mb-0 opacity-75">Track your project progress</p>
-              </div>
+    <div style={{ padding: '2rem 1rem', minHeight: '100vh', boxSizing: 'border-box' }}>
+      <h2 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '2rem' }}> Daily Update</h2>
 
-              {/* Body */}
-              <div className="card-body p-4">
-                {message && (
-                  <div className={`alert ${message.startsWith('❌') ? 'alert-danger' : 'alert-success'} alert-dismissible fade show`} role="alert">
-                    <span className="me-2">{message.startsWith('❌') ? '⚠️' : '✅'}</span>
-                    {message}
-                    <button type="button" className="btn-close" onClick={() => setMessage('')}></button>
-                  </div>
-                )}
-
-                <div onSubmit={handleSubmit}>
-                  {/* Project Selection */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark d-flex align-items-center">
-                      <span className="me-2">🎯</span>
-                      Project
-                    </label>
-                    <select
-                      className="form-select form-select-lg"
-                      name="project_title"
-                      value={formData.project_title}
-                      onChange={handleChange}
-                      required
-                      style={{ 
-                        borderRadius: '12px', 
-                        border: '2px solid #e5e7eb',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                    >
-                      <option value="">-- Select Project --</option>
-                      {Array.isArray(projects) &&
-                        projects.map((p) => (
-                          <option key={p._id} value={p.title}>
-                            {p.title}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  {/* Status Selection */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark d-flex align-items-center">
-                      <span className="me-2">📊</span>
-                      Status
-                    </label>
-                    <select
-                      className="form-select form-select-lg"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      required
-                      style={{ 
-                        borderRadius: '12px', 
-                        border: '2px solid #e5e7eb',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                    >
-                      <option value="">-- Select Status --</option>
-                      <option value="Not Started">🔴 Not Started</option>
-                      <option value="In Progress">🟡 In Progress</option>
-                      <option value="Completed">🟢 Completed</option>
-                    </select>
-                  </div>
-
-                  {/* Update Description */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark d-flex align-items-center">
-                      <span className="me-2">✍️</span>
-                      Update Description
-                    </label>
-                    <textarea
-                      className="form-control"
-                      name="update"
-                      value={formData.update}
-                      onChange={handleChange}
-                      required
-                      rows="4"
-                      placeholder="Describe your progress, challenges, and achievements..."
-                      style={{ 
-                        borderRadius: '12px', 
-                        border: '2px solid #e5e7eb',
-                        resize: 'vertical',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                    />
-                  </div>
-
-                  {/* Finish By */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark d-flex align-items-center">
-                      <span className="me-2">📅</span>
-                      Target Completion Date
-                    </label>
-                    <input
-                      type="date"
-                      className="form-control form-control-lg"
-                      name="finishBy"
-                      value={formData.finishBy}
-                      onChange={handleChange}
-                      required
-                      style={{ 
-                        borderRadius: '12px', 
-                        border: '2px solid #e5e7eb',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                    />
-                  </div>
-
-                  {/* Image Upload */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark d-flex align-items-center">
-                      <span className="me-2">📸</span>
-                      Upload Screenshot (Optional)
-                    </label>
-                    <div className="position-relative">
-                      <input
-                        type="file"
-                        className="form-control form-control-lg"
-                        name="image"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        style={{ 
-                          borderRadius: '12px', 
-                          border: '2px solid #e5e7eb',
-                          transition: 'all 0.3s ease',
-                          paddingRight: '50px'
-                        }}
-                        onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                        onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                      />
-                      <span className="position-absolute top-50 end-0 translate-middle-y me-3">
-                        📤
-                      </span>
-                    </div>
-                    <div className="form-text mt-2">
-                      <span className="me-1">💡</span>
-                      Supported formats: JPG, PNG, GIF (Max 5MB)
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="d-grid gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      className="btn btn-lg fw-semibold py-3 position-relative overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: 'white',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 8px 25px rgba(79, 70, 229, 0.3)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    >
-                      <span className="me-2">🚀</span>
-                      Submit Daily Update
-                    </button>
-                  </div>
-                </div>
-
-                {/* Additional Info Card */}
-                <div className="mt-4 p-3 rounded-3" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div className="d-flex align-items-center mb-2">
-                    <span className="me-2">💡</span>
-                    <h6 className="mb-0 fw-semibold text-dark">Quick Tips</h6>
-                  </div>
-                  <small className="text-muted">
-                    • Be specific about your progress and challenges<br/>
-                    • Include any blockers or dependencies<br/>
-                    • Screenshots help provide visual context
-                  </small>
-                </div>
-              </div>
-            </div>
-          </div>
+      {message && (
+        <div style={{
+          padding: '1rem',
+          backgroundColor: message.startsWith('❌') ? '#fee2e2' : '#dcfce7',
+          border: '1px solid #d1d5db',
+          borderRadius: '10px',
+          marginBottom: '1.5rem',
+          color: '#1f2937',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: '800px',
+          marginInline: 'auto'
+        }}>
+          <span>{message}</span>
+          <button onClick={() => setMessage('')} style={{ border: 'none', background: 'transparent', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
         </div>
-      </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <label style={{ fontWeight: 'bold', marginTop: '1rem', display: 'block' }}> Project</label>
+        <select
+          name="project_title"
+          value={formData.project_title}
+          onChange={handleChange}
+          required
+          style={{
+            width: '100%',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            marginBottom: '1rem'
+          }}
+        >
+          <option value="">Select a project</option>
+          {projects.map(p => (
+            <option key={p._id} value={p.title}>{p.title}</option>
+          ))}
+        </select>
+
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}> Status</label>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+          {['Not Started', 'In Progress', 'Completed'].map(status => (
+            <label key={status} style={{
+              flex: 1,
+              padding: '0.5rem',
+              borderRadius: '8px',
+              backgroundColor: formData.status === status ? '#3b82f6' : '#f3f4f6',
+              color: formData.status === status ? '#fff' : '#1f2937',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="radio"
+                name="status"
+                value={status}
+                checked={formData.status === status}
+                onChange={handleChange}
+                style={{ display: 'none' }}
+              />
+              {status}
+            </label>
+          ))}
+        </div>
+
+        <label style={{ fontWeight: 'bold', display: 'block' }}>Update</label>
+        <textarea
+          name="update"
+          value={formData.update}
+          onChange={handleChange}
+          rows="4"
+          required
+          placeholder="Describe your progress..."
+          style={{
+            width: '100%',
+            padding: '1rem',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            resize: 'vertical',
+            marginBottom: '1rem'
+          }}
+        />
+
+        <label style={{ fontWeight: 'bold', display: 'block' }}>Finish By</label>
+        <input
+          type="date"
+          name="finishBy"
+          value={formData.finishBy}
+          onChange={handleChange}
+          required
+          style={{
+            width: '100%',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            marginBottom: '1rem'
+          }}
+        />
+
+        <label style={{ fontWeight: 'bold', display: 'block' }}>Upload Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          style={{
+            width: '100%',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: '1px dashed #ccc',
+            marginBottom: '1.5rem'
+          }}
+        />
+
+        <button
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '1rem',
+            background: '#2563eb',
+            color: '#fff',
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer'
+          }}
+        >
+           Submit Update
+        </button>
+      </form>
     </div>
   );
 };
