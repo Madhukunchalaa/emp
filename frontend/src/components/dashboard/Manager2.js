@@ -857,7 +857,7 @@ const handleTaskSubmit = async (e) => {
                 </label>
                 <div className="text-center">
                   <img
-                    src={`http://localhost:5000${selectedUpdate.imageUrl}`}
+                    src={`https://emp-1-rgfq.onrender.com/${selectedUpdate.imageUrl}`}
                     alt="Update"
                     className="img-fluid rounded shadow border"
                     style={{ maxHeight: '300px', maxWidth: '100%' }}
