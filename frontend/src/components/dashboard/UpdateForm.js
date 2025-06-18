@@ -47,7 +47,7 @@ const UpdateForm = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/employee/updates', data, {
+      const res = await axios.post('http://emp-1-rgfq.onrender.com/api/employee/updates', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
