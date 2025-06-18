@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -261,11 +261,12 @@ export const managerService = {
   },
 
   updateProjectStatus: ({ projectId, status }) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.patch(`/manager/projects/${projectId}/status`, { status });
-  },
+  if (!authService.isAuthenticated()) {
+    return Promise.reject(new Error('No auth token'));
+  }
+   return api.put(`/manager/projects/${projectId}/status`, { status });
+},
+
 
   getAttendanceHistory: async (employeeId) => {
     if (!authService.isAuthenticated()) {
