@@ -35,6 +35,7 @@ const ManagerDashboard = () => {
   const[projectDeadline,setProjectDeadline]=useState()
   const [employeeToAssign,setEmployeeToAssign]=useState()
   const [taskMessage,setTaskMessage]=useState()
+  const [projectId,setProjectId]=useState()
 
 const { employeeId } = useParams();
 
@@ -95,6 +96,7 @@ useEffect(() => {
         const response = await managerService.getProfile();
         setManager(response.data.name);
         setEmail(response.data.email);
+      
        
        
       } catch {}
@@ -124,7 +126,9 @@ useEffect(() => {
       try {
         const response = await managerService.getProjects();
         setProjects(response.data);
-        console.log(response.data)
+          setProjectId(response.data[0]._id)
+          console.log('project id',response.data[0]._id)
+     
       } catch (error) {
         console.log("Error fetching projects:", error);
       }
@@ -134,14 +138,13 @@ useEffect(() => {
   }, []);
 
   //employee attendence details
-  
-   const handleEmployeeChange = async (e) => {
+    const handleEmployeeChange = async (e) => {
     const employeeId = e.target.value;
     setSelectedEmployeeId(employeeId);
     try {
       const res = managerService.getAttendanceHistory();
       setAttendanceHistory(res.data);
-    } catch (err) {
+    } catch {
       console.log("failed to fetch the employee attendence history");
     }
   };
@@ -154,9 +157,8 @@ useEffect(() => {
       setAttendanceHistory(res.data); // assuming array
       
     } catch (err) {
-      console.log("Error fetching attendance:", err);
-    } finally {
-    }
+      console.log("Error fetching attendance:");
+    } 
   };
 
 
@@ -171,10 +173,6 @@ useEffect(() => {
     { id: "updates", label: "Daily Updates", icon: FileText },
     { id: "designs", label: "Designs", icon: Palette },
   ];
-
-
-
-
 
 //getting  status of employee
 const [selectedUpdate, setSelectedUpdate] = useState(null);
@@ -249,8 +247,19 @@ const getStatusBadgeColor = (status) => {
   }
 };
 
-
-
+//update projects
+const handleStatusUpdate = async (projectId, status) => {
+  try {
+    const res = await managerService.updateProjectStatus({ projectId, status });
+    console.log(`✅ ${status} success:`, res.data);
+    alert(`${status}  successfully`);
+  } catch (err) {
+    console.error(`❌ ${status} failed:`, err);
+    const msg =
+      err?.response?.data?.message || err?.message || 'Unknown error';
+    alert(`${status} failed: ${msg}`);
+  }
+};
 //assign task to the employee
 
 const handleTaskSubmit = async (e) => {
@@ -366,6 +375,7 @@ const handleTaskSubmit = async (e) => {
                           <div className="mt-2">
                             <p className="mb-1">
                               <strong>Email:</strong> {emp.email}
+                               {/* <h5> Today's Update:<p>{emp.latestUpdateTitle || 'No updates yet'} </p> </h5> */}
                             </p>
                           </div>
                         </div>
@@ -882,7 +892,7 @@ const handleTaskSubmit = async (e) => {
             <button 
               type="button" 
               className="btn btn-danger rounded-pill px-4 me-2"
-              onClick={() => handleAction('reject')}
+                onClick={() => handleStatusUpdate(projectId, 'Reject')}
               disabled={!feedback.trim()}
             >
               <i className="bi bi-x-octagon me-2"></i>Reject
@@ -890,11 +900,11 @@ const handleTaskSubmit = async (e) => {
             <button 
               type="button" 
               className="btn btn-success rounded-pill px-4"
-              onClick={() => handleAction('approve')}
-              disabled={!feedback.trim()}
+                onClick={() => handleStatusUpdate(projectId, 'Approve')}
             >
-              <i className="bi bi-check-circle me-2"></i>Approve
+              <i className="bi bi-check-circle me-2"></i>Approve this task
             </button>
+            
           </div>
         </div>
       </div>

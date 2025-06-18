@@ -21,40 +21,45 @@ const getProfile = async (req, res) => {
 // Get all employees
 const getEmployees = async (req, res) => {
   try {
-   const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
+    const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
 
-
-    // Get today's attendance for each employee
-    const employeesWithAttendance = await Promise.all(
+    const employeesWithAttendanceAndUpdate = await Promise.all(
       employees.map(async (employee) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const attendance = await Punch.findOne({
           employee: employee._id,
           date: today
         });
 
-        return {
-          ...employee.toObject(),
-          attendance: {
-            today: attendance ? {
-              status: attendance.status,
-              punchIn: attendance.punchIn,
-              punchOut: attendance.punchOut,
-              hours: attendance.hours
-            } : null
-          }
-        };
+        // 🔥 Fetch the latest update for the employee
+       const latestUpdate = await Update.findOne({ employee: employee._id })
+  .sort({ createdAt: -1 })
+  .select('update'); // Fix here
+
+return {
+  ...employee.toObject(),
+  attendance: {
+    today: attendance ? {
+      status: attendance.status,
+      punchIn: attendance.punchIn,
+      punchOut: attendance.punchOut,
+      hours: attendance.hours
+    } : null
+  },
+  latestUpdateTitle: latestUpdate ? latestUpdate.update : null // Fix here
+};
       })
     );
 
-    res.json(employeesWithAttendance);
+    res.json(employeesWithAttendanceAndUpdate);
   } catch (error) {
     console.error('Error fetching employees:', error);
     res.status(500).json({ message: 'Error fetching employees' });
   }
 };
+
 
 // Get all projects
 const getProjects = async (req, res) => {
@@ -204,7 +209,7 @@ const updateProjectStatus = async (req, res) => {
     const { status } = req.body;
 
     // Validate status
-    if (!['Not Started', 'In Progress', 'Completed'].includes(status)) {
+    if (!['Approve', 'Under Review', 'Reject'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
