@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
 },
 
   employeeID: { type: String, unique: true, sparse: true },
-  role: { type: String, enum: ['developer', 'manager','designer'], required: true },
+  role: { type: String, enum: ['developer', 'manager','designer','Business'], required: true },
   department: { type: String, default: '' },
   position: { type: String, default: '' },
   createdAt: {

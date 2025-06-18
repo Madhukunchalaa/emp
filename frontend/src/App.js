@@ -9,8 +9,10 @@ import Register from './components/auth/Register';
 import Dashboard from './components/dashboard/Employee2';
 import ManagerDashboard from './components/dashboard/Manager2';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
+// import BusinessDevelopmentDashboard from './components/dashboard/BusinessDevelopment';
 import PrivateRoute from './components/auth/PrivateRoute';
 import ProjectDetails from './components/dashboard/ProjectDetails';
+import BusinessDashboard from './components/dashboard/BusinessDashboard';
 
 const theme = createTheme({
   palette: {
@@ -46,6 +48,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <ManagerDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/business-dashboard"
+              element={
+                <PrivateRoute>
+                  <BusinessDashboard/>
+                
                 </PrivateRoute>
               }
             />

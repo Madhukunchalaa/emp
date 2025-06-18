@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Clock, FolderOpen, FileText, CheckCircle, Play, Timer, User, LogOut, Menu, X, CalendarCheck } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  BarChart2,
+  GitBranch,
+  ClipboardList
+} from 'lucide-react';
 import { punchIn } from '../../store/slices/employeeSlice';
 import { useDispatch } from 'react-redux';
 import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
-import UpdateForm from './UpdateForm';
 
-
-const EmployeeDashboard = () => {
+const BusinessDevelopmentDashboard = () => {
   const navigate=useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeSection, setActiveSection] = useState('attendance');
@@ -21,80 +27,19 @@ const EmployeeDashboard = () => {
   const [userEmail,setUserEmail]=useState()
   const [role,setRole]=useState()
   const [punchStatus,setPunchStatus]=useState()
-  const [attendanceData, setAttendanceData] = useState(null);
   const [message,setMessage]=useState()
-  const [projects, setProjects] = useState([]);
-
   const [formData,setFormData]=useState({
     project:'',
     status:'',
     update:'',
-    finishBy:'',
-    project_title:''
+    finishBy:''
   })
   const [image, setImage] = useState(null);
 
 
 
-const myProjects=projects
+const myProjects=[]
 const finishedProjects=[]
-
-// Helper function to get status badge styling
-const getStatusBadgeStyle = (status) => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-    case 'in progress':
-      return 'bg-primary';
-    case 'completed':
-      return 'bg-success';
-    case 'not started':
-      return 'bg-secondary';
-    case 'on hold':
-      return 'bg-warning text-dark';
-    case 'cancelled':
-      return 'bg-danger';
-    default:
-      return 'bg-info';
-  }
-};
-
-// Helper function to format date
-const formatDat = (dateString) => {
-  if (!dateString) return 'Not set';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-// Helper function to calculate days until deadline
-const getDaysUntilDeadline = (deadline) => {
-  if (!deadline) return null;
-  const today = new Date();
-  const deadlineDate = new Date(deadline);
-  const diffTime = deadlineDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-};
-
-// Helper function to get deadline indicator
-const getDeadlineIndicator = (deadline) => {
-  const days = getDaysUntilDeadline(deadline);
-  if (days === null) return { text: 'No deadline', class: 'text-muted' };
-  if (days < 0) return { text: `${Math.abs(days)} days overdue`, class: 'text-danger fw-bold' };
-  if (days === 0) return { text: 'Due today', class: 'text-warning fw-bold' };
-  if (days <= 3) return { text: `${days} days left`, class: 'text-warning' };
-  if (days <= 7) return { text: `${days} days left`, class: 'text-info' };
-  return { text: `${days} days left`, class: 'text-success' };
-};
-
-
-
-
-
-
-
   
 
   const hour = new Date().getHours();
@@ -113,7 +58,7 @@ useEffect(() => {
       setRole(response.data.role);
       setIsWorking(response.data.isWorking); // 👈 Add this line
     } catch (err) {
-      console.error('Failed to fetch employee profile details', err);
+      // console.error('Failed to fetch employee profile details', err);
     }
   };
   fetchProfile();
@@ -122,10 +67,15 @@ useEffect(() => {
 
 const dailyUpdate=async()=>{
   try{
-     
+     const payload = {
+      project: "Landing Page Redesign",
+      status: "In Progress",
+      update: "Completed responsive layout",
+      finishBy: "2025-06-15"
+     }
 
 
-    const response=await employeeService.addDailyUpdate()
+    const response=await employeeService.addDailyUpdate(payload)
     console.log(response.data)
 
   }
@@ -138,20 +88,6 @@ const dailyUpdate=async()=>{
 useEffect(()=>{
   dailyUpdate()
 },[])
-
-
-useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await employeeService.getAttendance();
-        setAttendanceData(res.data);
-        // console.log(res.data)
-      } catch (err) {
-        // console.error('Failed to fetch attendance:', err);
-      }
-    };
-    fetchData();
-  }, []);
 
 
 
@@ -175,21 +111,16 @@ const handlePunch=async()=>{
   }
 }
 //punchout details
-const handlepunchOut = async () => {
-  try {
-    const response = await employeeService.punchOut();
-    if (response.data) {
-      setIsWorking(false);
-      // Update attendance data
-      const attendanceRes = await employeeService.getAttendance();
-      setAttendanceData(attendanceRes.data);
-      alert('Punched out successfully');
-    }
-  } catch (err) {
-    console.error('Punch out failed:', err);
-    alert(err.response?.data?.message || 'Failed to punch out. Please try again.');
+const handlepunchOut=async()=>{
+  try{
+    const response=await employeeService.punchOut()
+    alert('punched out success')
+    setIsWorking(false)
   }
-};
+  catch(err){
+    alert('punched out failed please try again after some time')
+  }
+}
 
 
 
@@ -210,106 +141,40 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
 
   //dailyupdates
-const handleChange = (e) => {
-  const { name, value } = e.target;
+  const handleChange=(e)=>{
+    const{name,value}=e.target
+    setFormData(prev=>({...prev,[name]:value}))
 
-  if (name === "project_title") {
-    const selectedProject = projects.find((p) => p.title === value);
-    setFormData((prev) => ({
-      ...prev,
-      project_title: value,
-      project: selectedProject?._id || "", // Store _id secretly for backend
-    }));
-  } else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   }
-};
 
-
-const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
-    const formPayload = new FormData();
+    const data = new FormData();
+    data.append('project', formData.project);
+    data.append('status', formData.status);
+    data.append('update', formData.update);
+    data.append('finishBy', formData.finishBy);
 
-    formPayload.append('project', formData.project);          // hidden _id
-    formPayload.append('project_title', formData.project_title); // user sees this
-    formPayload.append('status', formData.status);
-    formPayload.append('update', formData.update);
-    formPayload.append('finishBy', formData.finishBy);
+    if (image) {
+      data.append('image', image);
+    }
 
-    await employeeService.addDailyUpdate(); 
+    await employeeService.addDailyUpdate(data); 
     setMessage(`Today's update submitted successfully`);
-
-
-      formPayload.append('image', image);
-    
-
-    await employeeService.addDailyUpdate(formPayload);
-
-    setMessage("Today's update submitted successfully");
-
-
     setFormData({
       project: '',
-      project_title: '',
       status: '',
       update: '',
       finishBy: ''
     });
     setImage(null);
-
-    // Clear success message after 3 seconds
-    setTimeout(() => setMessage(null), 3000);
-    
   } catch (err) {
+    setMessage(`Something went wrong`);
     console.error('Form not submitted:', err);
-    setMessage("Something went wrong. Please try again.");
-    
-    // Clear error message after 3 seconds too (optional)
-    setTimeout(() => setMessage(null), 3000);
   }
 };
-
-
-
-
-useEffect(() => {
-  const getProject = async () => {
-    try {
-      const res = await employeeService.getProjects();
-      setProjects(res.data); // res.data should be an array of project objects
-     
-    } catch (err) {
-      console.error('Failed to fetch projects', err);
-    }
-  };
-  getProject();
-}, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -345,288 +210,137 @@ useEffect(() => {
   };
 
   const sidebarItems = [
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'myprojects', label: 'My Projects', icon: FolderOpen },
-    { id: 'updates', label: 'Daily Updates', icon: FileText },
-    { id: 'finished', label: 'Finished Projects', icon: CheckCircle },
-    { id: 'active', label: 'Active Projects', icon: Play },
-    { id: 'hours', label: 'Total Hours', icon: Timer },
-  ];
+  { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },       // Dashboard view
+  { id: 'Opportunities', label: 'Opportunities', icon: Briefcase },     // Business/Job opportunities
+  { id: 'Clients', label: 'Clients', icon: Users },                      // Group of people
+  { id: 'Analytics', label: 'Analytics', icon: BarChart2 },              // Data visualization
+  { id: 'Pipelines', label: 'Pipelines', icon: GitBranch },              // Represents workflow
+  { id: 'Activity Log', label: 'Activity Log', icon: ClipboardList },    // Logs or task history
+];
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'attendance':
-        return (
-          <div>
-            <h3 className="mb-4 fw-semibold text-dark">Attendance Management</h3>
-            
-            {/* Punch In/Out Section */}
-            <div className="row mb-4">
-              <div className="col-md-6">
-                <div className="card shadow-sm">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Current Time</h5>
-                    <h2 className="text-primary mb-3">{currentTime.toLocaleTimeString()}</h2>
-                    <p className="text-muted">{currentTime.toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="card shadow-sm">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Today's Status</h5>
-                    <div className="mb-3">
-                      {punchInTime && (
-                        <p className="mb-1">Punch In: <strong>{punchInTime.toLocaleTimeString()}</strong></p>
-                      )}
-                      {punchOutTime && (
-                        <p className="mb-1">Punch Out: <strong>{punchOutTime.toLocaleTimeString()}</strong></p>
-                      )}
-                      {punchInTime && punchOutTime && (
-                        <p className="mb-1">Total Hours: <strong>{calculateWorkingHours()}h</strong></p>
-                      )}
-                    </div>
-                    <div className="d-grid gap-2">
-                      <button 
-                        onClick={handlePunch}
-                        disabled={isWorking}
-                        className="btn btn-success"
-                      >
-                        <Clock size={16} className="me-2" />
-                        Punch In
-                      </button>
-                      <button 
-                        onClick={handlepunchOut}
-                        disabled={!isWorking}
-                        className="btn btn-danger"
-                      >
-                        <Clock size={16} className="me-2" />
-                        Punch Out
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Attendance History */}
-             <div className="card shadow-sm">
-      <div className="card-header">
-        <h5 className="mb-0">Attendance History</h5>
-      </div>
-      <div className="table-responsive">
-        <table className="table table-striped mb-0">
-          <thead className="table-light">
-            <tr>
-              <th>Date</th>
-              <th>Punch In</th>
-              <th>Punch Out</th>
-              <th>Total Hours</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendanceData?.history?.length > 0 ? (
-              attendanceData.history.map((record, index) => (
-                <tr key={index}>
-                  <td className="fw-medium">{formatDate(record.date)}</td>
-                  <td className="text-muted">{formatTime(record.punchIn)}</td>
-                  <td className="text-muted">{formatTime(record.punchOut)}</td>
-                  <td className="text-muted">{record.hours ?? 0}h</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        record.status === 'Present' || record.status === 'Late'
-                          ? 'bg-success'
-                          : 'bg-warning'
-                      }`}
-                    >
-                      {record.status}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center">
-                  No records found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-          </div>
-        );
+      
       
       case 'myprojects':
         return (
-          <div className="container-fluid">
-  <div className="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h3 className="fw-bold text-dark mb-0">
-        <i className="bi bi-kanban me-2 text-primary"></i>
-        My Projects
-      </h3>
-      <p className="text-muted mb-0">Manage and track your assigned projects</p>
-    </div>
-    <div className="d-flex align-items-center">
-      <span className="badge bg-primary bg-opacity-10 text-primary fs-6 me-2">
-        <i className="bi bi-collection me-1"></i>
-        {myProjects?.length || 0} Projects
-      </span>
-    </div>
-  </div>
-
-  <div className="row g-4">
-    {myProjects && myProjects.length > 0 ? (
-      myProjects.map((project, index) => {
-        const deadlineInfo = getDeadlineIndicator(project.deadline);
-        const cardColors = [
-          'border-start border-primary border-4',
-          'border-start border-success border-4',
-          'border-start border-info border-4',
-          'border-start border-warning border-4',
-          'border-start border-danger border-4'
-        ];
-        const cardClass = cardColors[index % cardColors.length];
-
-        return (
-          <div key={project._id} className="col-lg-6 col-xl-4">
-            <div className={`card h-100 shadow-sm border-0 ${cardClass} hover-shadow`} 
-                 style={{ transition: 'all 0.3s ease' }}>
-              <div className="card-header bg-transparent border-0 pb-0">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div className="flex-grow-1">
-                    <h5 className="card-title fw-bold text-dark mb-1 line-clamp-2">
-                      {project.title}
-                    </h5>
-                    <div className="d-flex flex-wrap gap-2 mb-2">
-                      <span className={`badge ${getStatusBadgeStyle(project.status)} rounded-pill`}>
-                        <i className="bi bi-circle-fill me-1" style={{ fontSize: '0.5rem' }}></i>
-                        {project.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-secondary border-0" 
-                            type="button" data-bs-toggle="dropdown">
-                      <i className="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul className="dropdown-menu">
-                      <li><a className="dropdown-item" href="#"><i className="bi bi-eye me-2"></i>View Details</a></li>
-                      <li><a className="dropdown-item" href="#"><i className="bi bi-pencil me-2"></i>Edit</a></li>
-                      <li><hr className="dropdown-divider" /></li>
-                      <li><a className="dropdown-item text-danger" href="#"><i className="bi bi-trash me-2"></i>Delete</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card-body pt-2">
-                <p className="text-muted mb-3 line-clamp-3" style={{ fontSize: '0.9rem' }}>
-                  {project.description || 'No description provided'}
-                </p>
-
-                <div className="row g-2 mb-3">
-                  <div className="col-12">
-                    <div className="d-flex align-items-center text-muted mb-2">
-                      <i className="bi bi-calendar-event me-2 text-primary"></i>
-                      <small className="me-2">Deadline:</small>
-                      <small className={deadlineInfo.class}>
-                        {formatDate(project.deadline)}
-                        {deadlineInfo.text !== 'No deadline' && (
-                          <span className="ms-1">({deadlineInfo.text})</span>
-                        )}
-                      </small>
-                    </div>
-                  </div>
-                  
-                  <div className="col-12">
-                    <div className="d-flex align-items-center text-muted mb-2">
-                      <i className="bi bi-person-check me-2 text-success"></i>
-                      <small className="me-2">Assigned to:</small>
-                      <small className="fw-medium text-dark">
-                        {project.assignedTo?.name || 'Unassigned'}
-                      </small>
-                    </div>
-                  </div>
-
-                  <div className="col-12">
-                    <div className="d-flex align-items-center text-muted mb-2">
-                      <i className="bi bi-person-plus me-2 text-info"></i>
-                      <small className="me-2">Created by:</small>
-                      <small className="fw-medium text-dark">
-                        {project.createdBy?.name || 'Unknown'}
-                      </small>
+          <div>
+            <h3 className="mb-4 fw-semibold text-dark">My Projects</h3>
+            <div className="row g-3">
+              {myProjects.map(project => (
+                <div key={project.id} className="col-12">
+                  <div className="card shadow-sm">
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h5 className="card-title">{project.name}</h5>
+                        <div>
+                          <span className={`badge me-2 ${
+                            project.priority === 'High' ? 'bg-danger' : 
+                            project.priority === 'Medium' ? 'bg-warning' : 'bg-info'
+                          }`}>
+                            {project.priority}
+                          </span>
+                          <span className={`badge ${
+                            project.status === 'Active' ? 'bg-primary' : 'bg-success'
+                          }`}>
+                            {project.status}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-muted mb-3">Deadline: {project.deadline}</p>
+                      <div className="mb-2">
+                        <div className="d-flex justify-content-between mb-1">
+                          <small>Progress</small>
+                          <small>{project.progress}%</small>
+                        </div>
+                        <div className="progress">
+                          <div 
+                            className="progress-bar bg-primary"
+                            role="progressbar"
+                            style={{ width: `${project.progress}%` }}
+                            aria-valuenow={project.progress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {project.comment && (
-                  <div className="mb-3">
-                    <div className="bg-light rounded p-2">
-                      <small className="text-muted d-block mb-1">
-                        <i className="bi bi-chat-left-quote me-1"></i>
-                        Comment:
-                      </small>
-                      <small className="text-dark">{project.comment}</small>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="card-footer bg-transparent border-0 pt-0">
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">
-                    <i className="bi bi-clock me-1"></i>
-                    Created {formatDate(project.createdAt)}
-                  </small>
-                  <div className="btn-group" role="group">
-                    <button type="button" className="btn btn-sm btn-outline-primary rounded-pill me-1">
-                      <i className="bi bi-eye me-1"></i>
-                      View
-                    </button>
-                    <button type="button" className="btn btn-sm btn-primary rounded-pill">
-                      <i className="bi bi-play-fill me-1"></i>
-                      Start
-                    </button>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         );
-      })
-    ) : (
-      <div className="col-12">
-        <div className="text-center py-5">
-          <div className="mb-4">
-            <i className="bi bi-kanban display-1 text-muted"></i>
-          </div>
-          <h4 className="text-muted mb-2">No Projects Found</h4>
-          <p className="text-muted mb-4">You don't have any projects assigned yet.</p>
-          <button className="btn btn-primary rounded-pill px-4">
-            <i className="bi bi-plus-circle me-2"></i>
-            Request New Project
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-        );
-
-
-          
-  
       
       case 'updates':
         return (
-      <UpdateForm/>
+             <div className="container mt-4">
+      <h3>Submit Daily Update</h3>
+      <form onSubmit={handleSubmit} className="card p-4 shadow-sm">
+        <div className="mb-3">
+          <label className="form-label">Project Name</label>
+          <input
+            type="text"
+            name="project"
+            className="form-control"
+            value={formData.project}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Status</label>
+          <select
+            name="status"
+            className="form-select"
+            value={formData.status}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select Status</option>
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Update Description</label>
+          <textarea
+            name="update"
+            className="form-control"
+            rows="3"
+            value={formData.update}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Finish By</label>
+          <input
+            type="date"
+            name="finishBy"
+            className="form-control"
+            value={formData.finishBy}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <label>Upload Screenshot:</label>
+<input
+  type="file"
+  accept="image/*"
+  onChange={(e) => setImage(e.target.files[0])}
+/>
+
+
+        <button type="submit" className="btn btn-primary">Submit Update</button>
+        {message && <p className="mt-3 text-success">{message}</p>}
+      </form>
+    </div>
         );
-        
     
       case 'finished':
         return (
@@ -819,7 +533,7 @@ useEffect(() => {
         <div className={`bg-white shadow sidebar ${sidebarOpen ? '' : 'collapsed'}`} style={{ width: sidebarOpen ? '260px' : '80px' }}>
           <div className="p-3 border-bottom">
             <div className="d-flex align-items-center justify-content-between">
-              {sidebarOpen && <h4 className="mb-0 fw-bold">Employee Portal</h4>}
+              {sidebarOpen && <h4 className="mb-0 fw-bold">Business</h4>}
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="btn btn-outline-secondary btn-sm"
@@ -867,9 +581,9 @@ useEffect(() => {
           <h4 className="fw-semibold">
             👋 {greeting}, <span style={{ color: 'rgb(255, 193, 7)' }}>{name}</span>!
           </h4>
-          <h1 className="display-5 fw-bold mt-2">Welcome back to the Employee Dashboard</h1>
+          <h1 className="display-5 fw-bold mt-2">Welcome back to the Business Development Dashboard</h1>
           <p className="lead text-white-50 mt-3">
-            View tasks, log updates, and track your daily progress.
+            Track opportunities,manage client relationships, and drive growth.
           </p>
         </div>
 
@@ -887,10 +601,10 @@ useEffect(() => {
       {/* Stats Cards */}
       <div className="row mt-4 text-center">
         {[
-          { label: 'Today\'s Hours', value: 5 },
-          { label: 'Pending Tasks', value: 2 },
-          { label: 'Completed Tasks', value: 4 },
-          { label: 'Weekly Total', value: 22 },
+          { label: 'Active Opportunities', value: 5 },
+          { label: 'Qualified Leads', value: 2 },
+          { label: 'Proposals Sent', value: 4 },
+          { label: 'Pipeline Value', value: 2 },
         ].map((item, index) => (
           <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
             <div
@@ -989,10 +703,8 @@ useEffect(() => {
           </div>
         </div>
       </div>
-
-    
     </>
   );
 };
 
-export default EmployeeDashboard;
+export default BusinessDevelopmentDashboard;
