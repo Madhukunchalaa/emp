@@ -12,7 +12,10 @@ const {
   getAttendance,
   submitDailyUpdate,
   getDailyUpdates,
-  getTodayUpdate
+  getTodayUpdate,
+  updateTodayWorkingOn,
+  getMyDailyUpdates,
+  updateDailyUpdate
 } = require('../controllers/employeeController');
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
@@ -45,13 +48,14 @@ router.get('/attendance', auth, getAttendance);
 
 // Daily update routes
 router.post('/daily-update', auth, upload.single('image'), submitDailyUpdate);
+router.put('/daily-updates/:updateId', auth, upload.single('image'), updateDailyUpdate);
 
 router.get('/daily-updates', auth, getDailyUpdates);
+router.get('/my-daily-updates', auth, getMyDailyUpdates);
 router.get('/today-update', auth, getTodayUpdate);
 
-
-
-
+// Today's working on route
+router.put('/today-working-on', auth, updateTodayWorkingOn);
 
 router.post('/updates',auth,upload.single('image'),dailyUpdates)
 
