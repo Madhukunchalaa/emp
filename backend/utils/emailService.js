@@ -150,7 +150,7 @@ const sendWelcomeEmail = async (email, userName, userRole) => {
     const mailOptions = {
       from: `"Smart Solutions" <madhkunchala@gmail.com>`,
       to: email,
-      subject: 'Welcome to Smart Solutions! 🎉',
+      subject: 'Welcome to Smart Solutions 🎉',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #3a0ca3, #4361ee); color: white; padding: 40px; text-align: center; border-radius: 15px 15px 0 0;">
