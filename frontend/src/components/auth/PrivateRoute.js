@@ -22,7 +22,7 @@ const PrivateRoute = ({ children }) => {
         break;
       case 'designer':
         if (currentPath !== '/designer-dashboard') {
-          return <Navigate to="/designer-dashboard" replace />;
+          return <Navigate to="/dashboard" replace />;
         }
         break;
       case 'developer':
@@ -32,7 +32,7 @@ const PrivateRoute = ({ children }) => {
         break;
          case 'Business':
         if (currentPath !== '/business-dashboard') {
-          return <Navigate to="/business-dashboard" replace />;
+          return <Navigate to="/dashboard" replace />;
         }
         break;
       default:
