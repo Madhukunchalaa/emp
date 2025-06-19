@@ -830,51 +830,7 @@ const getImageUrl = (url) => {
                     </div>
                   </div>
                 </div>
-{dailyUpdates.length > 0 ? (
-  dailyUpdates.map((dailyUpdate) => (
-    <div className="row mb-3 align-items-center" key={dailyUpdate._id}>
-      <div className="col-md-2 fw-medium text-dark">
-        {dailyUpdate.project_title || "Untitled"}
-      </div>
-
-      <div className="col-md-2">
-        <span className={`badge ${getStatusBadgeColor(dailyUpdate.status)} text-white`}>
-          {dailyUpdate.status}
-        </span>
-      </div>
-
-      <div className="col-md-2 text-muted">
-        <i className="bi bi-calendar me-1"></i>
-        {dailyUpdate.finishBy ? dailyUpdate.finishBy.slice(0, 10) : 'Not set'}
-      </div>
-
-      <div className="col-md-2 text-muted">
-        <i className="bi bi-clock me-1"></i>
-        {new Date(dailyUpdate.createdAt).toLocaleDateString()}
-      </div>
-
-      <div className="col-md-1">
-        <button
-          className="btn btn-outline-primary btn-sm rounded-pill"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewUpdate(dailyUpdate);
-          }}
-          title="View Details"
-        >
-          <i className="bi bi-eye"></i>
-        </button>
-      </div>
-    </div>
-  ))
-) : (
-  <div className="text-center py-5">
-    <i className="bi bi-inbox display-1 text-muted"></i>
-    <h5 className="text-muted mt-3">No updates found</h5>
-    <p className="text-muted">Updates will appear here once employees submit them.</p>
-  </div>
-)}
-
+              ))}
             </div>
           </div>
         );
