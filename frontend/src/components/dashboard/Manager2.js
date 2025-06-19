@@ -18,6 +18,8 @@ import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { managerService } from "../../services/api";
 import { useParams } from "react-router-dom";
+import Chat from '../common/Chat';
+
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -41,6 +43,7 @@ const ManagerDashboard = () => {
   const [calendarDate, setCalendarDate] = useState(null);
   const [datesWithUpdates, setDatesWithUpdates] = useState([]);
   const [updatesForDate, setUpdatesForDate] = useState([]);
+  const [chatEmployee, setChatEmployee] = useState(null);
 
 const { employeeId } = useParams();
 
@@ -499,12 +502,27 @@ const getImageUrl = (url) => {
                               </div>
                             )}
                           </div>
+                          <div className="d-flex justify-content-end mt-2">
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => setChatEmployee(emp)}
+                            >
+                              Chat
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   );
                 })}
             </div>
+            {chatEmployee && user && (
+              <div className="mt-4">
+                <h5>Chat with {chatEmployee.name}</h5>
+                <Chat currentUser={user} otherUser={chatEmployee} />
+                <button className="btn btn-link mt-2" onClick={() => setChatEmployee(null)}>Close Chat</button>
+              </div>
+            )}
           </div>
         );
 
