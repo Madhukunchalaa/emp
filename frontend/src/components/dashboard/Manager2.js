@@ -387,13 +387,23 @@ const getImageUrl = (url) => {
                     </div>
                   </div>
                 </div>
-                <div className="col-md-6 col-lg-3">
+                {/* <div className="col-md-6 col-lg-3">
                   <div className="card border-0 bg-secondary bg-opacity-10 rounded-4">
                     <div className="card-body text-center">
                       <h4 className="text-secondary mb-1">
                         {employees.filter(emp => emp.status !== 'Online' && emp.status !== 'Offline').length}
                       </h4>
                       <p className="text-muted mb-0 small">⚪ Other</p>
+                    </div>
+                  </div>
+                </div> */}
+                 <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-info bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-info mb-1">
+                        {employees.filter(emp => emp.todayWorkingOn && emp.todayWorkingOn.trim() !== '').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">📝 Updated Work</p>
                     </div>
                   </div>
                 </div>
@@ -404,16 +414,6 @@ const getImageUrl = (url) => {
                         {employees.length}
                       </h4>
                       <p className="text-muted mb-0 small">👥 Total</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6 col-lg-3">
-                  <div className="card border-0 bg-info bg-opacity-10 rounded-4">
-                    <div className="card-body text-center">
-                      <h4 className="text-info mb-1">
-                        {employees.filter(emp => emp.todayWorkingOn && emp.todayWorkingOn.trim() !== '').length}
-                      </h4>
-                      <p className="text-muted mb-0 small">📝 Updated Work</p>
                     </div>
                   </div>
                 </div>
