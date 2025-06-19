@@ -13,9 +13,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads', express.static('uploads'));
-
-
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');

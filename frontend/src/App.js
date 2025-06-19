@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import store from './store';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import ForgotPassword from './components/auth/ForgotPassword';
 import Dashboard from './components/dashboard/Employee2';
 import ManagerDashboard from './components/dashboard/Manager2';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
@@ -35,6 +36,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route
               path="/dashboard"
               element={
