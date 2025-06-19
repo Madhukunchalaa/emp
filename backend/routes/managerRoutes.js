@@ -13,7 +13,8 @@ const {
   getAttendanceHistory,
   getEmployeeAttendance,
   getEmployeeDailyUpdates,
-  getEmployeeUpdateSummary
+  getEmployeeUpdateSummary,
+  approveRejectUpdate
 } = require('../controllers/managerController');
 
 // Profile routes
@@ -36,6 +37,7 @@ router.get('/employees/:employeeId/attendance', auth, getEmployeeAttendance);
 // Daily update routes
 router.get('/employee-updates', auth, getEmployeeDailyUpdates);
 router.get('/employee-update-summary', auth, getEmployeeUpdateSummary);
-router.get('/all-updates',auth,getAllEmployeeUpdates)
+router.get('/all-updates',auth,getAllEmployeeUpdates);
+router.put('/updates/:updateId/approve-reject', auth, approveRejectUpdate);
 
 module.exports = router; 

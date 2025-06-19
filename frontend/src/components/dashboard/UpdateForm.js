@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { employeeService } from '../../services/api';
 
-const UpdateForm = () => {
+const UpdateForm = ({ onUpdateSubmitted }) => {
   const [formData, setFormData] = useState({
     project_title: '',
     status: '',
@@ -38,7 +38,12 @@ const UpdateForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Find the selected project to get its ID
+    const selectedProject = projects.find(p => p.title === formData.project_title);
+    
     const data = new FormData();
+    data.append('project', selectedProject?._id || ''); // Add project ID
     data.append('project_title', formData.project_title);
     data.append('status', formData.status);
     data.append('update', formData.update);
@@ -46,20 +51,19 @@ const UpdateForm = () => {
     if (image) data.append('image', image);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/employee/updates', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      setMessage(res.data.msg || '✅ Update submitted successfully!');
+      // Use the employeeService method which handles the headers correctly
+      const res = await employeeService.addDailyUpdate(data);
+      setMessage('✅ Update submitted successfully!');
       setFormData({ project_title: '', status: '', update: '', finishBy: '' });
       setImage(null);
+      
+      // Call the callback to refresh the updates list
+      if (onUpdateSubmitted) {
+        onUpdateSubmitted();
+      }
     } catch (error) {
       console.error('Form error:', error.response?.data || error.message);
-      setMessage('❌ Failed to submit update');
+      setMessage('❌ Failed to submit update: ' + (error.response?.data?.message || error.message));
     }
   };
 
