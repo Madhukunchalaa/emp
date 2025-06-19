@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+=======
+const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
+>>>>>>> 966e2bbd58fa683d08651de65cd9959f6b70276f
 
 // Create axios instance with default config
 const api = axios.create({
@@ -77,7 +81,51 @@ export const authService = {
       return response;
     } catch (error) {
       console.error('Register API error:', error);
-      throw error;
+      throw error.response?.data || error;
+    }
+  },
+
+  // Forgot password - Send OTP
+  forgotPassword: async (email) => {
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response;
+    } catch (error) {
+      console.error('Forgot password API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Verify OTP
+  verifyOTP: async (email, otp) => {
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp });
+      return response;
+    } catch (error) {
+      console.error('Verify OTP API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Verify registration OTP
+  verifyRegistrationOTP: async (email, otp) => {
+    try {
+      const response = await api.post('/auth/verify-registration-otp', { email, otp });
+      return response;
+    } catch (error) {
+      console.error('Verify registration OTP API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Reset password
+  resetPassword: async (email, newPassword) => {
+    try {
+      const response = await api.post('/auth/reset-password', { email, newPassword });
+      return response;
+    } catch (error) {
+      console.error('Reset password API error:', error);
+      throw error.response?.data || error;
     }
   },
 
@@ -187,17 +235,13 @@ export const employeeService = {
   },
 
   addDailyUpdate: (updateData) => {
-  if (!authService.isAuthenticated()) {
-    return Promise.reject(new Error('No auth token'));
-  }
-  
-  // For FormData, don't set Content-Type header - let axios handle it
-  return api.post('/employee/updates', updateData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
     }
-  });
-},
+    
+    // For FormData, don't set Content-Type header - let axios handle it automatically
+    return api.post('/employee/daily-update', updateData);
+  },
 
   updateDailyUpdate: (updateId, updateData) => {
     if (!authService.isAuthenticated()) {
@@ -211,6 +255,20 @@ export const employeeService = {
       return Promise.reject(new Error('No auth token'));
     }
     return api.delete(`/employee/daily-updates/${updateId}`);
+  },
+
+  updateTodayWorkingOn: (todayWorkingOn) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.put('/employee/today-working-on', { todayWorkingOn });
+  },
+
+  getMyDailyUpdates: (page = 1, limit = 10) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.get(`/employee/my-daily-updates?page=${page}&limit=${limit}`);
   }
 };
 
@@ -261,11 +319,12 @@ export const managerService = {
   },
 
   updateProjectStatus: ({ projectId, status }) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.patch(`/manager/projects/${projectId}/status`, { status });
-  },
+  if (!authService.isAuthenticated()) {
+    return Promise.reject(new Error('No auth token'));
+  }
+   return api.put(`/manager/projects/${projectId}/status`, { status });
+},
+
 
   getAttendanceHistory: async (employeeId) => {
     if (!authService.isAuthenticated()) {
@@ -313,6 +372,13 @@ export const managerService = {
       return Promise.reject(new Error('No auth token'));
     }
     return api.get(`/manager/employees/${employeeId}`);
+  },
+
+  approveRejectUpdate: (updateId, action, feedback) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.put(`/manager/updates/${updateId}/approve-reject`, { action, feedback });
   },
 
   updateEmployee: (employeeId, updateData) => {

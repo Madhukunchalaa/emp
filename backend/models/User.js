@@ -19,13 +19,20 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   status: {
-  type: String,
-  enum: ['Online', 'Offline'],
-  default: 'Offline'
-},
-
+    type: String,
+    enum: ['Online', 'Offline'],
+    default: 'Offline'
+  },
+  todayWorkingOn: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  empid: {
+    type: String,
+  },
   employeeID: { type: String, unique: true, sparse: true },
-  role: { type: String, enum: ['developer', 'manager','designer','Business'], required: true },
+  role: { type: String, enum: ['developer', 'manager', 'designer', 'Business'], required: true },
   department: { type: String, default: '' },
   position: { type: String, default: '' },
   createdAt: {
