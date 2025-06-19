@@ -4,9 +4,13 @@ import { authService } from '../../services/api';
 // Async thunks
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData) => {
-    const response = await authService.register(userData);
-    return response.data;
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await authService.register(userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Registration failed');
+    }
   }
 );
 
@@ -63,12 +67,12 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
+        // Don't set authentication state since user is not created yet
+        // Just store the message for display
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       // Login
       .addCase(login.pending, (state) => {

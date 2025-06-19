@@ -24,6 +24,26 @@ const EmployeeDashboard = () => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [message,setMessage]=useState()
   const [projects, setProjects] = useState([]);
+  const [taskMessage,setTaskMessage]=useState()
+  const [todayWorkingOn, setTodayWorkingOn] = useState('');
+  const [todayWorkingOnMessage, setTodayWorkingOnMessage] = useState('');
+  const [dailyUpdates, setDailyUpdates] = useState([]);
+  const [dailyUpdatesLoading, setDailyUpdatesLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  // Edit functionality states
+  const [editingUpdate, setEditingUpdate] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    project: '',
+    status: '',
+    update: '',
+    finishBy: '',
+    project_title: ''
+  });
+  const [editImage, setEditImage] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const [formData,setFormData]=useState({
     project:'',
@@ -55,6 +75,20 @@ const getStatusBadgeStyle = (status) => {
       return 'bg-danger';
     default:
       return 'bg-info';
+  }
+};
+
+// Helper function to get approval status badge styling
+const getApprovalStatusBadgeStyle = (status) => {
+  switch (status) {
+    case 'Approved':
+      return 'bg-success';
+    case 'Rejected':
+      return 'bg-danger';
+    case 'Pending':
+      return 'bg-warning text-dark';
+    default:
+      return 'bg-secondary';
   }
 };
 
@@ -290,6 +324,11 @@ useEffect(() => {
   getProject();
 }, []);
 
+// Fetch daily updates when component mounts
+useEffect(() => {
+  fetchDailyUpdates();
+}, []);
+
 
 
 
@@ -404,6 +443,53 @@ useEffect(() => {
                         Punch Out
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Working On Section */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <div className="card shadow-sm">
+                  <div className="card-header bg-primary bg-opacity-10">
+                    <h5 className="mb-0 text-primary">
+                      <i className="bi bi-pencil-square me-2"></i>
+                      Today's Working On
+                    </h5>
+                  </div>
+                  <div className="card-body">
+                    <form onSubmit={handleTodayWorkingOnSubmit}>
+                      <div className="row">
+                        <div className="col-md-8">
+                          <div className="form-group">
+                            <label htmlFor="todayWorkingOn" className="form-label fw-semibold">
+                              What are you working on today?
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="todayWorkingOn"
+                              value={todayWorkingOn}
+                              onChange={(e) => setTodayWorkingOn(e.target.value)}
+                              placeholder="e.g., Working on user authentication feature, Bug fixes for dashboard, etc."
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4 d-flex align-items-end">
+                          <button type="submit" className="btn btn-primary w-100">
+                            <i className="bi bi-check-circle me-2"></i>
+                            Update
+                          </button>
+                        </div>
+                      </div>
+                      {todayWorkingOnMessage && (
+                        <div className={`alert ${todayWorkingOnMessage.includes('successfully') ? 'alert-success' : 'alert-danger'} mt-3`}>
+                          {todayWorkingOnMessage}
+                        </div>
+                      )}
+                    </form>
                   </div>
                 </div>
               </div>
@@ -624,7 +710,242 @@ useEffect(() => {
       
       case 'updates':
         return (
-      <UpdateForm/>
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h3 className="fw-semibold text-dark mb-1">Daily Updates</h3>
+                <p className="text-muted mb-0">Track your submitted updates and approval status</p>
+              </div>
+              <div className="d-flex gap-2">
+                <button 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => fetchDailyUpdates()}
+                  disabled={dailyUpdatesLoading}
+                >
+                  <i className="bi bi-arrow-clockwise me-1"></i>
+                  {dailyUpdatesLoading ? 'Loading...' : 'Refresh'}
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setActiveSection('submit-update')}
+                >
+                  <i className="bi bi-plus-circle me-2"></i>
+                  Submit New Update
+                </button>
+              </div>
+            </div>
+
+            {dailyUpdatesLoading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2 text-muted">Loading your updates...</p>
+              </div>
+            ) : dailyUpdates.length > 0 ? (
+              <div className="row g-4">
+                {dailyUpdates.map((update) => (
+                  <div key={update._id} className="col-12">
+                    <div className="card shadow-sm border-0">
+                      <div className="card-header bg-transparent border-0 pb-0">
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 className="card-title fw-bold text-dark mb-1">
+                              {update.project_title || 'General Update'}
+                            </h6>
+                            <p className="text-muted mb-0 small">
+                              <i className="bi bi-calendar-event me-1"></i>
+                              {formatDate(update.date)}
+                            </p>
+                          </div>
+                          <div className="d-flex gap-2">
+                            <span className={`badge ${getStatusBadgeStyle(update.status)} rounded-pill`}>
+                              {update.status}
+                            </span>
+                            <span className={`badge ${getApprovalStatusBadgeStyle(update.approvalStatus)} rounded-pill`}>
+                              {update.approvalStatus || 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="card-body pt-2">
+                        <div className="row">
+                          <div className="col-md-8">
+                            <div className="mb-3">
+                              <h6 className="fw-semibold text-dark mb-2">Update Details:</h6>
+                              <p className="text-muted mb-0">{update.update}</p>
+                            </div>
+                            
+                            {update.finishBy && (
+                              <div className="mb-3">
+                                <h6 className="fw-semibold text-dark mb-2">Finish By:</h6>
+                                <p className="text-muted mb-0">{formatDate(update.finishBy)}</p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="col-md-4">
+                            <div className="bg-light rounded p-3">
+                              <h6 className="fw-semibold text-dark mb-2">Approval Status</h6>
+                              <div className="mb-2">
+                                <span className={`badge ${getApprovalStatusBadgeStyle(update.approvalStatus)} w-100`}>
+                                  {update.approvalStatus || 'Pending'}
+                                </span>
+                              </div>
+                              
+                              {update.approvedBy && (
+                                <div className="mb-2">
+                                  <small className="text-muted d-block">Approved by:</small>
+                                  <small className="fw-medium text-dark">{update.approvedBy.name}</small>
+                                </div>
+                              )}
+                              
+                              {update.approvedAt && (
+                                <div className="mb-2">
+                                  <small className="text-muted d-block">Approved on:</small>
+                                  <small className="fw-medium text-dark">{formatDate(update.approvedAt)}</small>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {update.managerFeedback && (
+                          <div className="mt-3 p-3 bg-light rounded">
+                            <h6 className="fw-semibold text-dark mb-2">
+                              <i className="bi bi-chat-left-quote me-2 text-primary"></i>
+                              Manager Feedback:
+                            </h6>
+                            <p className="text-muted mb-0">{update.managerFeedback}</p>
+                          </div>
+                        )}
+                        
+                        {update.imageUrl && (
+                          <div className="mt-3">
+                            <h6 className="fw-semibold text-dark mb-2">Attached Image:</h6>
+                            <img 
+                              src={update.imageUrl} 
+                              alt="Update attachment" 
+                              className="img-fluid rounded"
+                              style={{ maxHeight: '200px' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="card-footer bg-transparent border-0 pt-0">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted">
+                            <i className="bi bi-clock me-1"></i>
+                            Submitted {formatTime(update.createdAt)}
+                          </small>
+                          <div className="btn-group" role="group">
+                            <button 
+                              type="button" 
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleEditClick(update)}
+                            >
+                              <i className="bi bi-pencil me-1"></i>
+                              Edit
+                            </button>
+                            <button 
+                              type="button" 
+                              className="btn btn-sm btn-outline-info"
+                              onClick={() => {
+                                // Handle view details functionality
+                              }}
+                            >
+                              <i className="bi bi-eye me-1"></i>
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="col-12">
+                    <nav aria-label="Daily updates pagination">
+                      <ul className="pagination justify-content-center">
+                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                          <button 
+                            className="page-link" 
+                            onClick={() => fetchDailyUpdates(currentPage - 1)}
+                            disabled={currentPage === 1}
+                          >
+                            Previous
+                          </button>
+                        </li>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                            <button 
+                              className="page-link" 
+                              onClick={() => fetchDailyUpdates(page)}
+                            >
+                              {page}
+                            </button>
+                          </li>
+                        ))}
+                        
+                        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                          <button 
+                            className="page-link" 
+                            onClick={() => fetchDailyUpdates(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                          >
+                            Next
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-5">
+                <div className="mb-4">
+                  <i className="bi bi-file-text display-1 text-muted"></i>
+                </div>
+                <h4 className="text-muted mb-2">No Updates Found</h4>
+                <p className="text-muted mb-4">You haven't submitted any daily updates yet.</p>
+                <button 
+                  className="btn btn-primary rounded-pill px-4"
+                  onClick={() => setActiveSection('submit-update')}
+                >
+                  <i className="bi bi-plus-circle me-2"></i>
+                  Submit Your First Update
+                </button>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'submit-update':
+        return (
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h3 className="fw-semibold text-dark mb-1">Submit Daily Update</h3>
+                <p className="text-muted mb-0">Submit your daily work progress and updates</p>
+              </div>
+              <button 
+                className="btn btn-outline-secondary"
+                onClick={() => setActiveSection('updates')}
+              >
+                <i className="bi bi-arrow-left me-2"></i>
+                Back to Updates
+              </button>
+            </div>
+            <UpdateForm onUpdateSubmitted={() => {
+              fetchDailyUpdates();
+              setActiveSection('updates');
+            }} />
+          </div>
         );
         
     
@@ -762,6 +1083,139 @@ useEffect(() => {
       default:
         return <div className="text-center text-muted">Select a section from the sidebar</div>;
     }
+  };
+
+  const handleTodayWorkingOnSubmit = async (e) => {
+    e.preventDefault();
+    if (!todayWorkingOn.trim()) {
+      setTodayWorkingOnMessage('Please enter what you are working on today');
+      return;
+    }
+
+    try {
+      const response = await employeeService.updateTodayWorkingOn(todayWorkingOn);
+      setTodayWorkingOnMessage('Today\'s work updated successfully!');
+      setTodayWorkingOn('');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setTodayWorkingOnMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to update today\'s work:', err);
+      setTodayWorkingOnMessage(err.response?.data?.message || 'Failed to update. Please try again.');
+      
+      // Clear error message after 3 seconds
+      setTimeout(() => setTodayWorkingOnMessage(''), 3000);
+    }
+  };
+
+  const fetchDailyUpdates = async (page = 1) => {
+    setDailyUpdatesLoading(true);
+    try {
+      const response = await employeeService.getMyDailyUpdates(page, 10);
+      setDailyUpdates(response.data.updates);
+      setCurrentPage(response.data.currentPage);
+      setTotalPages(response.data.totalPages);
+    } catch (err) {
+      console.error('Failed to fetch daily updates:', err);
+    } finally {
+      setDailyUpdatesLoading(false);
+    }
+  };
+
+  // Edit functionality handlers
+  const handleEditClick = (update) => {
+    setEditingUpdate(update);
+    setEditFormData({
+      project: update.project?._id || update.project || '', // Handle both ObjectId and string
+      status: update.status || '',
+      update: update.update || '',
+      finishBy: update.finishBy ? new Date(update.finishBy).toISOString().split('T')[0] : '',
+      project_title: update.project_title || update.project?.title || '' // Use project title or project object title
+    });
+    setEditImage(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "project_title") {
+      const selectedProject = projects.find((p) => p.title === value);
+      setEditFormData(prev => ({
+        ...prev,
+        project_title: value,
+        project: selectedProject?._id || "", // Store _id secretly for backend
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleEditImageChange = (e) => {
+    if (e.target.files[0]) {
+      setEditImage(e.target.files[0]);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    
+    try {
+      const formData = new FormData();
+      // Don't send project field if it's not a valid ObjectId
+      if (editFormData.project && editFormData.project.trim() !== '') {
+        formData.append('project', editFormData.project);
+      }
+      formData.append('status', editFormData.status);
+      formData.append('update', editFormData.update);
+      formData.append('finishBy', editFormData.finishBy);
+      formData.append('project_title', editFormData.project_title);
+      
+      if (editImage) {
+        formData.append('image', editImage);
+      }
+
+      await employeeService.updateDailyUpdate(editingUpdate._id, formData);
+      
+      // Refresh the updates list
+      await fetchDailyUpdates(currentPage);
+      
+      // Close modal and reset state
+      setShowEditModal(false);
+      setEditingUpdate(null);
+      setEditFormData({
+        project: '',
+        status: '',
+        update: '',
+        finishBy: '',
+        project_title: ''
+      });
+      setEditImage(null);
+      
+      alert('Update edited successfully!');
+    } catch (error) {
+      console.error('Error editing update:', error);
+      alert(error.message || 'Failed to edit update');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditingUpdate(null);
+    setEditFormData({
+      project: '',
+      status: '',
+      update: '',
+      finishBy: '',
+      project_title: ''
+    });
+    setEditImage(null);
   };
 
   if (!isLoggedIn) {
@@ -989,6 +1443,170 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Edit Update Modal */}
+      {showEditModal && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="bi bi-pencil-square me-2 text-primary"></i>
+                  Edit Daily Update
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={handleCloseEditModal}
+                ></button>
+              </div>
+              <form onSubmit={handleEditSubmit}>
+                <div className="modal-body">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="editProject" className="form-label fw-semibold">
+                          Project
+                        </label>
+                        <select
+                          className="form-select"
+                          id="editProject"
+                          name="project_title"
+                          value={editFormData.project_title}
+                          onChange={handleEditFormChange}
+                        >
+                          <option value="">Select a project</option>
+                          {projects.map((project) => (
+                            <option key={project._id} value={project.title}>
+                              {project.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="editStatus" className="form-label fw-semibold">
+                          Status
+                        </label>
+                        <select
+                          className="form-select"
+                          id="editStatus"
+                          name="status"
+                          value={editFormData.status}
+                          onChange={handleEditFormChange}
+                        >
+                          <option value="">Select status</option>
+                          <option value="Not Started">Not Started</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="On Hold">On Hold</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="editUpdate" className="form-label fw-semibold">
+                      Update Details
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="editUpdate"
+                      name="update"
+                      rows="4"
+                      value={editFormData.update}
+                      onChange={handleEditFormChange}
+                      placeholder="Describe what you worked on today..."
+                      required
+                    ></textarea>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="editFinishBy" className="form-label fw-semibold">
+                          Finish By
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          id="editFinishBy"
+                          name="finishBy"
+                          value={editFormData.finishBy}
+                          onChange={handleEditFormChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="editImage" className="form-label fw-semibold">
+                          Attach Image (Optional)
+                        </label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          id="editImage"
+                          accept="image/*"
+                          onChange={handleEditImageChange}
+                        />
+                        <small className="text-muted">
+                          Leave empty to keep existing image
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {editingUpdate?.imageUrl && (
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Current Image:</label>
+                      <div>
+                        <img 
+                          src={editingUpdate.imageUrl} 
+                          alt="Current attachment" 
+                          className="img-fluid rounded"
+                          style={{ maxHeight: '150px' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={handleCloseEditModal}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={editLoading}
+                  >
+                    {editLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle me-2"></i>
+                        Update
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal Backdrop */}
+      {showEditModal && (
+        <div className="modal-backdrop fade show"></div>
+      )}
 
     
     </>

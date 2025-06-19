@@ -18,7 +18,7 @@ const dailyUpdateSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Not Started', 'In Progress', 'Completed'],
+    enum: ['Not Started', 'In Progress', 'Completed', 'On Hold'],
   },
   imageUrl: { type: String },
   update: {
@@ -27,6 +27,22 @@ const dailyUpdateSchema = new mongoose.Schema({
   finishBy: {
     type: Date,
   },
+  approvalStatus: {
+    type: String,
+    enum: ['Pending', 'Approved', 'Rejected'],
+    default: 'Pending'
+  },
+  managerFeedback: {
+    type: String,
+    default: ''
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  approvedAt: {
+    type: Date
+  }
 }, {
   timestamps: true
 });
