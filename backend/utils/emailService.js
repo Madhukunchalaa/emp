@@ -150,7 +150,7 @@ const sendWelcomeEmail = async (email, userName, userRole) => {
     const mailOptions = {
       from: `"Smart Solutions" <madhkunchala@gmail.com>`,
       to: email,
-      subject: 'Welcome to Employee Management System! 🎉',
+      subject: 'Welcome to Smart Solutions 🎉',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #3a0ca3, #4361ee); color: white; padding: 40px; text-align: center; border-radius: 15px 15px 0 0;">
@@ -162,7 +162,7 @@ const sendWelcomeEmail = async (email, userName, userRole) => {
             <h2 style="color: #333; margin-bottom: 25px; text-align: center;">Hello ${userName}! 👋</h2>
             
             <p style="color: #666; line-height: 1.8; margin-bottom: 25px; font-size: 16px; text-align: center;">
-              Welcome to our Employee Management System! We're excited to have you on board as a <strong>${userRole}</strong>.
+              Welcome to our Smart solutions We're excited to have you on board as a <strong>${userRole}</strong>.
             </p>
             
             <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 4px solid #2196f3; padding: 20px; border-radius: 8px; margin: 25px 0;">
