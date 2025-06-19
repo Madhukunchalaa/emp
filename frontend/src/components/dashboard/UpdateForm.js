@@ -54,16 +54,17 @@ const UpdateForm = ({ onUpdateSubmitted }) => {
       // Use the employeeService method which handles the headers correctly
       const res = await employeeService.addDailyUpdate(data);
       setMessage('✅ Update submitted successfully!');
-      setFormData({ project_title: '', status: '', update: '', finishBy: '' });
-      setImage(null);
-      
-      // Call the callback to refresh the updates list
-      if (onUpdateSubmitted) {
-        onUpdateSubmitted();
-      }
     } catch (error) {
-      console.error('Form error:', error.response?.data || error.message);
-      setMessage('❌ Failed to submit update: ' + (error.response?.data?.message || error.message));
+      console.error('Error submitting update:', error);
+      setMessage('❌ Failed to submit update. Please try again.');
+    }
+
+    setFormData({ project_title: '', status: '', update: '', finishBy: '' });
+    setImage(null);
+    
+    // Call the callback to refresh the updates list
+    if (onUpdateSubmitted) {
+      onUpdateSubmitted();
     }
   };
 
