@@ -1,19 +1,20 @@
 const User = require('../models/User');
+const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { generateOTP, sendOTPEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail } = require('../utils/emailService');
 
 // Use a default secret if JWT_SECRET is not set
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Register a new user
+// Register with OTP verification
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
-
+    const { name, email, password, role, empid } = req.body;
     console.log('Registration attempt for:', { name, email, role });
 
     // Validate role
-    const validRoles = ['developer', 'designer', 'manager','Business'];
+    const validRoles = ['developer', 'designer', 'manager', 'Business'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: 'Invalid role specified' });
     }
@@ -24,53 +25,74 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create new user (password will be hashed by the model's pre-save hook)
-    user = new User({
-      name,
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Delete any existing registration OTP for this email
+    await OTP.deleteMany({ email, type: 'email_verification' });
+
+    // Save registration details and OTP in OTP collection
+    const otpRecord = new OTP({
       email,
-      password,
-      role
+      otp,
+      type: 'email_verification',
+      // Store registration details in a subfield
+      registrationData: { name, password, role, empid }
     });
+    otpRecord.markModified && otpRecord.markModified('registrationData');
+    await otpRecord.save();
 
-    // Save user
-    await user.save();
-    console.log('User saved successfully:', { 
-      id: user.id, 
-      email: user.email, 
-      role: user.role
-    });
+    // Send OTP email
+    const emailSent = await sendOTPEmail(email, otp, name);
+    if (!emailSent) {
+      return res.status(500).json({ message: 'Failed to send OTP email' });
+    }
 
-    // Create JWT token
-    const payload = {
-      user: {
-        id: user.id,
-        role: user.role
-      }
-    };
-
-    jwt.sign(
-      payload,
-      JWT_SECRET,
-      { expiresIn: '24h' },
-      (err, token) => {
-        if (err) {
-          console.error('Error creating JWT token:', err);
-          return res.status(500).json({ message: 'Error creating authentication token' });
-        }
-        res.json({
-          token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }
-        });
-      }
-    );
+    res.json({ message: 'OTP sent to your email. Please verify to complete registration.', email });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+// Verify registration OTP and create user
+exports.verifyRegistrationOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+    // Find the OTP record
+    const otpRecord = await OTP.findOne({
+      email,
+      otp,
+      type: 'email_verification',
+      isUsed: false
+    });
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+    if (!otpRecord.isValid()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+    // Check if user already exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    // Create new user from registrationData
+    const { name, password, role, empid } = otpRecord.registrationData;
+    user = new User({ name, email, password, role, empid });
+    await user.save();
+    await otpRecord.markAsUsed();
+    
+    // Send welcome email
+    await sendWelcomeEmail(email, name, role);
+    
+    res.json({ message: 'Registration successful! You can now login.' });
+  } catch (err) {
+    console.error('Verify registration OTP error:', err);
+    res.status(500).json({ message: 'Server error during OTP verification' });
   }
 };
 
@@ -138,6 +160,123 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+// Forgot password - Send OTP
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found with this email' });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Delete any existing OTP for this email
+    await OTP.deleteMany({ email, type: 'password_reset' });
+
+    // Save new OTP
+    const otpRecord = new OTP({
+      email,
+      otp,
+      type: 'password_reset'
+    });
+    await otpRecord.save();
+
+    // Send OTP email
+    const emailSent = await sendOTPEmail(email, otp, user.name);
+    
+    if (!emailSent) {
+      return res.status(500).json({ message: 'Failed to send OTP email' });
+    }
+
+    res.json({ 
+      message: 'OTP sent successfully to your email',
+      email: email // Return email for frontend use
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error during forgot password process' });
+  }
+};
+
+// Verify OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    // Find the OTP record
+    const otpRecord = await OTP.findOne({ 
+      email, 
+      otp, 
+      type: 'password_reset',
+      isUsed: false 
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // Check if OTP is expired
+    if (!otpRecord.isValid()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+
+    // Mark OTP as used
+    await otpRecord.markAsUsed();
+
+    res.json({ 
+      message: 'OTP verified successfully',
+      email: email
+    });
+
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ message: 'Server error during OTP verification' });
+  }
+};
+
+// Reset password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Assign plain new password (let pre-save hook hash it)
+    user.password = newPassword;
+    await user.save();
+
+    // Send success email
+    await sendPasswordResetSuccessEmail(email, user.name);
+
+    res.json({ message: 'Password reset successfully' });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error during password reset' });
   }
 };
 

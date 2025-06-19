@@ -9,6 +9,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 import { useNavigate, Link } from "react-router-dom";
 
@@ -35,6 +37,10 @@ const ManagerDashboard = () => {
   const[projectDeadline,setProjectDeadline]=useState()
   const [employeeToAssign,setEmployeeToAssign]=useState()
   const [taskMessage,setTaskMessage]=useState()
+  const [projectId,setProjectId]=useState()
+  const [calendarDate, setCalendarDate] = useState(null);
+  const [datesWithUpdates, setDatesWithUpdates] = useState([]);
+  const [updatesForDate, setUpdatesForDate] = useState([]);
 
 const { employeeId } = useParams();
 
@@ -73,6 +79,11 @@ useEffect(() => {
     try {
       const response = await managerService.getEmployeeDailyUpdates();
       setUpdates(response.data.updates); // Make sure to access the actual array
+      // Extract unique dates (YYYY-MM-DD)
+      const uniqueDates = [...new Set(response.data.updates.map(update => new Date(update.date).toISOString().split('T')[0]))];
+      setDatesWithUpdates(uniqueDates);
+      // Optionally, set the calendar to the most recent date with updates
+      if (uniqueDates.length > 0) setCalendarDate(uniqueDates[0]);
       console.log('Fetched updates:', response.data.updates);
     } catch (error) {
       console.error(
@@ -85,6 +96,17 @@ useEffect(() => {
   fetchDailyUpdates();
 }, []);
 
+// When calendarDate or updates change, filter updates for that date
+useEffect(() => {
+  if (!calendarDate || !updates) {
+    setUpdatesForDate([]);
+    return;
+  }
+  const selected = new Date(calendarDate).toISOString().split('T')[0];
+  const filtered = updates.filter(update => new Date(update.date).toISOString().split('T')[0] === selected);
+  setUpdatesForDate(filtered);
+}, [calendarDate, updates]);
+
 
 
 
@@ -95,6 +117,7 @@ useEffect(() => {
         const response = await managerService.getProfile();
         setManager(response.data.name);
         setEmail(response.data.email);
+      
        
        
       } catch {}
@@ -117,6 +140,20 @@ useEffect(() => {
     emp();
   }, []);
 
+  // Add real-time updates for employee status
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await managerService.getEmployees();
+        setEmployees(response.data);
+      } catch (error) {
+        console.log("Error fetching employees:", error);
+      }
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   // getting projects
   useEffect(() => {
@@ -124,7 +161,9 @@ useEffect(() => {
       try {
         const response = await managerService.getProjects();
         setProjects(response.data);
-        console.log(response.data)
+          setProjectId(response.data[0]._id)
+          console.log('project id',response.data[0]._id)
+     
       } catch (error) {
         console.log("Error fetching projects:", error);
       }
@@ -134,14 +173,13 @@ useEffect(() => {
   }, []);
 
   //employee attendence details
-  
-   const handleEmployeeChange = async (e) => {
+    const handleEmployeeChange = async (e) => {
     const employeeId = e.target.value;
     setSelectedEmployeeId(employeeId);
     try {
       const res = managerService.getAttendanceHistory();
       setAttendanceHistory(res.data);
-    } catch (err) {
+    } catch {
       console.log("failed to fetch the employee attendence history");
     }
   };
@@ -154,9 +192,8 @@ useEffect(() => {
       setAttendanceHistory(res.data); // assuming array
       
     } catch (err) {
-      console.log("Error fetching attendance:", err);
-    } finally {
-    }
+      console.log("Error fetching attendance:");
+    } 
   };
 
 
@@ -171,10 +208,6 @@ useEffect(() => {
     { id: "updates", label: "Daily Updates", icon: FileText },
     { id: "designs", label: "Designs", icon: Palette },
   ];
-
-
-
-
 
 //getting  status of employee
 const [selectedUpdate, setSelectedUpdate] = useState(null);
@@ -206,29 +239,21 @@ const handleAction = async (action) => {
   }
 
   try {
-    // Replace with your actual API endpoint
-    const response = await fetch(`/api/updates/${selectedUpdate._id}/${action}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        feedback: feedback.trim(),
-        reviewedAt: new Date().toISOString(),
-      }),
-    });
-
-    if (response.ok) {
-      alert(`Task ${action}d successfully!`);
+    const response = await managerService.approveRejectUpdate(selectedUpdate._id, action, feedback.trim());
+    
+    if (response.data) {
+      alert(`Update ${action}d successfully!`);
       handleCloseModal();
-      // Refresh the updates list or update state as needed
-      // window.location.reload(); // or call a refresh function
+      
+      // Refresh the updates list
+      const refreshResponse = await managerService.getEmployeeDailyUpdates();
+      setUpdates(refreshResponse.data.updates);
     } else {
-      alert(`Failed to ${action} task. Please try again.`);
+      alert(`Failed to ${action} update. Please try again.`);
     }
   } catch (error) {
-    console.error(`Error ${action}ing task:`, error);
-    alert(`Error ${action}ing task. Please try again.`);
+    console.error(`Error ${action}ing update:`, error);
+    alert(`Error ${action}ing update: ${error.response?.data?.message || error.message}`);
   }
 };
 
@@ -249,8 +274,33 @@ const getStatusBadgeColor = (status) => {
   }
 };
 
+// Helper function to get approval status badge style
+const getApprovalStatusBadgeStyle = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'approved':
+      return 'bg-success';
+    case 'rejected':
+      return 'bg-danger';
+    case 'pending':
+      return 'bg-secondary';
+    default:
+      return 'bg-primary';
+  }
+};
 
-
+//update projects
+const handleStatusUpdate = async (projectId, status) => {
+  try {
+    const res = await managerService.updateProjectStatus({ projectId, status });
+    console.log(`✅ ${status} success:`, res.data);
+    alert(`${status}  successfully`);
+  } catch (err) {
+    console.error(`❌ ${status} failed:`, err);
+    const msg =
+      err?.response?.data?.message || err?.message || 'Unknown error';
+    alert(`${status} failed: ${msg}`);
+  }
+};
 //assign task to the employee
 
 const handleTaskSubmit = async (e) => {
@@ -282,20 +332,11 @@ const handleTaskSubmit = async (e) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
+// Helper to get the correct image URL
+const getImageUrl = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `http://localhost:5000${url}`;
+};
 
   //random colors for employee profile cards
   const renderContent = () => {
@@ -322,6 +363,63 @@ const handleTaskSubmit = async (e) => {
         return (
           <div>
             <h3 className="mb-4 fw-semibold text-dark">Employee List</h3>
+            
+            {/* Employee Status Summary */}
+            {Array.isArray(employees) && (
+              <div className="row mb-4">
+                <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-success bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-success mb-1">
+                        {employees.filter(emp => emp.status === 'Online').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">🟢 Online</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-danger bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-danger mb-1">
+                        {employees.filter(emp => emp.status === 'Offline').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">🔴 Offline</p>
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-secondary bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-secondary mb-1">
+                        {employees.filter(emp => emp.status !== 'Online' && emp.status !== 'Offline').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">⚪ Other</p>
+                    </div>
+                  </div>
+                </div> */}
+                 <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-info bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-info mb-1">
+                        {employees.filter(emp => emp.todayWorkingOn && emp.todayWorkingOn.trim() !== '').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">📝 Updated Work</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-primary bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-primary mb-1">
+                        {employees.length}
+                      </h4>
+                      <p className="text-muted mb-0 small">👥 Total</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="row g-4">
               {Array.isArray(employees) &&
                 employees.map((emp) => {
@@ -335,18 +433,34 @@ const handleTaskSubmit = async (e) => {
                         <div className="card-body p-4">
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <div className="d-flex align-items-center gap-3">
-                              <div
-                                className="avatar text-white rounded-circle d-flex align-items-center justify-content-center"
-                                style={{
-                                  width: "50px",
-                                  height: "50px",
-                                  fontSize: "20px",
-                                  backgroundColor: `#${Math.floor(
-                                    Math.random() * 16777215
-                                  ).toString(16)}`,
-                                }}
-                              >
-                                {emp.name?.charAt(0).toUpperCase()}
+                              <div className="position-relative">
+                                <div
+                                  className="avatar text-white rounded-circle d-flex align-items-center justify-content-center"
+                                  style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    fontSize: "20px",
+                                    backgroundColor: `#${Math.floor(
+                                      Math.random() * 16777215
+                                    ).toString(16)}`,
+                                  }}
+                                >
+                                  {emp.name?.charAt(0).toUpperCase()}
+                                </div>
+                                {/* Status indicator dot */}
+                                <div
+                                  className="position-absolute"
+                                  style={{
+                                    bottom: "2px",
+                                    right: "2px",
+                                    width: "12px",
+                                    height: "12px",
+                                    borderRadius: "50%",
+                                    backgroundColor: emp.status === 'Online' ? '#28a745' : emp.status === 'Offline' ? '#dc3545' : '#6c757d',
+                                    border: "2px solid white",
+                                    boxShadow: "0 0 0 2px #fff"
+                                  }}
+                                ></div>
                               </div>
                               <div>
                                 <h5 className="card-title mb-1 text-dark fw-bold">
@@ -358,15 +472,32 @@ const handleTaskSubmit = async (e) => {
                               </div>
                             </div>
                             <span
-                              className={`badge rounded-pill px-3 py-2 text-white ${randomBadgeClass}`}
+                              className={`badge rounded-pill px-3 py-2 text-white ${
+                                emp.status === 'Online' 
+                                  ? 'bg-success' 
+                                  : emp.status === 'Offline' 
+                                  ? 'bg-danger' 
+                                  : randomBadgeClass
+                              }`}
                             >
-                              {emp.status}
+                              {emp.status === 'Online' ? '🟢 Online' : emp.status === 'Offline' ? '🔴 Offline' : emp.status}
                             </span>
                           </div>
                           <div className="mt-2">
                             <p className="mb-1">
                               <strong>Email:</strong> {emp.email}
+                               {/* <h5> Today's Update:<p>{emp.latestUpdateTitle || 'No updates yet'} </p> </h5> */}
                             </p>
+                            {emp.todayWorkingOn && (
+                              <div className="mt-2 p-2 bg-light rounded">
+                                <small className="text-muted d-block mb-1">
+                                  <strong>Today's Work:</strong>
+                                </small>
+                                <p className="mb-0 text-dark small">
+                                  {emp.todayWorkingOn}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -645,263 +776,64 @@ const handleTaskSubmit = async (e) => {
 
 
      case "updates":
-  return (
-   <div className="container-fluid">
-  <div className="d-flex justify-content-between align-items-center mb-4">
-    <h3 className="fw-bold text-primary mb-0">
-      <i className="bi bi-list-task me-2"></i>
-      Daily Updates
-    </h3>
-    <span className="badge bg-primary fs-6">
-      {Array.isArray(updates) ? updates.length : 0} Total Updates
-    </span>
-  </div>
-
-  {/* List View */}
-  <div className="card border-0 shadow-sm">
-    <div className="card-header bg-light border-0 py-3">
-      <div className="row fw-semibold text-muted">
-        <div className="col-md-3">Employee</div>
-        <div className="col-md-2">Project</div>
-        <div className="col-md-2">Status</div>
-        <div className="col-md-2">Due Date</div>
-        <div className="col-md-2">Created</div>
-        <div className="col-md-1">Action</div>
-      </div>
-    </div>
-    <div className="card-body p-0">
-      {Array.isArray(updates) && updates.length > 0 ? (
-        updates.map((dailyUpdate, index) => {
-          const imageUrl = dailyUpdate.imageUrl
-            ? dailyUpdate.imageUrl.replace(/\\/g, "/").replace("C:/Users/Madhk/OneDrive/Desktop/emp/backend", "")
-            : null;
-
-          return (
-            <div 
-              key={dailyUpdate._id} 
-              className={`row py-3 px-3 border-bottom align-items-center hover-bg-light ${index % 2 === 0 ? 'bg-light bg-opacity-25' : ''}`}
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onMouseEnter={(e) => e.target.closest('.row').classList.add('bg-primary', 'bg-opacity-10')}
-              onMouseLeave={(e) => e.target.closest('.row').classList.remove('bg-primary', 'bg-opacity-10')}
-            >
-              <div className="col-md-3">
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                    <i className="bi bi-person-fill text-primary"></i>
-                  </div>
-                  <div>
-                    <div className="fw-semibold text-dark">
-                      {dailyUpdate.employee?.name || "Unknown"}
+        return (
+          <div>
+            <h3 className="mb-4 fw-semibold text-dark">Daily Updates</h3>
+            <div className="mb-4">
+              <Calendar
+                onChange={setCalendarDate}
+                value={calendarDate}
+                tileClassName={({ date, view }) => {
+                  if (view === 'month') {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (datesWithUpdates.includes(dateStr)) {
+                      return 'bg-primary text-white rounded-circle fw-bold';
+                    }
+                  }
+                  return null;
+                }}
+                tileContent={({ date, view }) => {
+                  if (view === 'month') {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (datesWithUpdates.includes(dateStr)) {
+                      return <span className="dot" style={{ display: 'inline-block', width: 6, height: 6, background: '#1976d2', borderRadius: '50%', marginLeft: 2 }}></span>;
+                    }
+                  }
+                  return null;
+                }}
+              />
+            </div>
+            <div>
+              {calendarDate && updatesForDate.length === 0 && (
+                <div className="alert alert-info">No updates for this date.</div>
+              )}
+              {updatesForDate.map(update => (
+                <div key={update._id} className="card mb-3 shadow-sm">
+                  <div className="card-body">
+                    <h5 className="card-title">{update.employee?.name || 'Employee'}</h5>
+                    <p className="card-text">{update.update}</p>
+                    <p className="mb-1"><strong>Status:</strong> {update.status}</p>
+                    <p className="mb-1"><strong>Approval:</strong> {update.approvalStatus}</p>
+                    {update.imageUrl && (
+                      <div className="mb-2">
+                        <img src={update.imageUrl} alt="Update attachment" style={{ maxWidth: 200, borderRadius: 8 }} />
+                      </div>
+                    )}
+                    <small className="text-muted">{new Date(update.date).toLocaleString()}</small>
+                    <div className="mt-2">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => handleViewUpdate(update)}
+                      >
+                        Review / Approve / Reject
+                      </button>
                     </div>
-                    <div className="text-muted small">
-                      {dailyUpdate.employee?.email || "Unknown"}
-                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="col-md-2">
-                <div className="fw-medium text-dark">
-                  {dailyUpdate.project_title || "Untitled"}
-                </div>
-              </div>
-              
-              <div className="col-md-2">
-                <span className={`badge ${getStatusBadgeColor(dailyUpdate.status)} text-white`}>
-                  {dailyUpdate.status}
-                </span>
-              </div>
-              
-              <div className="col-md-2">
-                <div className="text-muted">
-                  <i className="bi bi-calendar me-1"></i>
-                  {dailyUpdate.finishBy ? dailyUpdate.finishBy.slice(0, 10) : 'Not set'}
-                </div>
-              </div>
-              
-              <div className="col-md-2">
-                <div className="text-muted">
-                  <i className="bi bi-clock me-1"></i>
-                  {new Date(dailyUpdate.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-              
-              <div className="col-md-1">
-                <button
-                  className="btn btn-outline-primary btn-sm rounded-pill"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewUpdate(dailyUpdate);
-                  }}
-                  title="View Details"
-                >
-                  <i className="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <div className="text-center py-5">
-          <i className="bi bi-inbox display-1 text-muted"></i>
-          <h5 className="text-muted mt-3">No updates found</h5>
-          <p className="text-muted">Updates will appear here once employees submit them.</p>
-        </div>
-      )}
-    </div>
-  </div>
-
-  {/* Modal for Review */}
-  {showModal && selectedUpdate && (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg modal-dialog-centered">
-        <div className="modal-content border-0 shadow">
-          <div className="modal-header bg-primary text-white border-0">
-            <h5 className="modal-title fw-bold">
-              <i className="bi bi-clipboard-check me-2"></i>
-              Review Daily Update
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close btn-close-white" 
-              onClick={handleCloseModal}
-            ></button>
-          </div>
-          
-          <div className="modal-body">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-person-circle me-2"></i>Employee
-                  </label>
-                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
-                    {selectedUpdate.employee?.name || "Unknown"}
-                  </p>
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-envelope me-2"></i>Email
-                  </label>
-                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
-                    {selectedUpdate.employee?.email || "Unknown"}
-                  </p>
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-briefcase me-2"></i>Project
-                  </label>
-                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
-                    {selectedUpdate.project_title || "Untitled"}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-clipboard-check me-2"></i>Status
-                  </label>
-                  <p className="form-control-plaintext">
-                    <span className={`badge ${getStatusBadgeColor(selectedUpdate.status)} fs-6`}>
-                      {selectedUpdate.status}
-                    </span>
-                  </p>
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-clock me-2"></i>Finish By
-                  </label>
-                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
-                    {selectedUpdate.finishBy ? selectedUpdate.finishBy.slice(0, 10) : 'Not set'}
-                  </p>
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-primary">
-                    <i className="bi bi-calendar-date me-2"></i>Created
-                  </label>
-                  <p className="form-control-plaintext bg-light rounded px-3 py-2">
-                    {new Date(selectedUpdate.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mb-3">
-              <label className="form-label fw-semibold text-primary">
-                <i className="bi bi-journal-text me-2"></i>Update Details
-              </label>
-              <p className="form-control-plaintext bg-light rounded px-3 py-3" style={{ minHeight: '80px' }}>
-                {selectedUpdate.update || 'No update provided'}
-              </p>
-            </div>
-            
-            {selectedUpdate.imageUrl && (
-              <div className="mb-3">
-                <label className="form-label fw-semibold text-primary">
-                  <i className="bi bi-image me-2"></i>Attached Image
-                </label>
-                <div className="text-center">
-                  <img
-                    src={`http://localhost:5000${selectedUpdate.imageUrl}`}
-                    alt="Update"
-                    className="img-fluid rounded shadow border"
-                    style={{ maxHeight: '300px', maxWidth: '100%' }}
-                  />
-                </div>
-              </div>
-            )}
-            
-            <div className="mb-3">
-              <label className="form-label fw-semibold text-primary">
-                <i className="bi bi-chat-left-text me-2"></i>Your Feedback *
-              </label>
-              <textarea
-                className="form-control border-2"
-                rows="4"
-                placeholder="Provide your feedback for this update..."
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                style={{ resize: 'vertical' }}
-              ></textarea>
+              ))}
             </div>
           </div>
-          
-          <div className="modal-footer border-0 bg-light">
-            <button 
-              type="button" 
-              className="btn btn-secondary rounded-pill px-4"
-              onClick={handleCloseModal}
-            >
-              <i className="bi bi-x-circle me-2"></i>Cancel
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-danger rounded-pill px-4 me-2"
-              onClick={() => handleAction('reject')}
-              disabled={!feedback.trim()}
-            >
-              <i className="bi bi-x-octagon me-2"></i>Reject
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-success rounded-pill px-4"
-              onClick={() => handleAction('approve')}
-              disabled={!feedback.trim()}
-            >
-              <i className="bi bi-check-circle me-2"></i>Approve
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )}
-</div>
-  );
+        );
 
       case "designs":
         return (
@@ -961,10 +893,6 @@ const handleTaskSubmit = async (e) => {
 
   return (
     <>
-      <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
-        rel="stylesheet"
-      />
       <style>{`
         .sidebar {
           transition: all 0.3s ease;
@@ -996,7 +924,73 @@ const handleTaskSubmit = async (e) => {
         .main-content {
           min-height: calc(100vh - 200px);
         }
+        
+        /* Calendar Styles */
+        .react-calendar {
+          background: #fff !important;
+          border-radius: 16px !important;
+          box-shadow: 0 2px 16px rgba(44,62,80,0.08) !important;
+          border: none !important;
+          padding: 16px !important;
+          font-family: inherit !important;
+          margin-bottom: 24px !important;
+          width: 100% !important;
+        }
+        .react-calendar__tile {
+          border-radius: 8px !important;
+          transition: background 0.2s, color 0.2s !important;
+          font-weight: 500 !important;
+          font-size: 1rem !important;
+          padding: 0.5em 0.2em !important;
+        }
+        .react-calendar__tile--active,
+        .react-calendar__tile--now {
+          background: #1976d2 !important;
+          color: #fff !important;
+          border-radius: 8px !important;
+        }
+        .react-calendar__tile--hasActive {
+          background: #e3f2fd !important;
+          color: #1976d2 !important;
+        }
+        .react-calendar__tile:enabled:hover,
+        .react-calendar__tile:enabled:focus {
+          background: #e3f2fd !important;
+          color: #1976d2 !important;
+        }
+        .react-calendar__month-view__days__day--weekend {
+          color: #d32f2f !important;
+        }
+        .react-calendar__navigation {
+          margin-bottom: 8px !important;
+        }
+        .react-calendar__navigation button {
+          color: #1976d2 !important;
+          font-weight: bold !important;
+          min-width: 36px !important;
+          background: none !important;
+          border-radius: 6px !important;
+          border: none !important;
+          transition: background 0.2s !important;
+        }
+        .react-calendar__navigation button:enabled:hover,
+        .react-calendar__navigation button:enabled:focus {
+          background: #e3f2fd !important;
+        }
+        .dot {
+          display: inline-block !important;
+          width: 6px !important;
+          height: 6px !important;
+          background: #1976d2 !important;
+          border-radius: 50% !important;
+          margin-left: 2px !important;
+          margin-top: 2px !important;
+        }
       `}</style>
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+        rel="stylesheet"
+      />
 
       <div className="d-flex min-vh-100 bg-light">
         {/* Sidebar */}
@@ -1187,6 +1181,144 @@ const handleTaskSubmit = async (e) => {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {showModal && selectedUpdate && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="bi bi-eye me-2 text-primary"></i>
+                  Review Daily Update
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={handleCloseModal}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-8">
+                    <div className="mb-3">
+                      <h6 className="fw-semibold text-dark mb-2">Employee:</h6>
+                      <p className="text-muted mb-0">{selectedUpdate.employee?.name || 'Unknown Employee'}</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <h6 className="fw-semibold text-dark mb-2">Update Details:</h6>
+                      <p className="text-muted mb-0">{selectedUpdate.update}</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <h6 className="fw-semibold text-dark mb-2">Project:</h6>
+                      <p className="text-muted mb-0">{selectedUpdate.project_title || 'General Update'}</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <h6 className="fw-semibold text-dark mb-2">Status:</h6>
+                      <span className={`badge ${getStatusBadgeColor(selectedUpdate.status)}`}>
+                        {selectedUpdate.status}
+                      </span>
+                    </div>
+                    
+                    {selectedUpdate.finishBy && (
+                      <div className="mb-3">
+                        <h6 className="fw-semibold text-dark mb-2">Finish By:</h6>
+                        <p className="text-muted mb-0">{new Date(selectedUpdate.finishBy).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="col-md-4">
+                    <div className="bg-light rounded p-3">
+                      <h6 className="fw-semibold text-dark mb-2">Current Approval Status</h6>
+                      <div className="mb-2">
+                        <span className={`badge ${getApprovalStatusBadgeStyle(selectedUpdate.approvalStatus)} w-100`}>
+                          {selectedUpdate.approvalStatus || 'Pending'}
+                        </span>
+                      </div>
+                      
+                      {selectedUpdate.approvedBy && (
+                        <div className="mb-2">
+                          <small className="text-muted d-block">Approved by:</small>
+                          <small className="fw-medium text-dark">{selectedUpdate.approvedBy.name}</small>
+                        </div>
+                      )}
+                      
+                      {selectedUpdate.approvedAt && (
+                        <div className="mb-2">
+                          <small className="text-muted d-block">Approved on:</small>
+                          <small className="fw-medium text-dark">{new Date(selectedUpdate.approvedAt).toLocaleDateString()}</small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedUpdate.imageUrl && (
+                  <div className="mt-3">
+                    <h6 className="fw-semibold text-dark mb-2">Attached Image:</h6>
+                    <img 
+                      src={selectedUpdate.imageUrl} 
+                      alt="Update attachment" 
+                      className="img-fluid rounded"
+                      style={{ maxHeight: '200px' }}
+                    />
+                  </div>
+                )}
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold text-primary">
+                    <i className="bi bi-chat-left-text me-2"></i>Your Feedback *
+                  </label>
+                  <textarea
+                    className="form-control border-2"
+                    rows="4"
+                    placeholder="Provide your feedback for this update..."
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    style={{ resize: 'vertical' }}
+                  ></textarea>
+                </div>
+              </div>
+              
+              <div className="modal-footer border-0 bg-light">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary rounded-pill px-4"
+                  onClick={handleCloseModal}
+                >
+                  <i className="bi bi-x-circle me-2"></i>Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger rounded-pill px-4 me-2"
+                  onClick={() => handleAction('reject')}
+                  disabled={!feedback.trim()}
+                >
+                  <i className="bi bi-x-octagon me-2"></i>Reject
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-success rounded-pill px-4"
+                  onClick={() => handleAction('approve')}
+                  disabled={!feedback.trim()}
+                >
+                  <i className="bi bi-check-circle me-2"></i>Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal Backdrop */}
+      {showModal && (
+        <div className="modal-backdrop fade show"></div>
+      )}
+
     </>
   );
 };

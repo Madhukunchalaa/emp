@@ -21,40 +21,45 @@ const getProfile = async (req, res) => {
 // Get all employees
 const getEmployees = async (req, res) => {
   try {
-   const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
+    const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
 
-
-    // Get today's attendance for each employee
-    const employeesWithAttendance = await Promise.all(
+    const employeesWithAttendanceAndUpdate = await Promise.all(
       employees.map(async (employee) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const attendance = await Punch.findOne({
           employee: employee._id,
           date: today
         });
 
-        return {
-          ...employee.toObject(),
-          attendance: {
-            today: attendance ? {
-              status: attendance.status,
-              punchIn: attendance.punchIn,
-              punchOut: attendance.punchOut,
-              hours: attendance.hours
-            } : null
-          }
-        };
+        // 🔥 Fetch the latest update for the employee
+       const latestUpdate = await Update.findOne({ employee: employee._id })
+  .sort({ createdAt: -1 })
+  .select('update'); // Fix here
+
+return {
+  ...employee.toObject(),
+  attendance: {
+    today: attendance ? {
+      status: attendance.status,
+      punchIn: attendance.punchIn,
+      punchOut: attendance.punchOut,
+      hours: attendance.hours
+    } : null
+  },
+  latestUpdateTitle: latestUpdate ? latestUpdate.update : null // Fix here
+};
       })
     );
 
-    res.json(employeesWithAttendance);
+    res.json(employeesWithAttendanceAndUpdate);
   } catch (error) {
     console.error('Error fetching employees:', error);
     res.status(500).json({ message: 'Error fetching employees' });
   }
 };
+
 
 // Get all projects
 const getProjects = async (req, res) => {
@@ -204,7 +209,7 @@ const updateProjectStatus = async (req, res) => {
     const { status } = req.body;
 
     // Validate status
-    if (!['Not Started', 'In Progress', 'Completed'].includes(status)) {
+    if (!['Approve', 'Under Review', 'Reject'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
@@ -444,19 +449,78 @@ const getProjectUpdates = async (req, res) => {
 };
 const getAllEmployeeUpdates = async (req, res) => {
   try {
-    const updates = await Update.find()
-      .populate('employee', 'name email') // include employee name & email
-      .select('project_title status update finishBy imageUrl employee createdAt') // specify all fields to return
-      .sort({ createdAt: -1 });
+    const { startDate, endDate, status, employeeId } = req.query;
+    
+    let query = {};
+    
+    // Add date filter if provided
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.approvalStatus = status;
+    }
+    
+    // Add employee filter if provided
+    if (employeeId) {
+      query.employee = employeeId;
+    }
+
+    const updates = await DailyUpdate.find(query)
+      .populate('employee', 'name email role')
+      .populate('project', 'title description')
+      .populate('approvedBy', 'name')
+      .sort({ date: -1, createdAt: -1 });
+
+    res.json({ updates });
+  } catch (error) {
+    console.error('Error fetching all employee updates:', error);
+    res.status(500).json({ message: 'Error fetching updates' });
+  }
+};
+
+// Approve or reject daily update
+const approveRejectUpdate = async (req, res) => {
+  try {
+    const { updateId } = req.params;
+    const { action, feedback } = req.body; // action: 'approve' or 'reject'
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ message: 'Action must be either "approve" or "reject"' });
+    }
+
+    const update = await DailyUpdate.findById(updateId);
+    if (!update) {
+      return res.status(404).json({ message: 'Update not found' });
+    }
+
+    // Update the approval status
+    update.approvalStatus = action === 'approve' ? 'Approved' : 'Rejected';
+    update.managerFeedback = feedback || '';
+    update.approvedBy = req.user.id;
+    update.approvedAt = new Date();
+
+    await update.save();
+
+    // Populate the fields for response
+    await update.populate([
+      { path: 'employee', select: 'name email' },
+      { path: 'project', select: 'title description' },
+      { path: 'approvedBy', select: 'name' }
+    ]);
 
     res.json({
-      success: true,
-      count: updates.length,
-      updates,
+      message: `Update ${action}d successfully`,
+      update
     });
-  } catch (err) {
-    console.error('Error fetching updates:', err);
-    res.status(500).json({ success: false, msg: 'Failed to fetch updates' });
+  } catch (error) {
+    console.error('Error approving/rejecting update:', error);
+    res.status(500).json({ message: 'Error processing update' });
   }
 };
 
@@ -475,4 +539,5 @@ module.exports = {
   updateProfile,
   getEmployeeProfile,
   getProjectUpdates,
+  approveRejectUpdate,
 };
