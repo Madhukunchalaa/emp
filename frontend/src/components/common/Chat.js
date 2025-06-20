@@ -1,30 +1,29 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const apiUrl = process.env.REACT_APP_API_URL || '';
-const SOCKET_URL = apiUrl ? apiUrl.replace('/api', '') : '';
+// Hardcoded API URL for local development
+const apiUrl = 'http://localhost:5000/api';
+const SOCKET_URL = 'http://localhost:5000';
 
-const socket = SOCKET_URL ? io(SOCKET_URL, { transports: ['websocket'] }) : null;
+const socket = io(SOCKET_URL, { transports: ['websocket'] });
 
 export default function Chat({ currentUser, otherUser }) {
+  console.log('currentUser:', currentUser);
+  console.log('otherUser:', otherUser);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Join room and fetch history
   useEffect(() => {
     if (!currentUser?._id || !otherUser?._id || !socket) return;
     socket.emit('join', { userId: currentUser._id });
 
-    // Fetch chat history
     fetch(`${apiUrl}/employee/chat/history?user1=${currentUser._id}&user2=${otherUser._id}`)
       .then(res => res.json())
       .then(setMessages);
 
-    // Listen for new messages
     socket.on('receiveMessage', msg => {
-      // Only add if it's for this chat
       if (
         (msg.from === currentUser._id && msg.to === otherUser._id) ||
         (msg.from === otherUser._id && msg.to === currentUser._id)
@@ -36,7 +35,6 @@ export default function Chat({ currentUser, otherUser }) {
     return () => socket.off('receiveMessage');
   }, [currentUser?._id, otherUser?._id]);
 
-  // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -66,10 +64,6 @@ export default function Chat({ currentUser, otherUser }) {
     setText('');
     setFile(null);
   };
-
-  if (!SOCKET_URL) {
-    return <div style={{ color: 'red' }}>Chat is not available: API URL is not set.</div>;
-  }
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto', border: '1px solid #eee', borderRadius: 10, padding: 16, background: '#fff' }}>

@@ -60,7 +60,8 @@ useEffect(() => {
   const token = localStorage.getItem("token");
   if (token) {
     const decoded = jwtDecode(token);
-    setUser(decoded);
+    // Ensure _id is present for chat functionality
+    setUser({ _id: decoded._id || decoded.id, ...decoded });
   }
 }, []);
 
@@ -518,6 +519,7 @@ const getImageUrl = (url) => {
             </div>
             {chatEmployee && user && (
               <div className="mt-4">
+                {console.log('Current user:', user)}
                 <h5>Chat with {chatEmployee.name}</h5>
                 <Chat currentUser={user} otherUser={chatEmployee} />
                 <button className="btn btn-link mt-2" onClick={() => setChatEmployee(null)}>Close Chat</button>
