@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -77,6 +76,17 @@ export const authService = {
       return response;
     } catch (error) {
       console.error('Register API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Test function to check current user role
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response;
+    } catch (error) {
+      console.error('Get current user API error:', error);
       throw error.response?.data || error;
     }
   },
@@ -227,7 +237,7 @@ export const employeeService = {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.get('/employee/updates');
+    return api.get('/employee/daily-updates');
   },
 
   addDailyUpdate: (updateData) => {
@@ -270,169 +280,35 @@ export const employeeService = {
 
 // Manager service
 export const managerService = {
-  getProfile: () => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/profile');
-  },
-
-  updateProfile: (data) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.put('/manager/profile', data);
-  },
-
-  getEmployees: () => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/employees');
-  },
-
-  getProjects: () => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/projects');
-  },
-
-  assignProject: async (projectData) => {
-    if (!authService.isAuthenticated()) {
-      throw new Error('No auth token');
-    }
-    
-    try {
-      console.log('Assigning project:', projectData);
-      const response = await api.post('/manager/projects', projectData);
-      console.log('Project assignment response:', response.data);
-      return response;
-    } catch (error) {
-      console.error('Project assignment error:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  updateProjectStatus: ({ projectId, status }) => {
-  if (!authService.isAuthenticated()) {
-    return Promise.reject(new Error('No auth token'));
-  }
-   return api.put(`/manager/projects/${projectId}/status`, { status });
-},
-
-
-  getAttendanceHistory: async (employeeId) => {
-    if (!authService.isAuthenticated()) {
-      throw new Error('No auth token');
-    }
-
-    try {
-      console.log('Fetching attendance history for employee:', employeeId);
-      
-      const token = authService.getToken();
-      const response = await api.get(`/manager/employees/${employeeId}/attendance`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log('Attendance history response:', response.data);
-      return response;
-    } catch (error) {
-      console.error('Attendance history error:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  getEmployeeDailyUpdates: async (filters = {}) => {
-  if (!authService.isAuthenticated()) {
-    throw new Error('No auth token');
-  }
-
-  try {
-    const response = await api.get('/manager/all-updates', {
-      params: filters
-    });
-    return response;
-  } catch (error) {
-    console.error('Error fetching employee daily updates:', error.response?.data || error.message);
-    throw error;
-  }
-},
-
-
-  // Additional manager functions
-  getEmployeeById: (employeeId) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get(`/manager/employees/${employeeId}`);
-  },
-
-  approveRejectUpdate: (updateId, action, feedback) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.put(`/manager/updates/${updateId}/approve-reject`, { action, feedback });
-  },
-
-  updateEmployee: (employeeId, updateData) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.put(`/manager/employees/${employeeId}`, updateData);
-  },
-
-  deleteEmployee: (employeeId) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.delete(`/manager/employees/${employeeId}`);
-  },
-
-  getProjectById: (projectId) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get(`/manager/projects/${projectId}`);
-  },
-
-  updateProject: (projectId, updateData) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.put(`/manager/projects/${projectId}`, updateData);
-  },
-
-  deleteProject: (projectId) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.delete(`/manager/projects/${projectId}`);
-  },
-
-  // Reports and analytics
-  getAttendanceReport: (params) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/reports/attendance', { params });
-  },
-
-  getProjectReport: (params) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/reports/projects', { params });
-  },
-
-  getProductivityReport: (params) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    return api.get('/manager/reports/productivity', { params });
-  }
+  getProfile: () => api.get('/manager/profile'),
+  updateProfile: (data) => api.put('/manager/profile', data),
+  
+  // Employee management
+  getEmployees: () => api.get('/manager/employees'),
+  getEmployeeProfile: (id) => api.get(`/manager/employees/${id}`),
+  
+  // Project management
+  getProjects: () => api.get('/manager/projects'),
+  getProjectById: (projectId) => api.get(`/manager/projects/${projectId}`),
+  createProject: (projectData) => api.post('/manager/projects', projectData),
+  assignProject: (projectId, assignedTo) => api.post('/manager/projects/assign', { projectId, assignedTo }),
+  getProjectTasks: (projectId) => api.get(`/manager/projects/${projectId}/tasks`),
+  
+  // Task management
+  assignTask: (taskData) => api.post('/manager/tasks', taskData),
+  
+  // Attendance
+  getAttendanceHistory: () => api.get('/manager/attendance'),
+  getEmployeeAttendance: (employeeId) => api.get(`/manager/employees/${employeeId}/attendance`),
+  
+  // Updates
+  getEmployeeUpdates: () => api.get('/manager/employee-updates'),
+  getEmployeeUpdateSummary: () => api.get('/manager/employee-update-summary'),
+  getAllEmployeeUpdates: () => api.get('/manager/all-updates'),
+  approveRejectUpdate: (updateId, action) => api.put(`/manager/updates/${updateId}/approve-reject`, { action }),
+  
+  // Testing
+  testAssign: (data) => api.post('/manager/test-assign', data)
 };
 
 // Admin service (if needed)
