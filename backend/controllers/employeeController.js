@@ -1,5 +1,6 @@
 const Punch = require('../models/Punch');
 const Project = require('../models/Project');
+const Task = require('../models/Task');
 const User = require('../models/User');
 const DailyUpdate = require('../models/DailyUpdate');
 const bcrypt = require('bcryptjs');
@@ -170,18 +171,38 @@ exports.getAttendance = async (req, res) => {
   }
 };
 
-// Get assigned projects
+// Get assigned tasks (previously getProjects)
 exports.getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({})
-      .populate([
-        { path: 'assignedTo', select: 'name email role' },
-        { path: 'createdBy', select: 'name email' }
-      ]);
+    console.log('Fetching tasks for employee:', req.user.id);
+    
+    // Get tasks assigned to this employee
+    const tasks = await Task.find({ assignedTo: req.user.id })
+      .populate('projectId', 'title description deadline')
+      .populate('assignedBy', 'name email')
+      .sort({ deadline: 1 });
 
-    res.status(200).json(projects); // Return full project details
+    console.log(`Found ${tasks.length} tasks for employee`);
+
+    // Transform tasks to match the expected format for the frontend
+    const transformedTasks = tasks.map(task => ({
+      _id: task._id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      deadline: task.deadline,
+      estimatedHours: task.estimatedHours,
+      progress: task.progress,
+      projectId: task.projectId,
+      assignedBy: task.assignedBy,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt
+    }));
+
+    res.status(200).json(transformedTasks);
   } catch (err) {
-    console.error('Error in getProjects:', err.message);
+    console.error('Error in getProjects (tasks):', err.message);
     res.status(500).json({ message: 'Server error', projects: [] });
   }
 };

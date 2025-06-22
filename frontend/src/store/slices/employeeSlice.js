@@ -99,6 +99,42 @@ export const updateProjectComment = createAsyncThunk(
   }
 );
 
+export const addDailyUpdate = createAsyncThunk(
+  'employee/addDailyUpdate',
+  async (updateData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/employee/daily-update', updateData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Error adding daily update');
+    }
+  }
+);
+
+export const createDailyUpdate = createAsyncThunk(
+  'employee/createDailyUpdate',
+  async (updateData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/employee/daily-update', updateData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Error creating daily update');
+    }
+  }
+);
+
+export const fetchDailyUpdates = createAsyncThunk(
+  'employee/fetchDailyUpdates',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/employee/daily-updates');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Error fetching daily updates');
+    }
+  }
+);
+
 const employeeSlice = createSlice({
   name: 'employee',
   initialState: {
@@ -107,6 +143,7 @@ const employeeSlice = createSlice({
       today: null,
       history: []
     },
+    dailyUpdates: [],
     loading: false,
     error: null,
     success: null,
@@ -145,7 +182,15 @@ const employeeSlice = createSlice({
       })
       .addCase(fetchAttendance.fulfilled, (state, action) => {
         state.loading = false;
-        state.attendance = action.payload;
+        // Ensure we always have a valid structure
+        if (action.payload && typeof action.payload === 'object') {
+          state.attendance = {
+            today: action.payload.today || null,
+            history: Array.isArray(action.payload.history) ? action.payload.history : []
+          };
+        } else {
+          state.attendance = { today: null, history: [] };
+        }
       })
       .addCase(fetchAttendance.rejected, (state, action) => {
         state.loading = false;
@@ -220,6 +265,47 @@ const employeeSlice = createSlice({
       .addCase(updateProjectComment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Add Daily Update
+      .addCase(addDailyUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addDailyUpdate.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Daily update added successfully';
+      })
+      .addCase(addDailyUpdate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create Daily Update
+      .addCase(createDailyUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createDailyUpdate.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dailyUpdates.unshift(action.payload);
+        state.success = 'Daily update created successfully';
+      })
+      .addCase(createDailyUpdate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Daily Updates
+      .addCase(fetchDailyUpdates.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchDailyUpdates.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dailyUpdates = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(fetchDailyUpdates.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.dailyUpdates = [];
       });
   },
 });
