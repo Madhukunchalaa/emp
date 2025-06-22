@@ -289,4 +289,26 @@ exports.getCurrentUser = async (req, res) => {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+// Test endpoint to check user role
+exports.getCurrentUserRole = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('role name email');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Error getting current user role:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 }; 
