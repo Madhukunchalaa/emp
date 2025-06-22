@@ -71,6 +71,7 @@ function App() {
               }
             />
             <Route path="/project-details" element={<ProjectDetails />} />
+           
 
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
