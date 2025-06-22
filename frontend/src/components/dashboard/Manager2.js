@@ -18,6 +18,8 @@ import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { managerService } from "../../services/api";
 import { useParams } from "react-router-dom";
+import Chat from '../common/Chat';
+
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -41,6 +43,7 @@ const ManagerDashboard = () => {
   const [calendarDate, setCalendarDate] = useState(null);
   const [datesWithUpdates, setDatesWithUpdates] = useState([]);
   const [updatesForDate, setUpdatesForDate] = useState([]);
+  const [chatEmployee, setChatEmployee] = useState(null);
 
 const { employeeId } = useParams();
 
@@ -57,7 +60,8 @@ useEffect(() => {
   const token = localStorage.getItem("token");
   if (token) {
     const decoded = jwtDecode(token);
-    setUser(decoded);
+    // Ensure _id is present for chat functionality
+    setUser({ _id: decoded._id || decoded.id, ...decoded });
   }
 }, []);
 
@@ -387,13 +391,23 @@ const getImageUrl = (url) => {
                     </div>
                   </div>
                 </div>
-                <div className="col-md-6 col-lg-3">
+                {/* <div className="col-md-6 col-lg-3">
                   <div className="card border-0 bg-secondary bg-opacity-10 rounded-4">
                     <div className="card-body text-center">
                       <h4 className="text-secondary mb-1">
                         {employees.filter(emp => emp.status !== 'Online' && emp.status !== 'Offline').length}
                       </h4>
                       <p className="text-muted mb-0 small">⚪ Other</p>
+                    </div>
+                  </div>
+                </div> */}
+                 <div className="col-md-6 col-lg-3">
+                  <div className="card border-0 bg-info bg-opacity-10 rounded-4">
+                    <div className="card-body text-center">
+                      <h4 className="text-info mb-1">
+                        {employees.filter(emp => emp.todayWorkingOn && emp.todayWorkingOn.trim() !== '').length}
+                      </h4>
+                      <p className="text-muted mb-0 small">📝 Updated Work</p>
                     </div>
                   </div>
                 </div>
@@ -404,16 +418,6 @@ const getImageUrl = (url) => {
                         {employees.length}
                       </h4>
                       <p className="text-muted mb-0 small">👥 Total</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6 col-lg-3">
-                  <div className="card border-0 bg-info bg-opacity-10 rounded-4">
-                    <div className="card-body text-center">
-                      <h4 className="text-info mb-1">
-                        {employees.filter(emp => emp.todayWorkingOn && emp.todayWorkingOn.trim() !== '').length}
-                      </h4>
-                      <p className="text-muted mb-0 small">📝 Updated Work</p>
                     </div>
                   </div>
                 </div>
@@ -499,12 +503,28 @@ const getImageUrl = (url) => {
                               </div>
                             )}
                           </div>
+                          <div className="d-flex justify-content-end mt-2">
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => setChatEmployee(emp)}
+                            >
+                              Chat
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   );
                 })}
             </div>
+            {chatEmployee && user && (
+              <div className="mt-4">
+                {console.log('Current user:', user)}
+                <h5>Chat with {chatEmployee.name}</h5>
+                <Chat currentUser={user} otherUser={chatEmployee} />
+                <button className="btn btn-link mt-2" onClick={() => setChatEmployee(null)}>Close Chat</button>
+              </div>
+            )}
           </div>
         );
 
