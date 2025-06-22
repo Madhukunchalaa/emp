@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, forgotPassword, verifyOTP, resetPassword, verifyRegistrationOTP } = require('../controllers/authController');
+const { register, login, forgotPassword, verifyOTP, resetPassword, verifyRegistrationOTP, getCurrentUserRole } = require('../controllers/authController');
+const { auth } = require('../middleware/auth');
 
 // Register route
 router.post('/register', register);
@@ -15,5 +16,8 @@ router.post('/reset-password', resetPassword);
 
 // Verify registration OTP
 router.post('/verify-registration-otp', verifyRegistrationOTP);
+
+// Test endpoint to check current user role
+router.get('/me', auth, getCurrentUserRole);
 
 module.exports = router; 

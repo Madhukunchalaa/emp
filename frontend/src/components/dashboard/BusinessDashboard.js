@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Clock, FolderOpen, FileText, CheckCircle, Play, Timer, User, LogOut, Menu, X, CalendarCheck } from 'lucide-react';
+import { Clock, FolderOpen, FileText, CheckCircle, Play, Timer, User, LogOut, Menu, X, CalendarCheck, AlertCircle } from 'lucide-react';
 import {
   LayoutDashboard,
   Briefcase,
@@ -13,6 +13,7 @@ import { punchIn } from '../../store/slices/employeeSlice';
 import { useDispatch } from 'react-redux';
 import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
+import Navbar from '../common/Navbar';
 
 const BusinessDevelopmentDashboard = () => {
   const navigate=useNavigate()
@@ -35,8 +36,8 @@ const BusinessDevelopmentDashboard = () => {
     finishBy:''
   })
   const [image, setImage] = useState(null);
-
-
+  const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState(null);
 
 const myProjects=[]
 const finishedProjects=[]
@@ -485,48 +486,26 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
   }
 
   return (
-    <>
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-      <style>{`
-        .sidebar {
-          transition: all 0.3s ease;
-          min-height: 100vh;
-        }
-        .sidebar.collapsed {
-          width: 80px !important;
-        }
-        .sidebar-item {
-          transition: all 0.2s ease;
-          border: none;
-          background: none;
-        }
-        .sidebar-item:hover {
-          background-color: #f8f9fa !important;
-        }
-        .sidebar-item.active {
-          background-color: #e3f2fd !important;
-          color: #1976d2 !important;
-        }
-        .profile-avatar {
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .header-banner {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .main-content {
-          min-height: calc(100vh - 200px);
-        }
-        .working-status {
-          animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Navigation Bar */}
+      <Navbar userRole="business" />
+
+      {/* Error Message */}
+      {error && (
+        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="px-6 py-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+            Business Dashboard
+          </h1>
+          <p className="text-gray-600">Overview of your business operations and analytics</p>
+        </div>
       
       <div className="d-flex min-vh-100 bg-light">
         {/* Sidebar */}
@@ -566,72 +545,9 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
         {/* Main Content */}
         <div className="flex-fill d-flex flex-column">
-  {/* Header Banner */}
-  <header
-    className="header-banner text-white p-4 shadow"
-    style={{
-      background: 'linear-gradient(135deg, #3a0ca3, #4361ee)', // Same purple-blue gradient
-      borderBottom: '4px solid rgb(255, 193, 7)', // Matching accent
-    }}
-  >
-    <div className="container">
-      <div className="row align-items-center">
-        {/* Left Side: Greeting and Intro */}
-        <div className="col-md-7 text-center text-md-start mb-4 mb-md-0">
-          <h4 className="fw-semibold">
-            👋 {greeting}, <span style={{ color: 'rgb(255, 193, 7)' }}>{name}</span>!
-          </h4>
-          <h1 className="display-5 fw-bold mt-2">Welcome back to the Business Development Dashboard</h1>
-          <p className="lead text-white-50 mt-3">
-            Track opportunities,manage client relationships, and drive growth.
-          </p>
-        </div>
-
-        {/* Right Side: Illustration */}
-        <div className="col-md-5 text-center">
-          <img
-            src="https://cdn.dribbble.com/userupload/23691475/file/original-9d72eaaf0be2992f8c5d86cbcdac4a96.gif"
-            alt="Employee Illustration"
-            className="img-fluid rounded shadow"
-            style={{ maxHeight: '250px' }}
-          />
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="row mt-4 text-center">
-        {[
-          { label: 'Active Opportunities', value: 5 },
-          { label: 'Qualified Leads', value: 2 },
-          { label: 'Proposals Sent', value: 4 },
-          { label: 'Pipeline Value', value: 2 },
-        ].map((item, index) => (
-          <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
-            <div
-              className="p-3 rounded"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              <h5 className="mb-0" style={{ color: 'rgb(255, 193, 7)' }}>{item.value}</h5>
-              <small>{item.label}</small>
-            </div>
+            {renderContent()}
           </div>
-        ))}
-      </div>
-    </div>
-  </header>
-
-  {/* Main Content */}
-  <main className="flex-fill p-4 main-content">
-    {renderContent()}
-  </main>
 </div>
-
-
 
         {/* Right Sidebar - Profile */}
         <div className="bg-white shadow" style={{ width: '320px' }}>
@@ -703,7 +619,7 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

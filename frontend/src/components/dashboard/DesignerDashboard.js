@@ -56,6 +56,8 @@ import { fetchDesignerSubmissions, submitDesign } from '../../store/slices/desig
 import { fetchDesignerTasks, updateTaskStatus } from '../../store/slices/taskSlice';
 import { punchIn, punchOut, fetchAttendance } from '../../store/slices/employeeSlice';
 import { fetchProjects, updateProjectStatus } from '../../store/slices/projectSlice';
+import Navbar from '../common/Navbar';
+import { AlertCircle } from 'lucide-react';
 
 const GlassCard = ({ children, sx = {}, ...props }) => {
   const theme = useTheme();
@@ -278,416 +280,438 @@ const DesignerDashboard = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Stats Section */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            icon={<AssignmentIcon />}
-            title="Total Projects"
-            value={projects?.length || 0}
-            subtitle="Active projects"
-            color="primary"
-            delay={0}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            icon={<TimerIcon />}
-            title="Tasks"
-            value={tasks?.length || 0}
-            subtitle="Pending tasks"
-            color="warning"
-            delay={100}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            icon={<CheckCircleIcon />}
-            title="Designs"
-            value={designs?.length || 0}
-            subtitle="Submitted designs"
-            color="success"
-            delay={200}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            icon={<AccessTimeIcon />}
-            title="Hours"
-           value={Array.isArray(attendance) ? attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0) : 0}
-            subtitle="Total hours worked"
-            color="info"
-            delay={300}
-          />
-        </Grid>
-      </Grid>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Navigation Bar */}
+      <Navbar userRole="designer" />
 
-
-      
-      {/* Tabs Section */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <AnimatedTab label="Attendance" icon={<AccessTimeIcon />} />
-          <AnimatedTab label="Projects" icon={<AssignmentIcon />} />
-          <AnimatedTab label="Designs" icon={<CheckCircleIcon />} />
-          <AnimatedTab label="Tasks" icon={<TimerIcon />} />
-        </Tabs>
-      </Box>
-
-      {/* Attendance Tab */}
-      {tabValue === 0 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <GlassCard>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                    Attendance
-                  </Typography>
-                  <Box>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handlePunchIn}
-                      sx={{ mr: 1 }}
-                      startIcon={<AccessTimeIcon />}
-                    >
-                      Punch In
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={handlePunchOut}
-                      startIcon={<AccessTimeIcon />}
-                    >
-                      Punch Out
-                    </Button>
-                  </Box>
-                </Box>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Date</TableCell>
-                        <TableCell>Punch In</TableCell>
-                        <TableCell>Punch Out</TableCell>
-                        <TableCell>Total Hours</TableCell>
-                        <TableCell>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {attendanceLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} align="center">
-                            <CircularProgress />
-                          </TableCell>
-                        </TableRow>
-                      ) : !Array.isArray(attendance) ? (
-                        <TableRow>
-                          <TableCell colSpan={5} align="center">No attendance records available</TableCell>
-                        </TableRow>
-                      ) : attendance.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} align="center">No attendance records found</TableCell>
-                        </TableRow>
-                      ) : (
-                        attendance.map((record) => (
-                          <TableRow key={record._id}>
-                            <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
-                            <TableCell>{record.punchIn ? new Date(record.punchIn).toLocaleTimeString() : '-'}</TableCell>
-                            <TableCell>{record.punchOut ? new Date(record.punchOut).toLocaleTimeString() : '-'}</TableCell>
-                            <TableCell>{record.hours || '-'}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={record.status}
-                                color={getStatusColor(record.status)}
-                                size="small"
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-        </Grid>
+      {/* Error Message */}
+      {designsError && (
+        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>{designsError}</span>
+        </div>
       )}
 
-      {/* Projects Tab */}
-      {tabValue === 1 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <GlassCard>
-              <CardContent>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  My Projects
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Title</TableCell>
-                        <TableCell>Description</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {projectsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">
-                            <CircularProgress />
-                          </TableCell>
-                        </TableRow>
-                      ) : !Array.isArray(projects) ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No projects available</TableCell>
-                        </TableRow>
-                      ) : projects.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No projects found</TableCell>
-                        </TableRow>
-                      ) : (
-                        projects.map((project) => (
-                          <TableRow key={project._id}>
-                            <TableCell>{project.title}</TableCell>
-                            <TableCell>{project.description}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={project.status}
-                                color={getStatusColor(project.status)}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FormControl size="small" sx={{ minWidth: 120 }}>
-                                <Select
-                                  value={project.status}
-                                  onChange={(e) => handleUpdateProjectStatus(project._id, e.target.value)}
-                                  size="small"
-                                >
-                                  <MenuItem value="pending">Pending</MenuItem>
-                                  <MenuItem value="in progress">In Progress</MenuItem>
-                                  <MenuItem value="completed">Completed</MenuItem>
-                                </Select>
-                              </FormControl>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-        </Grid>
-      )}
+      <div className="px-6 py-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+            Designer Dashboard
+          </h1>
+          <p className="text-gray-600">Manage your design projects and tasks</p>
+        </div>
 
-      {/* Designs Tab */}
-      {tabValue === 2 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <GlassCard>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                    My Designs
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => setOpenSubmitDialog(true)}
-                    startIcon={<AddIcon />}
-                  >
-                    Submit Design
-                  </Button>
-                </Box>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Title</TableCell>
-                        <TableCell>Description</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Submitted Date</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {designsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">
-                            <CircularProgress />
-                          </TableCell>
-                        </TableRow>
-                      ) : !Array.isArray(designs) ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No designs available</TableCell>
-                        </TableRow>
-                      ) : designs.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No designs found</TableCell>
-                        </TableRow>
-                      ) : (
-                        designs.map((design) => (
-                          <TableRow key={design._id}>
-                            <TableCell>{design.title}</TableCell>
-                            <TableCell>{design.description}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={design.status}
-                                color={getStatusColor(design.status)}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>{new Date(design.createdAt).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* Tasks Tab */}
-      {tabValue === 3 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <GlassCard>
-              <CardContent>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  My Tasks
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Title</TableCell>
-                        <TableCell>Description</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {tasksLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">
-                            <CircularProgress />
-                          </TableCell>
-                        </TableRow>
-                      ) : !Array.isArray(tasks) ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No tasks available</TableCell>
-                        </TableRow>
-                      ) : tasks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">No tasks found</TableCell>
-                        </TableRow>
-                      ) : (
-                        tasks.map((task) => (
-                          <TableRow key={task._id}>
-                            <TableCell>{task.title}</TableCell>
-                            <TableCell>{task.description}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={task.status}
-                                color={getStatusColor(task.status)}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FormControl size="small" sx={{ minWidth: 120 }}>
-                                <Select
-                                  value={task.status}
-                                  onChange={(e) => handleUpdateTaskStatus(task._id, e.target.value)}
-                                  size="small"
-                                >
-                                  <MenuItem value="pending">Pending</MenuItem>
-                                  <MenuItem value="in progress">In Progress</MenuItem>
-                                  <MenuItem value="completed">Completed</MenuItem>
-                                </Select>
-                              </FormControl>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-        </Grid>
-      )}
-      {/* Submit Design Dialog */}
-      <Dialog open={openSubmitDialog} onClose={() => setOpenSubmitDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Submit New Design</DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleSubmitDesign} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              margin="normal"
-              multiline
-              rows={4}
-              required
-            />
-            <Button
-              variant="contained"
-              component="label"
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              Upload Design File
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setFormData({ ...formData, designFile: e.target.files[0] })}
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          {/* Stats Section */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                icon={<AssignmentIcon />}
+                title="Total Projects"
+                value={projects?.length || 0}
+                subtitle="Active projects"
+                color="primary"
+                delay={0}
               />
-            </Button>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
-          <Button onClick={handleSubmitDesign} variant="contained" color="primary">
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                icon={<TimerIcon />}
+                title="Tasks"
+                value={tasks?.length || 0}
+                subtitle="Pending tasks"
+                color="warning"
+                delay={100}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                icon={<CheckCircleIcon />}
+                title="Designs"
+                value={designs?.length || 0}
+                subtitle="Submitted designs"
+                color="success"
+                delay={200}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                icon={<AccessTimeIcon />}
+                title="Hours"
+               value={Array.isArray(attendance) ? attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0) : 0}
+                subtitle="Total hours worked"
+                color="info"
+                delay={300}
+              />
+            </Grid>
+          </Grid>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
+          {/* Tabs Section */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs value={tabValue} onChange={handleTabChange}>
+              <AnimatedTab label="Attendance" icon={<AccessTimeIcon />} />
+              <AnimatedTab label="Projects" icon={<AssignmentIcon />} />
+              <AnimatedTab label="Designs" icon={<CheckCircleIcon />} />
+              <AnimatedTab label="Tasks" icon={<TimerIcon />} />
+            </Tabs>
+          </Box>
+
+          {/* Attendance Tab */}
+          {tabValue === 0 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <GlassCard>
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                        Attendance
+                      </Typography>
+                      <Box>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handlePunchIn}
+                          sx={{ mr: 1 }}
+                          startIcon={<AccessTimeIcon />}
+                        >
+                          Punch In
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          onClick={handlePunchOut}
+                          startIcon={<AccessTimeIcon />}
+                        >
+                          Punch Out
+                        </Button>
+                      </Box>
+                    </Box>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Punch In</TableCell>
+                            <TableCell>Punch Out</TableCell>
+                            <TableCell>Total Hours</TableCell>
+                            <TableCell>Status</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {attendanceLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={5} align="center">
+                                <CircularProgress />
+                              </TableCell>
+                            </TableRow>
+                          ) : !Array.isArray(attendance) ? (
+                            <TableRow>
+                              <TableCell colSpan={5} align="center">No attendance records available</TableCell>
+                            </TableRow>
+                          ) : attendance.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} align="center">No attendance records found</TableCell>
+                            </TableRow>
+                          ) : (
+                            attendance.map((record) => (
+                              <TableRow key={record._id}>
+                                <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                                <TableCell>{record.punchIn ? new Date(record.punchIn).toLocaleTimeString() : '-'}</TableCell>
+                                <TableCell>{record.punchOut ? new Date(record.punchOut).toLocaleTimeString() : '-'}</TableCell>
+                                <TableCell>{record.hours || '-'}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={record.status}
+                                    color={getStatusColor(record.status)}
+                                    size="small"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </GlassCard>
+              </Grid>
+            </Grid>
+          )}
+
+          {/* Projects Tab */}
+          {tabValue === 1 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <GlassCard>
+                  <CardContent>
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                      My Projects
+                    </Typography>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Title</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {projectsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">
+                                <CircularProgress />
+                              </TableCell>
+                            </TableRow>
+                          ) : !Array.isArray(projects) ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No projects available</TableCell>
+                            </TableRow>
+                          ) : projects.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No projects found</TableCell>
+                            </TableRow>
+                          ) : (
+                            projects.map((project) => (
+                              <TableRow key={project._id}>
+                                <TableCell>{project.title}</TableCell>
+                                <TableCell>{project.description}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={project.status}
+                                    color={getStatusColor(project.status)}
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                                    <Select
+                                      value={project.status}
+                                      onChange={(e) => handleUpdateProjectStatus(project._id, e.target.value)}
+                                      size="small"
+                                    >
+                                      <MenuItem value="pending">Pending</MenuItem>
+                                      <MenuItem value="in progress">In Progress</MenuItem>
+                                      <MenuItem value="completed">Completed</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </GlassCard>
+              </Grid>
+            </Grid>
+          )}
+
+          {/* Designs Tab */}
+          {tabValue === 2 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <GlassCard>
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                        My Designs
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setOpenSubmitDialog(true)}
+                        startIcon={<AddIcon />}
+                      >
+                        Submit Design
+                      </Button>
+                    </Box>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Title</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Submitted Date</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {designsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">
+                                <CircularProgress />
+                              </TableCell>
+                            </TableRow>
+                          ) : !Array.isArray(designs) ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No designs available</TableCell>
+                            </TableRow>
+                          ) : designs.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No designs found</TableCell>
+                            </TableRow>
+                          ) : (
+                            designs.map((design) => (
+                              <TableRow key={design._id}>
+                                <TableCell>{design.title}</TableCell>
+                                <TableCell>{design.description}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={design.status}
+                                    color={getStatusColor(design.status)}
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell>{new Date(design.createdAt).toLocaleDateString()}</TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </GlassCard>
+              </Grid>
+            </Grid>
+          )}
+
+          {/* Tasks Tab */}
+          {tabValue === 3 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <GlassCard>
+                  <CardContent>
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                      My Tasks
+                    </Typography>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Title</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {tasksLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">
+                                <CircularProgress />
+                              </TableCell>
+                            </TableRow>
+                          ) : !Array.isArray(tasks) ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No tasks available</TableCell>
+                            </TableRow>
+                          ) : tasks.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">No tasks found</TableCell>
+                            </TableRow>
+                          ) : (
+                            tasks.map((task) => (
+                              <TableRow key={task._id}>
+                                <TableCell>{task.title}</TableCell>
+                                <TableCell>{task.description}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={task.status}
+                                    color={getStatusColor(task.status)}
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                                    <Select
+                                      value={task.status}
+                                      onChange={(e) => handleUpdateTaskStatus(task._id, e.target.value)}
+                                      size="small"
+                                    >
+                                      <MenuItem value="pending">Pending</MenuItem>
+                                      <MenuItem value="in progress">In Progress</MenuItem>
+                                      <MenuItem value="completed">Completed</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </GlassCard>
+              </Grid>
+            </Grid>
+          )}
+        </Container>
+
+        {/* Submit Design Dialog */}
+        <Dialog open={openSubmitDialog} onClose={() => setOpenSubmitDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Submit New Design</DialogTitle>
+          <DialogContent>
+            <Box component="form" onSubmit={handleSubmitDesign} sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                label="Title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                margin="normal"
+                required
+              />
+              <TextField
+                fullWidth
+                label="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                margin="normal"
+                multiline
+                rows={4}
+                required
+              />
+              <Button
+                variant="contained"
+                component="label"
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Upload Design File
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => setFormData({ ...formData, designFile: e.target.files[0] })}
+                />
+              </Button>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
+            <Button onClick={handleSubmitDesign} variant="contained" color="primary">
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
+    </div>
   );
 };
 

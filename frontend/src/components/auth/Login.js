@@ -22,20 +22,8 @@ const Login = () => {
     setError('');
     try {
       const result = await dispatch(login(formData)).unwrap();
-      switch (result.user.role) {
-        case 'manager':
-          navigate('/manager-dashboard');
-          break;
-        case 'designer':
-          navigate('/designer-dashboard');
-          break;
-        case 'Business':
-          navigate('/business-dashboard');
-        break;
-        
-        default:
-          navigate('/dashboard');
-      }
+      // Navigate to unified dashboard route - DynamicDashboard will handle role-based routing
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed. Please check credentials.');
     }
@@ -160,7 +148,7 @@ const Login = () => {
               </button>
 
               <div className="text-center small">
-                Don’t have an account?{' '}
+                Don't have an account?{' '}
                 <Link to="/register" className="fw-bold text-decoration-none">
                   Sign Up
                 </Link>
