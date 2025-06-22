@@ -1,10 +1,7 @@
 import axios from 'axios';
-
-<<<<<<< HEAD
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-=======
+// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
->>>>>>> 966e2bbd58fa683d08651de65cd9959f6b70276f
+
 
 // Create axios instance with default config
 const api = axios.create({
