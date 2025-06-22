@@ -6,6 +6,8 @@ import { useDispatch } from 'react-redux';
 import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
 import UpdateForm from './UpdateForm';
+import Chat from '../common/Chat';
+import { managerService } from '../../services/api';
 
 
 const EmployeeDashboard = () => {
@@ -54,74 +56,76 @@ const EmployeeDashboard = () => {
   })
   const [image, setImage] = useState(null);
 
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [managerUser, setManagerUser] = useState(null);
+  const [employeeUser, setEmployeeUser] = useState(null);
 
+  const myProjects=projects
+  const finishedProjects=[]
 
-const myProjects=projects
-const finishedProjects=[]
+  // Helper function to get status badge styling
+  const getStatusBadgeStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+      case 'in progress':
+        return 'bg-primary';
+      case 'completed':
+        return 'bg-success';
+      case 'not started':
+        return 'bg-secondary';
+      case 'on hold':
+        return 'bg-warning text-dark';
+      case 'cancelled':
+        return 'bg-danger';
+      default:
+        return 'bg-info';
+    }
+  };
 
-// Helper function to get status badge styling
-const getStatusBadgeStyle = (status) => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-    case 'in progress':
-      return 'bg-primary';
-    case 'completed':
-      return 'bg-success';
-    case 'not started':
-      return 'bg-secondary';
-    case 'on hold':
-      return 'bg-warning text-dark';
-    case 'cancelled':
-      return 'bg-danger';
-    default:
-      return 'bg-info';
-  }
-};
+  // Helper function to get approval status badge styling
+  const getApprovalStatusBadgeStyle = (status) => {
+    switch (status) {
+      case 'Approved':
+        return 'bg-success';
+      case 'Rejected':
+        return 'bg-danger';
+      case 'Pending':
+        return 'bg-warning text-dark';
+      default:
+        return 'bg-secondary';
+    }
+  };
 
-// Helper function to get approval status badge styling
-const getApprovalStatusBadgeStyle = (status) => {
-  switch (status) {
-    case 'Approved':
-      return 'bg-success';
-    case 'Rejected':
-      return 'bg-danger';
-    case 'Pending':
-      return 'bg-warning text-dark';
-    default:
-      return 'bg-secondary';
-  }
-};
+  // Helper function to format date
+  const formatDat = (dateString) => {
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-// Helper function to format date
-const formatDat = (dateString) => {
-  if (!dateString) return 'Not set';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+  // Helper function to calculate days until deadline
+  const getDaysUntilDeadline = (deadline) => {
+    if (!deadline) return null;
+    const today = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
-// Helper function to calculate days until deadline
-const getDaysUntilDeadline = (deadline) => {
-  if (!deadline) return null;
-  const today = new Date();
-  const deadlineDate = new Date(deadline);
-  const diffTime = deadlineDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-};
-
-// Helper function to get deadline indicator
-const getDeadlineIndicator = (deadline) => {
-  const days = getDaysUntilDeadline(deadline);
-  if (days === null) return { text: 'No deadline', class: 'text-muted' };
-  if (days < 0) return { text: `${Math.abs(days)} days overdue`, class: 'text-danger fw-bold' };
-  if (days === 0) return { text: 'Due today', class: 'text-warning fw-bold' };
-  if (days <= 3) return { text: `${days} days left`, class: 'text-warning' };
-  if (days <= 7) return { text: `${days} days left`, class: 'text-info' };
-  return { text: `${days} days left`, class: 'text-success' };
-};
+  // Helper function to get deadline indicator
+  const getDeadlineIndicator = (deadline) => {
+    const days = getDaysUntilDeadline(deadline);
+    if (days === null) return { text: 'No deadline', class: 'text-muted' };
+    if (days < 0) return { text: `${Math.abs(days)} days overdue`, class: 'text-danger fw-bold' };
+    if (days === 0) return { text: 'Due today', class: 'text-warning fw-bold' };
+    if (days <= 3) return { text: `${days} days left`, class: 'text-warning' };
+    if (days <= 7) return { text: `${days} days left`, class: 'text-info' };
+    return { text: `${days} days left`, class: 'text-success' };
+  };
 
 
 
@@ -1218,6 +1222,34 @@ useEffect(() => {
     setEditImage(null);
   };
 
+  // Fetch employee user info (with _id) from token/localStorage on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userObj = payload.user || payload;
+        setEmployeeUser({ _id: userObj._id || userObj.id, ...userObj });
+      } catch (e) {
+        console.error('Failed to decode token for employee user', e);
+      }
+    }
+  }, []);
+
+  const handleOpenChat = async () => {
+    try {
+      const res = await managerService.getProfile();
+      // Ensure _id is present for chat
+      setManagerUser({ _id: res.data._id || res.data.id, ...res.data });
+      setShowChatModal(true);
+    } catch (err) {
+      alert('Could not fetch manager info for chat');
+      console.error('Manager fetch error:', err);
+    }
+  };
+
+  const handleCloseChat = () => setShowChatModal(false);
+
   if (!isLoggedIn) {
     return (
       navigate('/login')
@@ -1300,6 +1332,10 @@ useEffect(() => {
                   </button>
                 );
               })}
+              <button className="btn btn-outline-primary w-100 mb-3" onClick={handleOpenChat}>
+                <User size={16} className="me-2" />
+                Chat with Manager
+              </button>
             </div>
           </nav>
         </div>
@@ -1608,7 +1644,29 @@ useEffect(() => {
         <div className="modal-backdrop fade show"></div>
       )}
 
-    
+      {/* Chat with Manager Modal */}
+      {showChatModal && managerUser && employeeUser && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="bi bi-chat-dots me-2 text-primary"></i>
+                  Chat with Manager
+                </h5>
+                <button type="button" className="btn-close" onClick={handleCloseChat}></button>
+              </div>
+              <div className="modal-body">
+                {/* Debug logs for user objects */}
+                {console.log('Employee user for chat:', employeeUser)}
+                {console.log('Manager user for chat:', managerUser)}
+                <Chat currentUser={employeeUser} otherUser={managerUser} />
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </div>
+      )}
     </>
   );
 };
