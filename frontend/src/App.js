@@ -13,6 +13,7 @@ import PrivateRoute from './components/auth/PrivateRoute';
 
 // Dynamic Dashboard
 import DynamicDashboard from './components/dashboard/DynamicDashboard';
+import ManagerDashboard from './components/dashboard/ManagerDashboard';
 
 // Manager Components
 import ProjectDetails from './components/dashboard/ProjectDetails';
@@ -63,6 +64,14 @@ function App() {
             />
 
             {/* Manager Routes */}
+            <Route
+              path="/manager-dashboard"
+              element={
+                <PrivateRoute>
+                  <ManagerDashboard />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/team"
               element={
