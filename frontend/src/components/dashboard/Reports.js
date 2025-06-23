@@ -21,7 +21,8 @@ import {
   Target,
   Award,
   Eye,
-  Search
+  Search,
+  XCircle
 } from 'lucide-react';
 import UserAvatar from '../common/userAvathar';
 
@@ -30,41 +31,69 @@ const Reports = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [selectedProject, setSelectedProject] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedEmployee, setSelectedEmployee] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const extractData = (response) => {
+    if (!response) return [];
+    if (Array.isArray(response.data)) return response.data;
+    if (response.data && Array.isArray(response.data.data)) return response.data.data;
+    if (response.data && Array.isArray(response.data.results)) return response.data.results;
+    if (response.data && Array.isArray(response.data.items)) return response.data.items;
+    if (Array.isArray(response)) return response;
+    if (response.data && typeof response.data === 'object') {
+      const keys = Object.keys(response.data);
+      for (const key of keys) {
+        if (Array.isArray(response.data[key])) return response.data[key];
+      }
+    }
+    console.warn('Could not extract array data from response:', response);
+    return [];
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [updatesRes, projectsRes] = await Promise.all([
-        managerService.getEmployeeUpdates(),
+        managerService.getAllEmployeeUpdates(),
         managerService.getProjects()
       ]);
       
-      setDailyUpdates(updatesRes.data || []);
-      setProjects(projectsRes.data || []);
+      setDailyUpdates(extractData(updatesRes));
+      setProjects(extractData(projectsRes));
     } catch (error) {
       console.error('Failed to fetch data:', error);
-      setError('Failed to load reports data');
+      setError('Failed to load reports data. Please try refreshing.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleViewUpdate = (update) => {
+    setSelectedUpdate(update);
+    setShowUpdateModal(true);
+  };
+
   const handleApproveUpdate = async (updateId, action) => {
     try {
-      await managerService.approveRejectUpdate(updateId, action);
-      // Refresh data after approval/rejection
-      fetchData();
+      setSuccess(null);
+      setError(null);
+      await managerService.approveRejectUpdate(updateId, action, 'Status updated by manager.');
+      setSuccess(`Update has been ${action}.`);
+      fetchData(); // Refresh data
     } catch (error) {
       console.error('Failed to update approval status:', error);
-      setError('Failed to update approval status');
+      setError('Failed to update approval status. Please try again.');
     }
   };
 
@@ -114,11 +143,17 @@ const Reports = () => {
       {/* Navigation Bar */}
       <Navbar userRole="manager" />
 
-      {/* Error Message */}
+      {/* Error/Success Messages */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>{success}</span>
         </div>
       )}
 
@@ -264,21 +299,16 @@ const Reports = () => {
                           </div>
                         </div>
                         
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-600">{update.update}</p>
-                        </div>
+                        <p className="text-sm text-gray-600 mb-4">{update.update}</p>
 
-                        {update.imageUrl && (
-                          <div className="mb-3">
-                            <img 
-                              src={update.imageUrl} 
-                              alt="Update attachment"
-                              className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                            />
-                          </div>
-                        )}
-
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex items-center justify-end mt-4 space-x-2">
+                          <button
+                            onClick={() => handleViewUpdate(update)}
+                            className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>View</span>
+                          </button>
                           {update.approvalStatus === 'Pending' && (
                             <>
                               <button
@@ -292,7 +322,7 @@ const Reports = () => {
                                 onClick={() => handleApproveUpdate(update._id, 'reject')}
                                 className="flex items-center space-x-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-red-600 transition-all duration-200"
                               >
-                                <AlertCircle className="w-3 h-3" />
+                                <XCircle className="w-3 h-3" />
                                 <span>Reject</span>
                               </button>
                             </>
@@ -307,6 +337,81 @@ const Reports = () => {
           </div>
         )}
       </div>
+
+      {/* Update Detail Modal */}
+      {showUpdateModal && selectedUpdate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Update Details</h3>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <UserAvatar
+                  avatar={selectedUpdate.employee?.avatar}
+                  name={selectedUpdate.employee?.name}
+                  size="sm"
+                />
+                <div>
+                  <h4 className="font-semibold text-gray-800">{selectedUpdate.employee?.name}</h4>
+                  <p className="text-xs text-gray-500">{formatDate(selectedUpdate.date)}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Project:</h5>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.project_title}</p>
+              </div>
+
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Update:</h5>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.update}</p>
+              </div>
+
+              {selectedUpdate.imageUrl && (
+                <div>
+                  <h5 className="font-medium text-gray-800 mb-2">Attachment:</h5>
+                  <img 
+                    src={`http://localhost:5000/${selectedUpdate.imageUrl}`}
+                    alt="Update attachment"
+                    className="w-full max-w-xs object-cover rounded-lg border border-gray-200 cursor-pointer"
+                    onClick={() => window.open(`http://localhost:5000/${selectedUpdate.imageUrl}`, '_blank')}
+                  />
+                </div>
+              )}
+
+              {selectedUpdate.approvalStatus === 'Pending' && (
+                <div className="flex space-x-2 pt-4 border-t">
+                  <button
+                    onClick={() => {
+                      handleApproveUpdate(selectedUpdate._id, 'approve');
+                      setShowUpdateModal(false);
+                    }}
+                    className="flex-1 bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition-all duration-200"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleApproveUpdate(selectedUpdate._id, 'reject');
+                      setShowUpdateModal(false);
+                    }}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-xl hover:bg-red-600 transition-all duration-200"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

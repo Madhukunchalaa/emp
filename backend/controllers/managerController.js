@@ -673,39 +673,69 @@ const getAllEmployeeUpdates = async (req, res) => {
 const approveRejectUpdate = async (req, res) => {
   try {
     const { updateId } = req.params;
-    const { action, feedback } = req.body; // action: 'approve' or 'reject'
+    const { action, reason } = req.body;
 
     if (!['approve', 'reject'].includes(action)) {
       return res.status(400).json({ message: 'Action must be either "approve" or "reject"' });
     }
 
-    const update = await DailyUpdate.findById(updateId);
-    if (!update) {
-      return res.status(404).json({ message: 'Update not found' });
-    }
+    const approvalStatus = action === 'approve' ? 'Approved' : 'Rejected';
+    const updateData = {
+      approvalStatus,
+      managerFeedback: reason || `Status updated to ${approvalStatus}`,
+      approvedBy: req.user.id,
+      approvedAt: new Date()
+    };
 
-    // Update the approval status
-    update.approvalStatus = action === 'approve' ? 'Approved' : 'Rejected';
-    update.managerFeedback = feedback || '';
-    update.approvedBy = req.user.id;
-    update.approvedAt = new Date();
-
-    await update.save();
-
-    // Populate the fields for response
-    await update.populate([
+    const updatedDocument = await DailyUpdate.findByIdAndUpdate(
+      updateId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).populate([
       { path: 'employee', select: 'name email' },
       { path: 'project', select: 'title description' },
       { path: 'approvedBy', select: 'name' }
     ]);
 
+    if (!updatedDocument) {
+      return res.status(404).json({ message: 'Update not found' });
+    }
+
     res.json({
       message: `Update ${action}d successfully`,
-      update
+      update: updatedDocument
     });
   } catch (error) {
     console.error('Error approving/rejecting update:', error);
+    // Provide a more specific error if it's a validation issue
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: `Validation failed: ${error.message}` });
+    }
     res.status(500).json({ message: 'Error processing update' });
+  }
+};
+
+const updateTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    task.status = status;
+    await task.save();
+
+    res.json({ message: `Task status updated to ${status}`, task });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ message: 'Error updating task status' });
   }
 };
 
@@ -729,4 +759,5 @@ module.exports = {
   approveRejectUpdate,
   getProjectTasks,
   getProjectById,
+  updateTaskStatus
 };

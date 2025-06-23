@@ -18,7 +18,8 @@ const {
   getEmployeeAttendance,
   getEmployeeDailyUpdates,
   getEmployeeUpdateSummary,
-  approveRejectUpdate
+  approveRejectUpdate,
+  updateTaskStatus
 } = require('../controllers/managerController');
 
 const assign=require('../controllers/testController')
@@ -36,7 +37,8 @@ router.post('/projects', auth, createProject);
 router.get('/projects', auth, getProjects);
 router.get('/projects/:id', auth, getProjectById);
 router.post('/projects/assign', auth, assignProject);
-router.post('/tasks', auth, assignTask);
+router.post('/tasks/assign', auth, assignTask);
+router.put('/tasks/:taskId/status', auth, updateTaskStatus);
 router.put('/projects/:id/status', auth, updateProjectStatus);
 router.get('/projects/:projectId/tasks', auth, getProjectTasks);
 

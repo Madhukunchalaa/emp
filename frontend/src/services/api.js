@@ -295,17 +295,18 @@ export const managerService = {
   getProjectTasks: (projectId) => api.get(`/manager/projects/${projectId}/tasks`),
   
   // Task management
-  assignTask: (taskData) => api.post('/manager/tasks', taskData),
+  assignTask: (taskData) => api.post('/manager/tasks/assign', taskData),
+  approveRejectTask: (taskId, status) => api.put(`/manager/tasks/${taskId}/status`, { status }),
   
   // Attendance
   getAttendanceHistory: () => api.get('/manager/attendance'),
   getEmployeeAttendance: (employeeId) => api.get(`/manager/employees/${employeeId}/attendance`),
   
   // Updates
-  getEmployeeUpdates: () => api.get('/manager/employee-updates'),
+  getEmployeeUpdates: () => api.get('/manager/updates'),
   getEmployeeUpdateSummary: () => api.get('/manager/employee-update-summary'),
   getAllEmployeeUpdates: () => api.get('/manager/all-updates'),
-  approveRejectUpdate: (updateId, action) => api.put(`/manager/updates/${updateId}/approve-reject`, { action }),
+  approveRejectUpdate: (updateId, action, reason) => api.put(`/manager/updates/${updateId}/approve-reject`, { action, reason }),
   
   // Testing
   testAssign: (data) => api.post('/manager/test-assign', data)
