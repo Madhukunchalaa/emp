@@ -24,6 +24,7 @@ const ProjectDetails = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -59,12 +60,33 @@ const ProjectDetails = () => {
     }
   }, [projectId]);
 
+  const handleApproveTask = async (taskId, status) => {
+    try {
+      await managerService.approveRejectTask(taskId, status);
+      setSuccess(`Task has been ${status}.`);
+      // Refresh tasks
+      const tasksRes = await managerService.getProjectTasks(projectId);
+      let projectTasks = [];
+      if (tasksRes.data && tasksRes.data.tasks) {
+        projectTasks = Array.isArray(tasksRes.data.tasks) ? tasksRes.data.tasks : [];
+      } else if (Array.isArray(tasksRes.data)) {
+        projectTasks = tasksRes.data;
+      }
+      setTasks(projectTasks);
+    } catch (err) {
+      setError('Failed to update task status.');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
+      case 'approved': return 'bg-green-100 text-green-800';
       case 'in-progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'pending approval': return 'bg-orange-100 text-orange-800';
       case 'overdue': return 'bg-red-100 text-red-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -124,6 +146,13 @@ const ProjectDetails = () => {
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>{success}</span>
         </div>
       )}
 
@@ -384,6 +413,25 @@ const ProjectDetails = () => {
                             </div>
                           </div>
                         )}
+
+                        <div className="mt-3 flex justify-end space-x-2">
+                          {task.status === 'pending approval' && (
+                            <>
+                              <button
+                                onClick={() => handleApproveTask(task._id, 'approved')}
+                                className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleApproveTask(task._id, 'rejected')}
+                                className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

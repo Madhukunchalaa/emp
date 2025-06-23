@@ -237,26 +237,6 @@ export default function ManagerDashboard() {
     setShowUpdateModal(true);
   };
 
-  const handleApproveUpdate = async (updateId, action) => {
-    try {
-      setLoading(true);
-      await managerService.approveRejectUpdate(updateId, action, 'Approved by manager');
-      setSuccess(`Update ${action} successfully`);
-      // Refresh updates
-      const updatesRes = await managerService.getEmployeeUpdates();
-      const updates = extractData(updatesRes);
-      setEmployeeUpdates(updates);
-      setStats(prev => ({
-        ...prev,
-        pendingUpdates: updates.filter(update => update.status === 'pending').length
-      }));
-    } catch (error) {
-      setError(`Failed to ${action} update`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filteredEmployees = employeesData.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -588,24 +568,6 @@ export default function ManagerDashboard() {
                         <Eye className="w-3 h-3" />
                         <span>View</span>
                       </button>
-                      {update.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleApproveUpdate(update._id, 'approve')}
-                            className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-600 transition-all duration-200"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            <span>Approve</span>
-                          </button>
-                          <button
-                            onClick={() => handleApproveUpdate(update._id, 'reject')}
-                            className="flex items-center space-x-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-red-600 transition-all duration-200"
-                          >
-                            <XCircle className="w-3 h-3" />
-                            <span>Reject</span>
-                          </button>
-                        </>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -691,24 +653,6 @@ export default function ManagerDashboard() {
                         <Eye className="w-3 h-3" />
                         <span>View</span>
                       </button>
-                      {update.approvalStatus === 'Pending' && (
-                        <>
-                          <button
-                            onClick={() => handleApproveUpdate(update._id, 'approve')}
-                            className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-600 transition-all duration-200"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            <span>Approve</span>
-                          </button>
-                          <button
-                            onClick={() => handleApproveUpdate(update._id, 'reject')}
-                            className="flex items-center space-x-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-red-600 transition-all duration-200"
-                          >
-                            <XCircle className="w-3 h-3" />
-                            <span>Reject</span>
-                          </button>
-                        </>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -831,23 +775,6 @@ export default function ManagerDashboard() {
                     alt="Update attachment"
                     className="w-32 h-32 object-cover rounded-lg border border-gray-200"
                   />
-                </div>
-              )}
-
-              {selectedUpdate.approvalStatus === 'Pending' && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleApproveUpdate(selectedUpdate._id, 'approve')}
-                    className="flex-1 bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition-all duration-200"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleApproveUpdate(selectedUpdate._id, 'reject')}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-xl hover:bg-red-600 transition-all duration-200"
-                  >
-                    Reject
-                  </button>
                 </div>
               )}
             </div>

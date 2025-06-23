@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { 
   Bell, 
   LogOut, 
@@ -9,6 +10,7 @@ import {
   Clock
 } from 'lucide-react';
 import UserAvatar from './userAvathar';
+import { logout } from '../../store/slices/authSlice';
 
 const Navbar = ({ userRole = 'manager' }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -17,6 +19,7 @@ const Navbar = ({ userRole = 'manager' }) => {
   const [role, setRole] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Update time every second
   useEffect(() => {
@@ -67,8 +70,7 @@ const Navbar = ({ userRole = 'manager' }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    dispatch(logout());
     navigate('/login');
   };
 
