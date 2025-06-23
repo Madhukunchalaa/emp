@@ -19,10 +19,10 @@ const DynamicDashboard = () => {
       return <EmployeeDashboard />;
     case 'designer':
       console.log('Rendering DesignerDashboard');
-      return <DesignerDashboard />;
+      return <EmployeeDashboard/>;
     case 'business':
       console.log('Rendering BusinessDashboard');
-      return <BusinessDashboard />;
+      return <ManagerDashboard />;
     default:
       console.log(`No valid role found ('${userRole}'), showing a fallback.`);
       // It's better to show a loading or error message than a wrong dashboard.
