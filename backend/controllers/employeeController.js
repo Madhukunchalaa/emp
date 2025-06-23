@@ -445,21 +445,6 @@ exports.submitDailyUpdate = async (req, res) => {
       });
     }
 
-    // Check for existing update today (optional)
-    const existing = await DailyUpdate.findOne({
-      employee: req.user.id,
-      date: {
-        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      }
-    });
-
-    if (existing) {
-      return res.status(400).json({ 
-        message: 'You have already submitted an update for today. Please edit your existing update instead.' 
-      });
-    }
-
     // Handle image upload
     let imageUrl = null;
     if (req.file) {
