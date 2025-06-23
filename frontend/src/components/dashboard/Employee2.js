@@ -251,17 +251,21 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 const handleChange = (e) => {
   const { name, value } = e.target;
 
-  if (name === "project_title") {
-    const selectedProject = projects.find((p) => p.title === value);
-    setFormData((prev) => ({
-      ...prev,
-      project_title: value,
-      project: selectedProject?._id || "", // Store _id secretly for backend
-    }));
+  if (name === "project") {
+    // When project is selected from dropdown, find the project details
+    const selectedProject = projects.find((p) => p._id === value);
+    if (selectedProject) {
+      setFormData((prev) => ({
+        ...prev,
+        project: selectedProject._id,
+        project_title: selectedProject.title
+      }));
+    }
   } else {
+    // For all other fields, update normally
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   }
 };
@@ -273,24 +277,24 @@ const handleSubmit = async (e) => {
   try {
     const formPayload = new FormData();
 
-    formPayload.append('project', formData.project);          // hidden _id
-    formPayload.append('project_title', formData.project_title); // user sees this
+    // Add required fields
+    formPayload.append('project', formData.project);          // Project ID
+    formPayload.append('project_title', formData.project_title); // Project title
     formPayload.append('status', formData.status);
     formPayload.append('update', formData.update);
     formPayload.append('finishBy', formData.finishBy);
 
-    await employeeService.addDailyUpdate(); 
-    setMessage(`Today's update submitted successfully`);
-
-
+    // Add image if exists
+    if (image) {
       formPayload.append('image', image);
-    
+    }
 
-    await employeeService.addDailyUpdate(formPayload);
+    // Make single API call
+    const response = await employeeService.addDailyUpdate(formPayload);
 
     setMessage("Today's update submitted successfully");
-
-
+    
+    // Reset form
     setFormData({
       project: '',
       project_title: '',
@@ -307,7 +311,7 @@ const handleSubmit = async (e) => {
     console.error('Form not submitted:', err);
     setMessage("Something went wrong. Please try again.");
     
-    // Clear error message after 3 seconds too (optional)
+    // Clear error message after 3 seconds
     setTimeout(() => setMessage(null), 3000);
   }
 };
@@ -945,10 +949,88 @@ useEffect(() => {
                 Back to Updates
               </button>
             </div>
-            <UpdateForm onUpdateSubmitted={() => {
-              fetchDailyUpdates();
-              setActiveSection('updates');
-            }} />
+
+            <form onSubmit={handleSubmit} className="card p-4 shadow-sm">
+              <div className="mb-3">
+                <label className="form-label">Select Project</label>
+                <select
+                  name="project"
+                  className="form-select"
+                  value={formData.project}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a project...</option>
+                  {projects.map((project) => (
+                    <option key={project._id} value={project._id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Status</label>
+                <select
+                  name="status"
+                  className="form-select"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Status</option>
+                  <option value="Not Started">Not Started</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Update Description</label>
+                <textarea
+                  name="update"
+                  className="form-control"
+                  rows="4"
+                  value={formData.update}
+                  onChange={handleChange}
+                  placeholder="Describe what you worked on today, challenges faced, and next steps..."
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Finish By</label>
+                <input
+                  type="date"
+                  name="finishBy"
+                  className="form-control"
+                  value={formData.finishBy}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Upload Screenshot</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files[0])}
+                  className="form-control"
+                />
+              </div>
+
+              {message && (
+                <div className={`alert ${message.includes('successfully') ? 'alert-success' : 'alert-danger'} mb-3`}>
+                  {message}
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary w-100">
+                Submit Update
+              </button>
+            </form>
           </div>
         );
         
