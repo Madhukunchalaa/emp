@@ -25,6 +25,7 @@ export const login = createAsyncThunk(
       // Store token and user data in localStorage
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('userRole', response.data.user.role.toLowerCase());
       
       return response.data;
     } catch (error) {
@@ -40,6 +41,7 @@ export const logout = createAsyncThunk(
     await authService.logout();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
   }
 );
 
@@ -49,6 +51,19 @@ const initialState = {
   loading: false,
   error: null
 };
+
+// Initialize userRole in localStorage if user data exists
+const storedUser = localStorage.getItem('user');
+if (storedUser) {
+  try {
+    const user = JSON.parse(storedUser);
+    if (user.role && !localStorage.getItem('userRole')) {
+      localStorage.setItem('userRole', user.role);
+    }
+  } catch (error) {
+    console.error('Error parsing stored user data:', error);
+  }
+}
 
 const authSlice = createSlice({
   name: 'auth',

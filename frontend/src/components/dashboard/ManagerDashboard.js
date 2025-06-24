@@ -1,1433 +1,786 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
+import { Calendar, Clock, Users, BarChart3, MessageSquare, Eye, Plus, Bell, TrendingUp, AlertCircle, CheckCircle, XCircle, Filter, Search, Download, RefreshCw } from 'lucide-react';
+import { managerService } from '../../services/api';
+import UserAvatar from '../common/userAvathar';
+import { Link } from 'react-router-dom';
+import Navbar from '../common/Navbar';
 
-import {
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  Box,
-  Tab,
-  Tabs,
-  Card,
-  CardContent,
-  Avatar,
-  Fade,
-  Slide,
-  Zoom,
-  useTheme,
-  alpha,
-  Snackbar,
-  Alert,
-  Pagination,
-} from '@mui/material';
-import {
-  Schedule as ScheduleIcon,
-  Person as PersonIcon,
-  Assignment as AssignmentIcon,
-  AccessTime as AccessTimeIcon,
-  Add as AddIcon,
-  Dashboard as DashboardIcon,
-  TrendingUp as TrendingUpIcon,
-  Group as GroupIcon,
-  Assignment as ProjectIcon,
-  Timer as TimerIcon,
-  Star as StarIcon,
-  Visibility as VisibilityIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  Comment as CommentIcon,
-  Edit as EditIcon,
-  Save as SaveIcon,
-  CalendarToday as CalendarIcon,
-  ThumbUp as ApproveIcon,
-  ThumbDown as RejectIcon,
-  Image as ImageIcon,
-} from '@mui/icons-material';
-import {
-  fetchEmployees,
-  fetchProjects,
-  assignProject,
-  fetchAttendanceHistory,
-  fetchEmployeeDailyUpdates, // Added this import
-  clearError,
-  clearSuccess,
-} from '../../store/slices/managerSlice';
-import {
-  fetchAllDesigns,
-  reviewDesign,
-} from '../../store/slices/designSlice';
-import EmployeeCalendar from './EmployeeCalendar';
-import api from '../../services/api';
-
-const GlassCard = ({ children, sx = {}, ...props }) => {
-  const theme = useTheme();
-
-  return (
-    <Card
-      sx={{
-        background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.4)})`,
-        backdropFilter: 'blur(20px)',
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        borderRadius: '20px',
-        boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: `0 16px 48px ${alpha(theme.palette.common.black, 0.15)}`,
-        },
-        ...sx,
-      }}
-      {...props}
-    >
-      {children}
-    </Card>
-  );
-};
-
-const StatCard = ({ icon, title, value, subtitle, color = 'primary', delay = 0 }) => (
-  <Zoom in timeout={1000} style={{ transitionDelay: `${delay}ms` }}>
-    <GlassCard>
-      <CardContent sx={{ p: 3 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
-            <Typography variant="h4" fontWeight="bold" color={`${color}.main`}>
-              {value}
-            </Typography>
-            <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {subtitle}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: '16px',
-              background: `linear-gradient(135deg, ${alpha('#667eea', 0.2)}, ${alpha('#764ba2', 0.2)})`,
-              color: `${color}.main`,
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </GlassCard>
-  </Zoom>
-);
-
-const AnimatedTab = ({ label, icon, ...props }) => (
-  <Tab
-    label={
-      <Box display="flex" alignItems="center" gap={1}>
-        {icon}
-        <Typography variant="body2" fontWeight="600">
-          {label}
-        </Typography>
-      </Box>
-    }
-    sx={{
-      minHeight: 64,
-      textTransform: 'none',
-      borderRadius: '12px',
-      mx: 0.5,
-      transition: 'all 0.3s ease',
-      '&.Mui-selected': {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        '& .MuiTypography-root': {
-          color: 'white',
-        },
-      },
-    }}
-    {...props}
-  />
-);
-
-const ManagerDashboard = () => {
-  const dispatch = useDispatch();
-  const { 
-    employees = [], 
-    projects = [], 
-    attendanceHistory = [], 
-    dailyUpdates = [], // Added this from Redux state
-    loading, 
-    error, 
-    success 
-  } = useSelector((state) => state.manager);
-  const { user } = useSelector((state) => state.auth);
-
-  const [tabValue, setTabValue] = useState(0);
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [newProject, setNewProject] = useState({
-    title: '',
-    description: '',
-    deadline: '',
-    assignedTo: '',
-  });
+export default function ManagerDashboard() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [managerName, setManagerName] = useState('');
+  const [managerMail, setManagerMail] = useState('');
+  const [role, setRole] = useState('');
+  const [employeesData, setEmployeesData] = useState([]);
+  const [projectsData, setProjectsData] = useState([]);
   const [employeeUpdates, setEmployeeUpdates] = useState([]);
-  const [updateSummary, setUpdateSummary] = useState(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 7)),
-    endDate: new Date()
-  });
-  const [designReviewDialog, setDesignReviewDialog] = useState({
-    open: false,
-    design: null,
-    status: '',
-    comment: '',
-  });
-  const [designs, setDesigns] = useState([]);
-  const [designLoading, setDesignLoading] = useState(false);
-  const [designError, setDesignError] = useState(null);
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 9;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedUpdate, setSelectedUpdate] = useState(null);
 
+  // Dashboard stats
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    activeEmployees: 0,
+    totalProjects: 0,
+    completedProjects: 0,
+    pendingUpdates: 0,
+    totalHours: 0
+  });
+
+  // Fetch manager details
   useEffect(() => {
-    dispatch(fetchEmployees());
-    dispatch(fetchProjects());
-    fetchDesigns();
-  }, [dispatch]);
+    const managerDetails = async () => {
+      try {
+        setLoading(true);
+        const res = await managerService.getProfile();
+        setManagerName(res.data.name);
+        setManagerMail(res.data.mail);
+        setRole(res.data.role);
+      } catch (error) {
+        console.error('Failed to fetch manager details:', error);
+        setManagerName('Failed to fetch name');
+        setManagerMail('Failed to fetch manager email');
+        setRole('Failed to fetch manager role');
+      } finally {
+        setLoading(false);
+      }
+    };
+    managerDetails();
+  }, []);
 
+  // Fetch all employees
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        const res = await managerService.getEmployees();
+        console.log('Employees response:', res);
+        console.log('Employees data type:', typeof res.data);
+        console.log('Employees data:', res.data);
+        const employees = extractData(res);
+        setEmployeesData(employees);
+        setStats(prev => ({
+          ...prev,
+          totalEmployees: employees.length,
+          activeEmployees: employees.filter(emp => emp.status === 'active').length
+        }));
+      } catch (error) {
+        console.error('Failed to fetch employees:', error);
+        setError('Failed to fetch employees data');
+        setEmployeesData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  // Fetch projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const res = await managerService.getProjects();
+        console.log('Projects response:', res);
+        console.log('Projects data type:', typeof res.data);
+        console.log('Projects data:', res.data);
+        const projects = extractData(res);
+        setProjectsData(projects);
+        setStats(prev => ({
+          ...prev,
+          totalProjects: projects.length,
+          completedProjects: projects.filter(project => project.status === 'completed').length
+        }));
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        setError('Failed to fetch projects data');
+        setProjectsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  // Fetch employee updates
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      try {
+        setLoading(true);
+        const res = await managerService.getEmployeeUpdates();
+        console.log('Updates response:', res);
+        console.log('Updates data type:', typeof res.data);
+        console.log('Updates data:', res.data);
+        const updates = extractData(res);
+        setEmployeeUpdates(updates);
+        setStats(prev => ({
+          ...prev,
+          pendingUpdates: updates.filter(update => update.status === 'pending').length
+        }));
+      } catch (error) {
+        console.error('Failed to fetch updates:', error);
+        setError('Failed to fetch employee updates');
+        setEmployeeUpdates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUpdates();
+  }, []);
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Clear error/success messages after 5 seconds
   useEffect(() => {
     if (error) {
-      setTimeout(() => dispatch(clearError()), 5000);
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
     }
-    if (success) {
-      setTimeout(() => dispatch(clearSuccess()), 5000);
-    }
-  }, [error, success, dispatch]);
+  }, [error]);
 
   useEffect(() => {
-    if (selectedEmployee) {
-      fetchEmployeeUpdates();
-      // Fetch daily updates using Redux action
-      dispatch(fetchEmployeeDailyUpdates({
-        employeeId: selectedEmployee._id,
-        startDate: dateRange.startDate.toISOString(),
-        endDate: dateRange.endDate.toISOString()
-      }));
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 5000);
+      return () => clearTimeout(timer);
     }
-  }, [selectedEmployee, dateRange, dispatch]);
+  }, [success]);
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-    if (newValue === 2 && selectedEmployee) {
-      dispatch(fetchAttendanceHistory(selectedEmployee._id));
-    }
-    // Load daily updates when switching to Daily Updates tab
-    if (newValue === 3 && selectedEmployee) {
-      dispatch(fetchEmployeeDailyUpdates({
-        employeeId: selectedEmployee._id,
-        startDate: dateRange.startDate.toISOString(),
-        endDate: dateRange.endDate.toISOString()
-      }));
-    }
-  };
-
-  const handleProjectDialogOpen = () => {
-    setProjectDialogOpen(true);
-  };
-
-  const handleProjectDialogClose = () => {
-    setProjectDialogOpen(false);
-    setNewProject({
-      title: '',
-      description: '',
-      deadline: '',
-      assignedTo: '',
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
     });
   };
 
-  const handleProjectSubmit = () => {
-    dispatch(assignProject(newProject));
-    handleProjectDialogClose();
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const handleEmployeeSelect = (employee) => {
-    setSelectedEmployee(employee);
-    if (tabValue === 2) {
-      dispatch(fetchAttendanceHistory(employee._id));
-    }
-    if (tabValue === 3) {
-      dispatch(fetchEmployeeDailyUpdates({
-        employeeId: employee._id,
-        startDate: dateRange.startDate.toISOString(),
-        endDate: dateRange.endDate.toISOString()
-      }));
-    }
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
   };
+
+  // Helper function to safely extract data from API responses
+  const extractData = (response) => {
+    if (!response) return [];
+    
+    // If response.data is an array, return it
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // If response.data is an object with a data property
+    if (response.data && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    
+    // If response.data is an object with a results property
+    if (response.data && Array.isArray(response.data.results)) {
+      return response.data.results;
+    }
+    
+    // If response.data is an object with an items property
+    if (response.data && Array.isArray(response.data.items)) {
+      return response.data.items;
+    }
+    
+    // If response itself is an array
+    if (Array.isArray(response)) {
+      return response;
+    }
+    
+    // If response.data is an object, try to find any array property
+    if (response.data && typeof response.data === 'object') {
+      const keys = Object.keys(response.data);
+      for (const key of keys) {
+        if (Array.isArray(response.data[key])) {
+          return response.data[key];
+        }
+      }
+    }
+    
+    // Default fallback
+    console.warn('Could not extract array data from response:', response);
+    return [];
+  };
+
+  const handleViewEmployee = (employee) => {
+    setSelectedEmployee(employee);
+    setShowEmployeeModal(true);
+  };
+
+  const handleViewUpdate = (update) => {
+    setSelectedUpdate(update);
+    setShowUpdateModal(true);
+  };
+
+  const filteredEmployees = employeesData.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || employee.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredProjects = projectsData.filter(project => {
+    return project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           project.description.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Not Started':
-        return 'default';
-      case 'In Progress':
-        return 'primary';
-      case 'Completed':
-        return 'success';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'default';
-    }
-  };
-
-  const fetchEmployeeUpdates = async () => {
-    try {
-      console.log('Fetching updates for employee:', selectedEmployee._id);
-      const response = await api.get('/manager/employee-updates', {
-        params: {
-          employeeId: selectedEmployee._id,
-          startDate: dateRange.startDate.toISOString(),
-          endDate: dateRange.endDate.toISOString()
-        }
-      });
-      console.log('Employee updates response:', response.data);
-      setEmployeeUpdates(response.data.updates || []);
-      setUpdateSummary(response.data.summary || null);
-    } catch (error) {
-      console.error('Error fetching employee updates:', error);
-      setEmployeeUpdates([]);
-      setUpdateSummary(null);
-    }
-  };
-
-  const fetchDesigns = async () => {
-    try {
-      setDesignLoading(true);
-      const response = await dispatch(fetchAllDesigns({})).unwrap();
-      setDesigns(response);
-      
-    } catch (error) {
-      setDesignError(error.message);
-    } finally {
-      setDesignLoading(false);
-    }
-  };
-
-  const handleDesignReview = (design) => {
-    setDesignReviewDialog({
-      open: true,
-      design,
-      status: '',
-      comment: '',
-    });
-  };
-
-  const handleDesignReviewClose = () => {
-    setDesignReviewDialog({
-      open: false,
-      design: null,
-      status: '',
-      comment: '',
-    });
-  };
-
-  const handleDesignReviewSubmit = async () => {
-    try {
-      await dispatch(reviewDesign({
-        designId: designReviewDialog.design._id,
-        status: designReviewDialog.status,
-        managerComment: designReviewDialog.comment,
-      })).unwrap();
-      handleDesignReviewClose();
-      fetchDesigns();
-    } catch (error) {
-      setDesignError(error.message);
-    }
-  };
-
-  // Updated renderEmployeeUpdates to use Redux state
-  const renderEmployeeUpdates = () => {
-    if (!selectedEmployee) {
-      return (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            Please select an employee to view their daily updates
-          </Typography>
-        </Box>
-      );
-    }
-
-    if (loading) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    if (error) {
-      return (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
-      );
-    }
-
-    // Use dailyUpdates from Redux state instead of employeeUpdates
-    const updatesToShow = dailyUpdates || [];
-
-    if (updatesToShow.length === 0) {
-      return (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            No daily updates found for this employee
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <GlassCard>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h6" fontWeight="bold">
-              Daily Updates - {selectedEmployee.name}
-            </Typography>
-            <Box display="flex" gap={2}>
-              <TextField
-                type="date"
-                label="Start Date"
-                value={dateRange.startDate.toISOString().split('T')[0]}
-                onChange={(e) => {
-                  const newDateRange = { ...dateRange, startDate: new Date(e.target.value) };
-                  setDateRange(newDateRange);
-                  // Refetch data with new date range
-                  if (selectedEmployee) {
-                    dispatch(fetchEmployeeDailyUpdates({
-                      employeeId: selectedEmployee._id,
-                      startDate: newDateRange.startDate.toISOString(),
-                      endDate: newDateRange.endDate.toISOString()
-                    }));
-                  }
-                }}
-                InputLabelProps={{ shrink: true }}
-                size="small"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
-              />
-              <TextField
-                type="date"
-                label="End Date"
-                value={dateRange.endDate.toISOString().split('T')[0]}
-                onChange={(e) => {
-                  const newDateRange = { ...dateRange, endDate: new Date(e.target.value) };
-                  setDateRange(newDateRange);
-                  // Refetch data with new date range
-                  if (selectedEmployee) {
-                    dispatch(fetchEmployeeDailyUpdates({
-                      employeeId: selectedEmployee._id,
-                      startDate: newDateRange.startDate.toISOString(),
-                      endDate: newDateRange.endDate.toISOString()
-                    }));
-                  }
-                }}
-                InputLabelProps={{ shrink: true }}
-                size="small"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
-              />
-            </Box>
-          </Box>
-
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Project</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Task Status</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Hours Spent</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Comments</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {updatesToShow.map((update) => (
-                  <React.Fragment key={update._id}>
-                    {update.tasks && update.tasks.map((task, index) => (
-                      <TableRow 
-                        key={`${update._id}-${index}`}
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: alpha('#667eea', 0.05),
-                          },
-                        }}
-                      >
-                        <TableCell>
-                          <Typography variant="body2">
-                            {new Date(update.date).toLocaleDateString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="600">
-                            {projects.find(p => p._id === task.project)?.title || 'Unknown Project'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={task.status}
-                            color={
-                              task.status === 'Completed' ? 'success' : 
-                              task.status === 'In Progress' ? 'primary' : 
-                              'default'
-                            }
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {task.hoursSpent} hrs
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {task.description}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {update.comments || '-'}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </GlassCard>
-    );
-  };
-
-  const renderAttendanceHistory = () => {
-    if (!selectedEmployee) {
-      return (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <Typography variant="h6" color="text.secondary">
-            Select an employee to view attendance history
-          </Typography>
-        </Box>
-      );
-    }
-
-    if (loading) {
-      return (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    return (
-      <GlassCard>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h6" fontWeight="bold">
-              Attendance History
-            </Typography>
-            <Box display="flex" gap={2}>
-              <TextField
-                type="date"
-                label="Start Date"
-                value={dateRange.startDate.toISOString().split('T')[0]}
-                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: new Date(e.target.value) }))}
-                InputLabelProps={{ shrink: true }}
-                size="small"
-              />
-              <TextField
-                type="date"
-                label="End Date"
-                value={dateRange.endDate.toISOString().split('T')[0]}
-                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: new Date(e.target.value) }))}
-                InputLabelProps={{ shrink: true }}
-                size="small"
-              />
-            </Box>
-          </Box>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Punch In</TableCell>
-                  <TableCell>Punch Out</TableCell>
-                  <TableCell>Total Hours</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {attendanceHistory.length > 0 ? (
-                  attendanceHistory.map((record) => (
-                    <TableRow key={record._id}>
-                      <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {record.punchIn ? new Date(record.punchIn).toLocaleTimeString() : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {record.punchOut ? new Date(record.punchOut).toLocaleTimeString() : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {record.totalHours ? `${record.totalHours.toFixed(2)} hrs` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={record.status}
-                          color={
-                            record.status === 'Present' ? 'success' :
-                            record.status === 'Late' ? 'warning' :
-                            record.status === 'Absent' ? 'error' : 'default'
-                          }
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      <Typography variant="body2" color="text.secondary">
-                        No attendance records found for the selected period
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </GlassCard>
-    );
-  };
-
-  const renderEmployeeList = () => {
-    if (loading) {
-      return (
-        <Box display="flex" justifyContent="center" p={3}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedEmployees = employees.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(employees.length / itemsPerPage);
-
-    return (
-      <Fade in key="employees">
-        <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box display="flex" alignItems="center">
-              <GroupIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" fontWeight="bold">
-                Team Members
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              Total Employees: {employees.length}
-            </Typography>
-          </Box>
-          
-          <Grid container spacing={2}>
-            {paginatedEmployees.length > 0 ? (
-              paginatedEmployees.map((employee, index) => (
-                <Grid item xs={12} sm={6} md={4} key={employee._id}>
-                  <Zoom in timeout={500} style={{ transitionDelay: `${index * 100}ms` }}>
-                    <GlassCard>
-                      <CardContent>
-                        <Box display="flex" alignItems="center" mb={2}>
-                          <Avatar
-                            sx={{
-                              width: 56,
-                              height: 56,
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              mr: 2,
-                            }}
-                          >
-                            {employee.name?.charAt(0)}
-                          </Avatar>
-                          <Box flex={1}>
-                            <Typography variant="h6" fontWeight="bold">
-                              {employee.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {employee.role}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" mb={2}>
-                          {employee.email}
-                        </Typography>
-                        {employee.attendance?.today && (
-                          <Box mb={2}>
-                            <Chip
-                              label={`Today: ${employee.attendance.today.status}`}
-                              color={
-                                employee.attendance.today.status === 'Present' ? 'success' :
-                                employee.attendance.today.status === 'Late' ? 'warning' :
-                                'error'
-                              }
-                              size="small"
-                              sx={{ mb: 1 }}
-                            />
-                            {employee.attendance.today.punchIn && (
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                Punch In: {new Date(employee.attendance.today.punchIn).toLocaleTimeString()}
-                              </Typography>
-                            )}
-                            {employee.attendance.today.punchOut && (
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                Punch Out: {new Date(employee.attendance.today.punchOut).toLocaleTimeString()}
-                              </Typography>
-                            )}
-                          </Box>
-                        )}
-                        <Box display="flex" gap={1}>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            startIcon={<VisibilityIcon />}
-                            onClick={() => {
-                              handleEmployeeSelect(employee);
-                              setTabValue(2);
-                            }}
-                            sx={{
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              borderRadius: '12px',
-                              textTransform: 'none',
-                              fontWeight: 600,
-                            }}
-                          >
-                            View Hours
-                          </Button>
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<SaveIcon />}
-                            onClick={() => {
-                              handleEmployeeSelect(employee);
-                              setTabValue(3);
-                            }}
-                            sx={{
-                              borderRadius: '12px',
-                              textTransform: 'none',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Daily Updates
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </GlassCard>
-                  </Zoom>
-                </Grid>
-              ))
-            ) : (
-              <Grid item xs={12}>
-                <Box textAlign="center" py={4}>
-                  <PersonIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary">
-                    No employees found
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-          </Grid>
-
-          {totalPages > 1 && (
-            <Box display="flex" justifyContent="center" mt={3}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(e, value) => setPage(value)}
-                color="primary"
-                size="large"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    borderRadius: '12px',
-                    margin: '0 4px',
-                  },
-                }}
-              />
-            </Box>
-          )}
-        </Box>
-      </Fade>
-    );
-  };
-
-  const renderProjectList = () => {
-    if (loading) {
-      return (
-        <Box display="flex" justifyContent="center" p={3}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    return (
-      <Fade in key="projects">
-        <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box display="flex" alignItems="center">
-              <AssignmentIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" fontWeight="bold">
-                Project Management
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleProjectDialogOpen}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1.5,
-              }}
-            >
-              Assign New Project
-            </Button>
-          </Box>
-
-          <GlassCard>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Title</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Description</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Assigned To</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Deadline</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Comment</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {projects && projects.length > 0 ? (
-                    projects.map((project, index) => (
-                      <Fade in timeout={300} style={{ transitionDelay: `${index * 50}ms` }} key={project._id}>
-                        <TableRow
-                          sx={{
-                            '&:hover': {
-                              backgroundColor: alpha('#667eea', 0.05),
-                            },
-                          }}
-                        >
-                          <TableCell>
-                            <Typography fontWeight="600">{project.title}</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">{project.description}</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box display="flex" alignItems="center">
-                              <Avatar sx={{ width: 32, height: 32, mr: 1, fontSize: '0.8rem' }}>
-                                {project.assignedTo?.name?.charAt(0)}
-                              </Avatar>
-                              {project.assignedTo?.name}
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {new Date(project.deadline).toLocaleDateString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={project.status}
-                              color={getStatusColor(project.status)}
-                              size="small"
-                              sx={{ fontWeight: 600 }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">
-                              {project.comment || 'No comment'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box display="flex" gap={1}>
-                              <Tooltip title="View Details">
-                                <IconButton size="small" color="primary">
-                                  <VisibilityIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Edit Project">
-                                <IconButton size="small" color="primary">
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      </Fade>
-                    ))
-                    ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} align="center">
-                        <Box py={4}>
-                          <ProjectIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                          <Typography variant="h6" color="text.secondary">
-                            No projects assigned yet
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </GlassCard>
-        </Box>
-      </Fade>
-    );
-  };
-
-  const renderDesignReview = () => {
-    if (designLoading) {
-      return (
-        <Box display="flex" justifyContent="center" p={3}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    if (designError) {
-      return (
-        <Box p={3} textAlign="center">
-          <Typography color="error">{designError}</Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Fade in key="designs">
-        <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box display="flex" alignItems="center">
-              <ImageIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" fontWeight="bold">
-                Design Review
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              Total Designs: {designs.length}
-            </Typography>
-          </Box>
-
-          <Grid container spacing={3}>
-            {designs && designs.length > 0 ? (
-              designs.map((design, index) => (
-                <Grid item xs={12} sm={6} md={4} key={design._id}>
-                  <Zoom in timeout={500} style={{ transitionDelay: `${index * 100}ms` }}>
-                    <GlassCard>
-                      <CardContent>
-                        <Box display="flex" alignItems="center" mb={2}>
-                          <Avatar
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              mr: 2,
-                            }}
-                          >
-                            <ImageIcon />
-                          </Avatar>
-                          <Box flex={1}>
-                            <Typography variant="h6" fontWeight="bold" noWrap>
-                              {design.title}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              by {design.createdBy?.name}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        
-                        <Typography variant="body2" color="text.secondary" mb={2}>
-                          {design.description}
-                        </Typography>
-                        
-                        <Box mb={2}>
-                          <Chip
-                            label={design.status}
-                            color={
-                              design.status === 'approved' ? 'success' :
-                              design.status === 'rejected' ? 'error' :
-                              'warning'
-                            }
-                            size="small"
-                            sx={{ mb: 1 }}
-                          />
-                          <Typography variant="caption" display="block" color="text.secondary">
-                            Created: {new Date(design.createdAt).toLocaleDateString()}
-                          </Typography>
-                        </Box>
-
-                        {design.managerComment && (
-                          <Box mb={2} p={2} sx={{ backgroundColor: 'background.default', borderRadius: 2 }}>
-                            <Typography variant="body2" fontWeight="600" mb={1}>
-                              Manager Comment:
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {design.managerComment}
-                            </Typography>
-                          </Box>
-                        )}
-
-                        <Box display="flex" gap={1}>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            startIcon={<VisibilityIcon />}
-                            onClick={() => handleDesignReview(design)}
-                            sx={{
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              borderRadius: '12px',
-                              textTransform: 'none',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Review
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </GlassCard>
-                  </Zoom>
-                </Grid>
-              ))
-            ) : (
-              <Grid item xs={12}>
-                <Box textAlign="center" py={4}>
-                  <ImageIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary">
-                    No designs found for review
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-          </Grid>
-        </Box>
-      </Fade>
-    );
-  };
-
-  const renderTabContent = () => {
-    switch (tabValue) {
-      case 0:
-        return (
-          <Box>
-            <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={3}>
-                <StatCard
-                  icon={<GroupIcon sx={{ fontSize: 32 }} />}
-                  title="Total Employees"
-                  value={employees.length}
-                  subtitle="Active team members"
-                  delay={0}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StatCard
-                  icon={<AssignmentIcon sx={{ fontSize: 32 }} />}
-                  title="Active Projects"
-                  value={projects.filter(p => p.status !== 'Completed').length}
-                  subtitle="In progress"
-                  color="secondary"
-                  delay={100}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StatCard
-                  icon={<CheckCircleIcon sx={{ fontSize: 32 }} />}
-                  title="Completed Projects"
-                  value={projects.filter(p => p.status === 'Completed').length}
-                  subtitle="Successfully finished"
-                  color="success"
-                  delay={200}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StatCard
-                  icon={<TrendingUpIcon sx={{ fontSize: 32 }} />}
-                  title="Team Performance"
-                  value="85%"
-                  subtitle="Overall efficiency"
-                  color="warning"
-                  delay={300}
-                />
-              </Grid>
-            </Grid>
-            {renderEmployeeList()}
-          </Box>
-        );
-      case 1:
-        return renderProjectList();
-      case 2:
-        return renderAttendanceHistory();
-      case 3:
-        return renderEmployeeUpdates();
-      case 4:
-        return renderDesignReview();
-      case 5:
-        return selectedEmployee ? (
-          <EmployeeCalendar employeeId={selectedEmployee._id} />
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-            <Typography variant="h6" color="text.secondary">
-              Select an employee to view calendar
-            </Typography>
-          </Box>
-        );
-      default:
-        return null;
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box mb={4}>
-        <Typography variant="h3" fontWeight="bold" gutterBottom>
-          Manager Dashboard
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Welcome back, {user?.name}! Here's your team overview.
-        </Typography>
-      </Box>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Navigation Bar */}
+      <Navbar userRole="manager" />
 
-      <Paper
-        elevation={0}
-        sx={{
-          background: 'transparent',
-          mb: 3,
-        }}
-      >
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            '& .MuiTabs-indicator': {
-              display: 'none',
-            },
-            '& .MuiTabs-scroller': {
-              overflow: 'visible !important',
-            },
-          }}
-        >
-          <AnimatedTab
-            label="Dashboard"
-            icon={<DashboardIcon />}
-          />
-          <AnimatedTab
-            label="Projects"
-            icon={<AssignmentIcon />}
-          />
-          <AnimatedTab
-            label="Attendance"
-            icon={<AccessTimeIcon />}
-          />
-          <AnimatedTab
-            label="Daily Updates"
-            icon={<CommentIcon />}
-          />
-          <AnimatedTab
-            label="Design Review"
-            icon={<ImageIcon />}
-          />
-          <AnimatedTab
-            label="Calendar"
-            icon={<CalendarIcon />}
-          />
-        </Tabs>
-      </Paper>
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+        </div>
+      )}
+      
+      {success && (
+        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>{success}</span>
+        </div>
+      )}
 
-      <Box sx={{ minHeight: '60vh' }}>
-        {renderTabContent()}
-      </Box>
-
-      {/* Project Assignment Dialog */}
-      <Dialog
-        open={projectDialogOpen}
-        onClose={handleProjectDialogClose}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '20px',
-            background: `linear-gradient(135deg, ${alpha('#667eea', 0.05)}, ${alpha('#764ba2', 0.05)})`,
-            backdropFilter: 'blur(20px)',
-          },
-        }}
-      >
-        <DialogTitle sx={{ pb: 2 }}>
-          <Typography variant="h5" fontWeight="bold">
-            Assign New Project
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Project Title"
-                value={newProject.title}
-                onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Project Description"
-                value={newProject.description}
-                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Assign To</InputLabel>
-                <Select
-                  value={newProject.assignedTo}
-                  onChange={(e) => setNewProject({ ...newProject, assignedTo: e.target.value })}
-                  label="Assign To"
-                  sx={{
-                    borderRadius: '12px',
-                  }}
-                >
-                  {employees.map((employee) => (
-                    <MenuItem key={employee._id} value={employee._id}>
-                      {employee.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Deadline"
-                value={newProject.deadline}
-                onChange={(e) => setNewProject({ ...newProject, deadline: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button
-            onClick={handleProjectDialogClose}
-            sx={{
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
+      {/* Debug Section - Remove this in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+          <h4 className="font-bold mb-2">Debug Info:</h4>
+          <p>User Role from localStorage: {localStorage.getItem('userRole')}</p>
+          <p>User Data: {localStorage.getItem('user')}</p>
+          <button 
+            onClick={() => {
+              console.log('Current localStorage:', {
+                token: localStorage.getItem('token'),
+                user: localStorage.getItem('user'),
+                userRole: localStorage.getItem('userRole')
+              });
             }}
+            className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
           >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleProjectSubmit}
-            variant="contained"
-            disabled={!newProject.title || !newProject.assignedTo || !newProject.deadline}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-            }}
-          >
-            Assign Project
-          </Button>
-        </DialogActions>
-      </Dialog>
+            Log localStorage
+          </button>
+        </div>
+      )}
 
-      {/* Design Review Dialog */}
-      <Dialog
-        open={designReviewDialog.open}
-        onClose={handleDesignReviewClose}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '20px',
-            background: `linear-gradient(135deg, ${alpha('#667eea', 0.05)}, ${alpha('#764ba2', 0.05)})`,
-            backdropFilter: 'blur(20px)',
-          },
-        }}
-      >
-        <DialogTitle sx={{ pb: 2 }}>
-          <Typography variant="h5" fontWeight="bold">
-            Review Design: {designReviewDialog.design?.title}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <Typography variant="body1" color="text.secondary" mb={2}>
-                {designReviewDialog.design?.description}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
-                Created by: {designReviewDialog.design?.createdBy?.name}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Review Status</InputLabel>
-                <Select
-                  value={designReviewDialog.status}
-                  onChange={(e) => setDesignReviewDialog(prev => ({ ...prev, status: e.target.value }))}
-                  label="Review Status"
-                  sx={{ borderRadius: '12px' }}
-                >
-                  <MenuItem value="approved">
-                    <Box display="flex" alignItems="center">
-                      <ApproveIcon sx={{ mr: 1, color: 'success.main' }} />
-                      Approve
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="rejected">
-                    <Box display="flex" alignItems="center">
-                      <RejectIcon sx={{ mr: 1, color: 'error.main' }} />
-                      Reject
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="pending">
-                    <Box display="flex" alignItems="center">
-                      <WarningIcon sx={{ mr: 1, color: 'warning.main' }} />
-                      Needs Revision
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Manager Comment"
-                value={designReviewDialog.comment}
-                onChange={(e) => setDesignReviewDialog(prev => ({ ...prev, comment: e.target.value }))}
-                placeholder="Provide feedback or comments..."
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                  },
-                }}
+      {/* Main Content */}
+      <div className="px-6 py-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+            Manager Dashboard
+          </h1>
+          <p className="text-gray-600">Welcome back! Here's an overview of your team and projects</p>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-800">{stats.totalEmployees}</span>
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1">Total Employees</h3>
+            <p className="text-sm text-gray-500">{stats.activeEmployees} active today</p>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
+                <BarChart3 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-800">{stats.totalProjects}</span>
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1">Total Projects</h3>
+            <p className="text-sm text-gray-500">{stats.completedProjects} completed</p>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-800">{stats.pendingUpdates}</span>
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1">Pending Updates</h3>
+            <p className="text-sm text-gray-500">Require approval</p>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-800">87%</span>
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1">Productivity</h3>
+            <p className="text-sm text-gray-500">+5% from last week</p>
+          </div>
+        </div>
+
+        {/* Search and Filter Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center space-x-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search employees, projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Employee List Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-white/20">
+            <h2 className="text-xl font-bold text-gray-800">Employee List</h2>
+            <Link to="/assign-task" className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 no-underline">
+              <Plus className="w-4 h-4" />
+              <span>Assign Task</span>
+            </Link>
+          </div>
+          
+          <div className="p-5">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                <p className="text-gray-500 mt-4">Loading employees...</p>
+              </div>
+            ) : filteredEmployees.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No employees found.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredEmployees.map((employee) => (
+                  <div key={employee._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 text-center hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 group">
+                    <div className="relative mb-3">
+                      <UserAvatar
+                        avatar={employee.avatar}
+                        name={employee.name}
+                        className="mx-auto"
+                      />
+                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white shadow-sm ${
+                        employee.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
+                      }`}></div>
+                    </div>
+                    
+                    <h3 className="text-base font-semibold text-gray-800 mb-1">{employee.name}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{employee.position || employee.role}</p>
+                    <p className="text-xs text-gray-500 mb-3 truncate">{employee.email}</p>
+                    
+                    <div className="mb-3">
+                      <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 bg-gray-100/70 rounded-lg px-2 py-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{employee.role}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        onClick={() => handleViewEmployee(employee)}
+                        className="flex items-center space-x-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:shadow-md transition-all duration-200"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                      <button className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>Chat</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Projects Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-white/20">
+            <h2 className="text-xl font-bold text-gray-800">Recent Projects</h2>
+            <div className="flex space-x-2">
+              <Link to="/assign-project" className="text-orange-500 hover:text-orange-600 font-medium no-underline">
+                Create Project
+              </Link>
+              <span className="text-gray-400">|</span>
+              <Link to="/projects" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
+            </div>
+          </div>
+          
+          <div className="p-5">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                <p className="text-gray-500 mt-4">Loading projects...</p>
+              </div>
+            ) : filteredProjects.length === 0 ? (
+              <div className="text-center py-8">
+                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No projects found.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredProjects.slice(0, 6).map((project) => (
+                  <Link 
+                    key={project._id} 
+                    to={`/project/${project._id}`}
+                    className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 group block no-underline"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">{project.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Deadline: {new Date(project.deadline).toLocaleDateString()}</span>
+                      <span>Assigned to: {project.assignedTo?.name || 'Unassigned'}</span>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Click to view details</span>
+                        <Eye className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Employee Updates Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
+          <div className="flex items-center justify-between p-5 border-b border-white/20">
+            <h2 className="text-xl font-bold text-gray-800">Recent Employee Updates</h2>
+            <Link to="/reports" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
+          </div>
+          
+          <div className="p-5">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                <p className="text-gray-500 mt-4">Loading updates...</p>
+              </div>
+            ) : employeeUpdates.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No updates found.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {employeeUpdates.slice(0, 5).map((update) => (
+                  <div key={update._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <UserAvatar
+                          avatar={update.employee?.avatar}
+                          name={update.employee?.name}
+                          size="sm"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-gray-800">{update.employee?.name}</h4>
+                          <p className="text-xs text-gray-500">{new Date(update.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        update.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        update.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {update.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">{update.tasks?.map(task => task.description).join(', ')}</p>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleViewUpdate(update)}
+                        className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Daily Updates Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mt-6">
+          <div className="flex items-center justify-between p-5 border-b border-white/20">
+            <h2 className="text-xl font-bold text-gray-800">Daily Updates</h2>
+            <Link to="/reports" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
+          </div>
+          
+          <div className="p-5">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                <p className="text-gray-500 mt-4">Loading daily updates...</p>
+              </div>
+            ) : employeeUpdates.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No daily updates found.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {employeeUpdates.slice(0, 5).map((update) => (
+                  <div key={update._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <UserAvatar
+                          avatar={update.employee?.avatar}
+                          name={update.employee?.name}
+                          size="sm"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-gray-800">{update.employee?.name}</h4>
+                          <p className="text-xs text-gray-500">{new Date(update.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          update.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                          update.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                          update.status === 'Not Started' ? 'bg-yellow-100 text-yellow-800' :
+                          update.status === 'On Hold' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {update.status}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          update.approvalStatus === 'Approved' ? 'bg-green-100 text-green-800' :
+                          update.approvalStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {update.approvalStatus}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <h5 className="font-medium text-gray-800 mb-1">Project: {update.project_title}</h5>
+                      <p className="text-sm text-gray-600">{update.update}</p>
+                    </div>
+
+                    {update.imageUrl && (
+                      <div className="mb-3">
+                        <img 
+                          src={update.imageUrl} 
+                          alt="Update attachment"
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleViewUpdate(update)}
+                        className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Employee Detail Modal */}
+      {showEmployeeModal && selectedEmployee && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Employee Details</h3>
+              <button
+                onClick={() => setShowEmployeeModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="text-center mb-4">
+              <UserAvatar
+                avatar={selectedEmployee.avatar}
+                name={selectedEmployee.name}
+                className="mx-auto mb-3"
               />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button
-            onClick={handleDesignReviewClose}
-            sx={{
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDesignReviewSubmit}
-            variant="contained"
-            disabled={!designReviewDialog.status}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-            }}
-          >
-            Submit Review
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <h4 className="font-semibold text-gray-800">{selectedEmployee.name}</h4>
+              <p className="text-sm text-gray-600">{selectedEmployee.position || selectedEmployee.role}</p>
+              <p className="text-xs text-gray-500">{selectedEmployee.email}</p>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  selectedEmployee.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {selectedEmployee.status}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Role:</span>
+                <span className="text-gray-800">{selectedEmployee.role}</span>
+              </div>
+            </div>
+            <div className="flex space-x-2 mt-6">
+              <button className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200">
+                View Profile
+              </button>
+              <button className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition-all duration-200">
+                Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Success/Error Snackbars */}
-      <Snackbar
-        open={!!success}
-        autoHideDuration={5000}
-        onClose={() => dispatch(clearSuccess())}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => dispatch(clearSuccess())} severity="success" sx={{ width: '100%' }}>
-          {success}
-        </Alert>
-      </Snackbar>
+      {/* Update Detail Modal */}
+      {showUpdateModal && selectedUpdate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Daily Update Details</h3>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <UserAvatar
+                  avatar={selectedUpdate.employee?.avatar}
+                  name={selectedUpdate.employee?.name}
+                  size="sm"
+                />
+                <div>
+                  <h4 className="font-semibold text-gray-800">{selectedUpdate.employee?.name}</h4>
+                  <p className="text-xs text-gray-500">{new Date(selectedUpdate.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Project:</h5>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.project_title}</p>
+              </div>
 
-      <Snackbar
-        open={!!error}
-        autoHideDuration={5000}
-        onClose={() => dispatch(clearError())}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => dispatch(clearError())} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
-    </Container>
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Status:</h5>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  selectedUpdate.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                  selectedUpdate.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                  selectedUpdate.status === 'Not Started' ? 'bg-yellow-100 text-yellow-800' :
+                  selectedUpdate.status === 'On Hold' ? 'bg-orange-100 text-orange-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {selectedUpdate.status}
+                </span>
+              </div>
+
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Update Details:</h5>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.update}</p>
+              </div>
+
+              {selectedUpdate.finishBy && (
+                <div>
+                  <h5 className="font-medium text-gray-800 mb-2">Finish By:</h5>
+                  <p className="text-sm text-gray-600">{new Date(selectedUpdate.finishBy).toLocaleDateString()}</p>
+                </div>
+              )}
+
+              {selectedUpdate.imageUrl && (
+                <div>
+                  <h5 className="font-medium text-gray-800 mb-2">Attachment:</h5>
+                  <img 
+                    src={selectedUpdate.imageUrl} 
+                    alt="Update attachment"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
-};
-
-export default ManagerDashboard;
+}

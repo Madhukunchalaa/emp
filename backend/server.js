@@ -3,11 +3,20 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const http = require('http');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: {
+    origin: '*', // You can restrict this to your frontend URL
+    methods: ['GET', 'POST']
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -26,6 +35,21 @@ app.use('/api/employee', employeeRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/designs', designRoutes);
 
+// Socket.IO chat logic
+const ChatMessage = require('./models/ChatMessage');
+io.on('connection', (socket) => {
+  socket.on('join', ({ userId }) => {
+    socket.join(userId);
+  });
+
+  socket.on('sendMessage', async (data) => {
+    // Save to DB, then emit to recipient
+    const msg = await ChatMessage.create(data);
+    io.to(data.to).emit('receiveMessage', msg);
+    io.to(data.from).emit('receiveMessage', msg); // echo to sender
+  });
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -34,7 +58,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => {
   console.log('MongoDB connected');
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 })
