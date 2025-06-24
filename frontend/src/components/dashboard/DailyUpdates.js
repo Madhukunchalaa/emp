@@ -48,20 +48,19 @@ const DailyUpdates = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
 
-    // If project is selected, update project_title
     if (name === 'project') {
       const selectedProject = projects.find(p => p._id === value);
-      if (selectedProject) {
-        setFormData(prev => ({
-          ...prev,
-          project_title: selectedProject.title
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        project: value,
+        project_title: selectedProject ? selectedProject.title : ''
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
 
@@ -85,9 +84,9 @@ const DailyUpdates = () => {
       formDataToSend.append('image', selectedFiles[0]);
     }
 
-    // Add project ID if a project is selected
-    if (formData.project) {
-      formDataToSend.append('project', formData.project);
+    // Debug: log all form data values
+    for (let pair of formDataToSend.entries()) {
+      console.log('FormData:', pair[0], pair[1]);
     }
 
     try {

@@ -739,6 +739,20 @@ const updateTaskStatus = async (req, res) => {
   }
 };
 
+// Get all employee updates (for /api/manager/updates)
+const getEmployeeUpdates = async (req, res) => {
+  try {
+    const updates = await DailyUpdate.find()
+      .populate('employee', 'name email')
+      .populate('project', 'title description')
+      .sort({ date: -1 });
+    res.json(updates);
+  } catch (error) {
+    console.error('Error fetching employee updates:', error);
+    res.status(500).json({ message: 'Error fetching employee updates' });
+  }
+};
+
 module.exports = {
   getAllEmployeeUpdates,
   getProfile,
@@ -759,5 +773,6 @@ module.exports = {
   approveRejectUpdate,
   getProjectTasks,
   getProjectById,
-  updateTaskStatus
+  updateTaskStatus,
+  getEmployeeUpdates
 };
