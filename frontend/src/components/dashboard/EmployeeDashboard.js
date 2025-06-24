@@ -138,7 +138,7 @@ const EmployeeDashboard = () => {
         </div>
       )}
 
-      {/* Debug Section - Remove this in production */}
+      {/* Debug Section - Remove this in production
       {process.env.NODE_ENV === 'development' && (
         <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
           <h4 className="font-bold mb-2">Debug Info:</h4>
@@ -157,7 +157,7 @@ const EmployeeDashboard = () => {
             Log localStorage
           </button>
         </div>
-      )}
+      )} */}
 
       <div className="px-6 py-6">
         <div className="mb-6">
@@ -220,7 +220,7 @@ const EmployeeDashboard = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                <Clock className="w-5 h-5 text-white" />
+                <Clock className="w-5 h-5 text-white"/>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Attendance</h3>
