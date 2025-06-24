@@ -1,8 +1,7 @@
 import axios from 'axios';
-<<<<<<< HEAD
+
 // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-=======
->>>>>>> 8c0fdd4e794c79881c46c5926b1bbd27e41f4d69
+
 const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
 
 
