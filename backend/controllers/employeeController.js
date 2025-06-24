@@ -1,5 +1,6 @@
 const Punch = require('../models/Punch');
 const Project = require('../models/Project');
+const Task = require('../models/Task');
 const User = require('../models/User');
 const DailyUpdate = require('../models/DailyUpdate');
 const bcrypt = require('bcryptjs');
@@ -170,18 +171,38 @@ exports.getAttendance = async (req, res) => {
   }
 };
 
-// Get assigned projects
+// Get assigned tasks (previously getProjects)
 exports.getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({})
-      .populate([
-        { path: 'assignedTo', select: 'name email role' },
-        { path: 'createdBy', select: 'name email' }
-      ]);
+    console.log('Fetching tasks for employee:', req.user.id);
+    
+    // Get tasks assigned to this employee
+    const tasks = await Task.find({ assignedTo: req.user.id })
+      .populate('projectId', 'title description deadline')
+      .populate('assignedBy', 'name email')
+      .sort({ deadline: 1 });
 
-    res.status(200).json(projects); // Return full project details
+    console.log(`Found ${tasks.length} tasks for employee`);
+
+    // Transform tasks to match the expected format for the frontend
+    const transformedTasks = tasks.map(task => ({
+      _id: task._id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      deadline: task.deadline,
+      estimatedHours: task.estimatedHours,
+      progress: task.progress,
+      projectId: task.projectId,
+      assignedBy: task.assignedBy,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt
+    }));
+
+    res.status(200).json(transformedTasks);
   } catch (err) {
-    console.error('Error in getProjects:', err.message);
+    console.error('Error in getProjects (tasks):', err.message);
     res.status(500).json({ message: 'Server error', projects: [] });
   }
 };
@@ -421,21 +442,6 @@ exports.submitDailyUpdate = async (req, res) => {
       return res.status(400).json({ 
         message: `Missing required fields: ${missingFields.join(', ')}`,
         received: { project_title, status, update, finishBy, project }
-      });
-    }
-
-    // Check for existing update today (optional)
-    const existing = await DailyUpdate.findOne({
-      employee: req.user.id,
-      date: {
-        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      }
-    });
-
-    if (existing) {
-      return res.status(400).json({ 
-        message: 'You have already submitted an update for today. Please edit your existing update instead.' 
       });
     }
 
@@ -750,4 +756,41 @@ exports.getEmployeeUpdates = async (req, res) => {
 
   }
 
+};
+
+// Update task progress or mark as complete
+exports.updateTaskProgress = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { progress } = req.body;
+
+    // Validate progress
+    if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+      return res.status(400).json({ message: 'Progress must be a number between 0 and 100' });
+    }
+
+    // Find the task and check ownership
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    if (task.assignedTo.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this task' });
+    }
+
+    // Update progress and status
+    task.progress = progress;
+    if (progress === 100) {
+      task.status = 'completed';
+      task.completedDate = new Date();
+    } else if (progress > 0 && task.status !== 'in_progress') {
+      task.status = 'in_progress';
+    }
+    await task.save();
+
+    res.json({ message: 'Task progress updated', task });
+  } catch (err) {
+    console.error('Error updating task progress:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
 };

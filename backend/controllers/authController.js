@@ -43,7 +43,7 @@ exports.register = async (req, res) => {
     await otpRecord.save();
 
     // Send OTP email
-    const emailSent = await sendOTPEmail(email, otp, name);
+    const emailSent = await sendOTPEmail(email, otp, name, 'registration');
     if (!emailSent) {
       return res.status(500).json({ message: 'Failed to send OTP email' });
     }
@@ -193,7 +193,7 @@ exports.forgotPassword = async (req, res) => {
     await otpRecord.save();
 
     // Send OTP email
-    const emailSent = await sendOTPEmail(email, otp, user.name);
+    const emailSent = await sendOTPEmail(email, otp, user.name, 'password_reset');
     
     if (!emailSent) {
       return res.status(500).json({ message: 'Failed to send OTP email' });
@@ -287,6 +287,28 @@ exports.getCurrentUser = async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Test endpoint to check user role
+exports.getCurrentUserRole = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('role name email');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Error getting current user role:', err);
     res.status(500).json({ message: 'Server error' });
   }
 }; 

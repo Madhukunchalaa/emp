@@ -2,45 +2,20 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
+/**
+ * @param {ReactNode} children - The component to render.
+ */
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const location = useLocation();
 
   if (!isAuthenticated) {
+    // If not authenticated, redirect to the login page
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Redirect based on user role
-  if (user) {
-    const currentPath = location.pathname;
-    
-    switch (user.role) {
-      case 'manager':
-        if (currentPath !== '/manager-dashboard') {
-          return <Navigate to="/manager-dashboard" replace />;
-        }
-        break;
-      case 'designer':
-        if (currentPath !== '/designer-dashboard') {
-          return <Navigate to="/designer-dashboard" replace />;
-        }
-        break;
-      case 'developer':
-        if (currentPath !== '/dashboard') {
-          return <Navigate to="/dashboard" replace />;
-        }
-        break;
-         case 'Business':
-        if (currentPath !== '/business-dashboard') {
-          return <Navigate to="/business-dashboard" replace />;
-        }
-        break;
-      default:
-        return <Navigate to="/login" replace />;
-    }
-  }
-
+  // If authenticated, render the children components
   return children;
 };
 
-export default PrivateRoute; 
+export default PrivateRoute;

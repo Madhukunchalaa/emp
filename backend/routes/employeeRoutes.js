@@ -15,7 +15,8 @@ const {
   getTodayUpdate,
   updateTodayWorkingOn,
   getMyDailyUpdates,
-  updateDailyUpdate
+  updateDailyUpdate,
+  updateTaskProgress
 } = require('../controllers/employeeController');
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
@@ -58,5 +59,26 @@ router.get('/today-update', auth, getTodayUpdate);
 router.put('/today-working-on', auth, updateTodayWorkingOn);
 
 router.post('/updates',auth,upload.single('image'),dailyUpdates)
+
+// Chat file upload endpoint
+router.post('/chat/upload', upload.single('file'), (req, res) => {
+  res.json({ fileUrl: `/uploads/chat/${req.file.filename}`, fileName: req.file.originalname });
+});
+
+// Chat history endpoint
+const ChatMessage = require('../models/ChatMessage');
+router.get('/chat/history', async (req, res) => {
+  const { user1, user2 } = req.query;
+  const messages = await ChatMessage.find({
+    $or: [
+      { from: user1, to: user2 },
+      { from: user2, to: user1 }
+    ]
+  }).sort({ createdAt: 1 });
+  res.json(messages);
+});
+
+// Task progress update route
+router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
 
 module.exports = router; 

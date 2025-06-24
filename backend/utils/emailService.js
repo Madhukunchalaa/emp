@@ -16,39 +16,41 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send OTP email
-const sendOTPEmail = async (email, otp, userName = 'User') => {
+// Send OTP email (context: 'registration' or 'password_reset')
+const sendOTPEmail = async (email, otp, userName = 'User', context = 'password_reset') => {
   try {
-    console.log('Creating email transporter...');
     const transporter = createTransporter();
-    
-    console.log('Verifying transporter...');
-    await transporter.verify();
-    console.log('Transporter verified successfully!');
-    
+
+    let subject, intro, purpose;
+    if (context === 'registration') {
+      subject = 'Registration OTP - Smart Solutions';
+      intro = 'Complete Your Registration';
+      purpose = 'We received a request to register your account. Use the OTP below to complete your registration process.';
+    } else {
+      subject = 'Password Reset OTP - Smart Solutions';
+      intro = 'Password Reset';
+      purpose = 'We received a request to reset your password. Use the OTP below to complete the password reset process.';
+    }
+
     const mailOptions = {
       from: `"Smart Solutions" <madhkunchala@gmail.com>`,
       to: email,
-      subject: 'Password Reset OTP - Employee Management System',
+      subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #3a0ca3, #4361ee); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 28px;">🔐 Password Reset</h1>
+            <h1 style="margin: 0; font-size: 28px;">🔐 ${intro}</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Employee Management System</p>
           </div>
-          
           <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h2 style="color: #333; margin-bottom: 20px;">Hello ${userName}!</h2>
-            
             <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
-              We received a request to reset your password. Use the OTP below to complete the password reset process.
+              ${purpose}
             </p>
-            
             <div style="background: linear-gradient(135deg, #3a0ca3, #4361ee); color: white; padding: 25px; border-radius: 10px; text-align: center; margin: 25px 0;">
               <h1 style="margin: 0; font-size: 36px; letter-spacing: 8px; font-weight: bold;">${otp}</h1>
               <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">Your OTP Code</p>
             </div>
-            
             <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 25px 0;">
               <h4 style="margin: 0 0 10px 0; color: #856404;">⚠️ Important:</h4>
               <ul style="margin: 0; padding-left: 20px; color: #856404;">
@@ -57,12 +59,10 @@ const sendOTPEmail = async (email, otp, userName = 'User') => {
                 <li>If you didn't request this, please ignore this email</li>
               </ul>
             </div>
-            
             <p style="color: #666; line-height: 1.6; margin-bottom: 0;">
               If you have any questions, please contact your system administrator.
             </p>
           </div>
-          
           <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
             <p>This is an automated email. Please do not reply to this message.</p>
             <p>&copy; 2024 Employee Management System. All rights reserved.</p>
@@ -71,7 +71,6 @@ const sendOTPEmail = async (email, otp, userName = 'User') => {
       `
     };
 
-    console.log('Sending email...');
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent successfully:', info.messageId);
     return true;

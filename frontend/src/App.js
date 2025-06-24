@@ -4,16 +4,30 @@ import { Provider } from 'react-redux';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import store from './store';
+
+// Auth and Dashboard Components
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
-import Dashboard from './components/dashboard/Employee2';
-import ManagerDashboard from './components/dashboard/Manager2';
-import DesignerDashboard from './components/dashboard/DesignerDashboard';
-// import BusinessDevelopmentDashboard from './components/dashboard/BusinessDevelopment';
 import PrivateRoute from './components/auth/PrivateRoute';
+
+// Dynamic Dashboard
+import DynamicDashboard from './components/dashboard/DynamicDashboard';
+import ManagerDashboard from './components/dashboard/ManagerDashboard';
+
+// Manager Components
 import ProjectDetails from './components/dashboard/ProjectDetails';
-import BusinessDashboard from './components/dashboard/BusinessDashboard';
+import AssignTask from './components/dashboard/manager-componenets/AssignTask';
+import AssignProject from './components/dashboard/manager-componenets/AssignProject';
+import Team from './components/dashboard/Team';
+import Projects from './components/dashboard/Projects';
+import Reports from './components/dashboard/Reports';
+
+// Employee Dashboard Components
+import MyTasks from './components/dashboard/MyTasks';
+import MyProjects from './components/dashboard/MyProjects';
+import DailyUpdates from './components/dashboard/DailyUpdates';
+import Attendance from './components/dashboard/Attendance';
 
 const theme = createTheme({
   palette: {
@@ -34,17 +48,22 @@ function App() {
         <CssBaseline />
         <Router>
           <Routes>
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+
+            {/* Dynamic Dashboard Route */}
             <Route
               path="/dashboard"
               element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <DynamicDashboard />
                 </PrivateRoute>
               }
             />
+
+            {/* Manager Routes */}
             <Route
               path="/manager-dashboard"
               element={
@@ -54,25 +73,94 @@ function App() {
               }
             />
             <Route
-              path="/business-dashboard"
+              path="/team"
               element={
                 <PrivateRoute>
-                  <BusinessDashboard/>
-                
+                  <Team />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/designer-dashboard"
+              path="/projects"
               element={
                 <PrivateRoute>
-                  <DesignerDashboard />
+                  <Projects />
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute>
+                  <Reports />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/assign-project"
+              element={
+                <PrivateRoute>
+                  <AssignProject />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/assign-task"
+              element={
+                <PrivateRoute>
+                  <AssignTask />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/project/:projectId"
+              element={
+                <PrivateRoute>
+                  <ProjectDetails />
+                </PrivateRoute>
+              }
+            />
+<<<<<<< HEAD
             <Route path="/project-details" element={<ProjectDetails />} />
            
+=======
+>>>>>>> 8c0fdd4e794c79881c46c5926b1bbd27e41f4d69
 
+            {/* Employee Dashboard Routes */}
+            <Route
+              path="/my-tasks"
+              element={
+                <PrivateRoute>
+                  <MyTasks />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/my-projects"
+              element={
+                <PrivateRoute>
+                  <MyProjects />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/daily-updates"
+              element={
+                <PrivateRoute>
+                  <DailyUpdates />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                <PrivateRoute>
+                  <Attendance />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>
