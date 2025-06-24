@@ -19,7 +19,8 @@ const {
   getEmployeeDailyUpdates,
   getEmployeeUpdateSummary,
   approveRejectUpdate,
-  updateTaskStatus
+  updateTaskStatus,
+  getEmployeeUpdates
 } = require('../controllers/managerController');
 
 const assign=require('../controllers/testController')
@@ -51,6 +52,9 @@ router.get('/employee-updates', auth, getEmployeeDailyUpdates);
 router.get('/employee-update-summary', auth, getEmployeeUpdateSummary);
 router.get('/all-updates',auth,getAllEmployeeUpdates);
 router.put('/updates/:updateId/approve-reject', auth, approveRejectUpdate);
+
+// Add this route to support GET /api/manager/updates
+router.get('/updates', auth, getEmployeeUpdates);
 
 // these are testing routes
 router.post('/test-assign',auth,assign)
