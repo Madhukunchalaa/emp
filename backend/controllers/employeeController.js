@@ -757,3 +757,40 @@ exports.getEmployeeUpdates = async (req, res) => {
   }
 
 };
+
+// Update task progress or mark as complete
+exports.updateTaskProgress = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { progress } = req.body;
+
+    // Validate progress
+    if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+      return res.status(400).json({ message: 'Progress must be a number between 0 and 100' });
+    }
+
+    // Find the task and check ownership
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    if (task.assignedTo.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this task' });
+    }
+
+    // Update progress and status
+    task.progress = progress;
+    if (progress === 100) {
+      task.status = 'completed';
+      task.completedDate = new Date();
+    } else if (progress > 0 && task.status !== 'in_progress') {
+      task.status = 'in_progress';
+    }
+    await task.save();
+
+    res.json({ message: 'Task progress updated', task });
+  } catch (err) {
+    console.error('Error updating task progress:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
