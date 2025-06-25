@@ -28,6 +28,7 @@ import MyTasks from './components/dashboard/MyTasks';
 import MyProjects from './components/dashboard/MyProjects';
 import DailyUpdates from './components/dashboard/DailyUpdates';
 import Attendance from './components/dashboard/Attendance';
+import Leave from './components/dashboard/Leave';
 
 const theme = createTheme({
   palette: {
@@ -121,6 +122,9 @@ function App() {
               }
             />
 
+            <Route path="/project-details" element={<ProjectDetails />} />
+           
+
             {/* Employee Dashboard Routes */}
             <Route
               path="/my-tasks"
@@ -154,6 +158,14 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path='/Leave'
+              element={
+                <PrivateRoute>
+                  <Leave/>
+                </PrivateRoute>
+              }
+      />
 
             {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />

@@ -11,8 +11,11 @@ import {
   Select,
   MenuItem,
   Alert,
-  Paper
+  Paper,
+  Avatar,
+  IconButton
 } from '@mui/material';
+import { PhotoCamera, Delete } from '@mui/icons-material';
 import { register } from '../../store/slices/authSlice';
 import { authService } from '../../services/api';
 
@@ -24,8 +27,11 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    role: 'developer'
+    role: 'developer',
+    empid: '',
+    profileImage: null
   });
+  const [imagePreview, setImagePreview] = useState(null);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,6 +44,51 @@ const Register = () => {
     });
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please upload a valid image file (JPEG, PNG, or GIF)');
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+
+      setFormData({
+        ...formData,
+        profileImage: file
+      });
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError(''); // Clear any previous errors
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({
+      ...formData,
+      profileImage: null
+    });
+    setImagePreview(null);
+    // Reset the file input
+    const fileInput = document.getElementById('image-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -45,8 +96,18 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Since your backend doesn't handle file uploads yet, send regular JSON
+      // You can modify this later when backend supports file uploads
+      const registrationData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        empid: formData.empid
+      };
+
       // Call the register endpoint to send OTP
-      const response = await authService.register(formData);
+      const response = await authService.register(registrationData);
       setSuccess(response.data.message);
       setStep(2);
     } catch (err) {
@@ -82,7 +143,16 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await authService.register(formData);
+      // Send regular JSON data for resend request
+      const registrationData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        empid: formData.empid
+      };
+
+      const response = await authService.register(registrationData);
       setSuccess('OTP resent successfully!');
     } catch (err) {
       setError(err.message || 'Failed to resend OTP');
@@ -91,8 +161,70 @@ const Register = () => {
     }
   };
 
+  const renderImageUpload = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ position: 'relative', mb: 2 }}>
+        <Avatar
+          src={imagePreview}
+          sx={{
+            width: 100,
+            height: 100,
+            bgcolor: 'grey.300',
+            fontSize: '2rem'
+          }}
+        >
+          {!imagePreview && formData.name ? formData.name.charAt(0).toUpperCase() : '📷'}
+        </Avatar>
+        
+        {imagePreview && (
+          <IconButton
+            sx={{
+              position: 'absolute',
+              top: -8,
+              right: -8,
+              bgcolor: 'error.main',
+              color: 'white',
+              width: 28,
+              height: 28,
+              '&:hover': {
+                bgcolor: 'error.dark',
+              }
+            }}
+            onClick={handleRemoveImage}
+            size="small"
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
+      
+      <input
+        accept="image/*"
+        style={{ display: 'none' }}
+        id="image-upload"
+        type="file"
+        onChange={handleImageUpload}
+      />
+      <label htmlFor="image-upload">
+        <Button
+          variant="outlined"
+          component="span"
+          startIcon={<PhotoCamera />}
+          size="small"
+        >
+          {imagePreview ? 'Change Photo' : 'Upload Photo'}
+        </Button>
+      </label>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+        Optional: Upload a profile picture (Max 5MB, JPEG/PNG/GIF)
+      </Typography>
+    </Box>
+  );
+
   const renderRegistrationForm = () => (
     <Box component="form" onSubmit={handleSubmit}>
+      {renderImageUpload()}
+      
       <TextField
         margin="normal"
         required
@@ -100,6 +232,15 @@ const Register = () => {
         label="Full Name"
         name="name"
         value={formData.name}
+        onChange={handleChange}
+      />
+      <TextField
+        margin="normal"
+        required
+        fullWidth
+        label="Employee ID"
+        name="empid"
+        value={formData.empid}
         onChange={handleChange}
       />
       <TextField
