@@ -29,11 +29,13 @@ const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const managerRoutes = require('./routes/managerRoutes');
 const designRoutes = require('./routes/designRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/designs', designRoutes);
+app.use('/api/leaves', leaveRoutes);
 
 // Socket.IO chat logic
 const ChatMessage = require('./models/ChatMessage');
