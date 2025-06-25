@@ -1,13 +1,6 @@
 import axios from 'axios';
-
-
-// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-
-
-// const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://emp-1-rgfq.onrender.com/api'
-
+const API_URL = 'http://localhost:5000/api';
+// const API_URL = 'https://emp-1-rgfq.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -437,3 +430,35 @@ export { api };
 
 // Default export
 export default api;
+
+export const applyForLeave = async (leaveData) => {
+  const token = localStorage.getItem('token');
+  const res = await api.post('/leaves/apply', leaveData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};
+
+export const getMyLeaveHistory = async () => {
+  const token = localStorage.getItem('token');
+  const res = await api.get('/leaves/my-history', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};
+
+export const getAllLeaveRequests = async () => {
+  const token = localStorage.getItem('token');
+  const res = await api.get('/leaves/all', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};
+
+export const reviewLeaveRequest = async (leaveId, status) => {
+  const token = localStorage.getItem('token');
+  const res = await api.patch(`/leaves/${leaveId}/review`, { status }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};

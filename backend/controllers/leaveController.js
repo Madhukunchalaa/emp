@@ -40,4 +40,43 @@ exports.getMyLeaveHistory = async (req, res) => {
     console.error('Error fetching leave history:', error);
     res.status(500).json({ message: 'Server error while fetching leave history.' });
   }
+};
+
+// Get all leave requests (for manager)
+exports.getAllLeaveRequests = async (req, res) => {
+  try {
+    const leaves = await Leave.find().populate('employee', 'name email role').sort({ createdAt: -1 });
+    res.json(leaves);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error while fetching leave requests.' });
+  }
+};
+
+// Approve or reject a leave request
+exports.reviewLeaveRequest = async (req, res) => {
+  const { leaveId } = req.params;
+  const { status } = req.body; // 'approved' or 'rejected'
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ message: 'Invalid status.' });
+  }
+  try {
+    const leave = await Leave.findById(leaveId);
+    if (!leave) return res.status(404).json({ message: 'Leave request not found.' });
+    leave.status = status;
+    leave.reviewedBy = req.user.id;
+    leave.reviewedAt = new Date();
+    await leave.save();
+
+    // Emit notification to employee
+    const io = req.app.get('io');
+    if (io && leave.employee) {
+      io.to(leave.employee.toString()).emit('notification', {
+        message: `Your leave request has been ${status}.`
+      });
+    }
+
+    res.json({ message: `Leave ${status}.`, leave });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error while updating leave status.' });
+  }
 }; 

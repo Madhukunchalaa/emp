@@ -207,6 +207,15 @@ const assignTaskToEmployee = async (req, res) => {
     step.tasks.push({ title, assignedTo });
     calculateProjectProgress(project); // Update status if needed
     await project.save();
+
+    // Emit notification to assigned employee
+    const io = req.app.get('io');
+    if (io && assignedTo) {
+      io.to(assignedTo.toString()).emit('notification', {
+        message: `A new task has been assigned to you: ${title}`
+      });
+    }
+
     res.status(201).json({ message: 'Task assigned successfully', project });
   } catch (err) {
     console.error('Error in assignTask:', err);
@@ -651,6 +660,15 @@ const approveRejectTask = async (req, res) => {
     if (task) {
       task.status = status;
       await project.save();
+
+      // Emit notification to assigned employee
+      const io = req.app.get('io');
+      if (io && task.assignedTo) {
+        io.to(task.assignedTo.toString()).emit('notification', {
+          message: `Your task "${task.title}" has been ${status}.`
+        });
+      }
+
       res.json({ message: `Task ${status} successfully.`, task });
     } else {
       res.status(404).json({ message: 'Task not found.' });
@@ -679,10 +697,14 @@ const updateProjectTaskStatus = async (req, res) => {
 
     // Find and update the specific task
     let taskFound = false;
+    let assignedTo = null;
+    let taskTitle = '';
     for (const step of project.steps) {
       const task = step.tasks.id(taskId);
       if (task) {
         task.status = status;
+        assignedTo = task.assignedTo;
+        taskTitle = task.title;
         taskFound = true;
         break;
       }
@@ -704,6 +726,14 @@ const updateProjectTaskStatus = async (req, res) => {
       path: 'steps.tasks.assignedTo',
       select: 'name email avatar'
     });
+
+    // Emit notification to assigned employee
+    const io = req.app.get('io');
+    if (io && assignedTo) {
+      io.to(assignedTo.toString()).emit('notification', {
+        message: `Your task "${taskTitle}" status has been updated to ${status}.`
+      });
+    }
 
     res.json({ 
       message: `Task status updated to ${status}`, 
