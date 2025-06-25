@@ -6,7 +6,7 @@ import axios from 'axios';
 
 
 // const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://emp-1-rgfq.onrender.com/ap
+const API_URL = 'https://emp-1-rgfq.onrender.com/api'
 
 
 // Create axios instance with default config
