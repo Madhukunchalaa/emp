@@ -18,6 +18,8 @@ const io = new Server(server, {
   }
 });
 
+app.set('io', io); // Attach io to app for controller access
+
 // Middleware
 app.use(cors());
 app.use(express.json());

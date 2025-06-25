@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   XCircle,
@@ -8,6 +8,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import Navbar from '../common/Navbar';
+import { applyForLeave, getMyLeaveHistory } from '../../services/api';
 
 const LeaveManagement = () => {
   const [selectedDates, setSelectedDates] = useState([]);
@@ -19,6 +20,7 @@ const LeaveManagement = () => {
   });
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [leaveHistory, setLeaveHistory] = useState([]);
 
   const approvedLeavesCount = 4;
   const pendingLeavesCount = 3;
@@ -28,6 +30,21 @@ const LeaveManagement = () => {
     { id: 1, name: 'Alice Brown', dates: '10-12 Jun', reason: 'Project deadline conflict', rejectedOn: '5 Jun' },
     { id: 2, name: 'Tom Wilson', dates: '8-9 Jun', reason: 'Insufficient notice period', rejectedOn: '3 Jun' }
   ];
+
+  useEffect(() => {
+    fetchLeaveHistory();
+  }, []);
+
+  const fetchLeaveHistory = async () => {
+    try {
+      const data = await getMyLeaveHistory();
+      setLeaveHistory(data);
+      // You can use this data to update summary cards, calendar, etc.
+      console.log('Leave history:', data);
+    } catch (err) {
+      console.error('Error fetching leave history:', err);
+    }
+  };
 
   const generateCalendar = () => {
     const firstDay = new Date(selectedYear, selectedMonth, 1);
@@ -55,11 +72,17 @@ const LeaveManagement = () => {
     }
   };
 
-  const handleSubmitLeave = () => {
+  const handleSubmitLeave = async () => {
     if (leaveForm.type && leaveForm.fromDate && leaveForm.toDate && leaveForm.reason) {
-      alert('Leave request submitted to manager!');
-      setLeaveForm({ type: 'Sick Leave', fromDate: '', toDate: '', reason: '' });
-      setSelectedDates([]);
+      try {
+        await applyForLeave(leaveForm);
+        alert('Leave request submitted to manager!');
+        setLeaveForm({ type: 'Sick Leave', fromDate: '', toDate: '', reason: '' });
+        setSelectedDates([]);
+        fetchLeaveHistory(); // Refresh history after submitting
+      } catch (err) {
+        alert(err.response?.data?.message || 'Error submitting leave request');
+      }
     }
   };
 
@@ -256,6 +279,43 @@ const LeaveManagement = () => {
             )}
 
           </div>
+        </div>
+
+        {/* Leave History Table */}
+        <div className="bg-white/80 rounded-2xl shadow-sm border border-white/20 p-6 mt-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">My Leave History</h3>
+          {leaveHistory.length === 0 ? (
+            <p className="text-gray-500">No leave requests found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">To</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Submitted On</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {leaveHistory.map((leave) => (
+                    <tr key={leave._id}>
+                      <td className="px-4 py-2 whitespace-nowrap">{leave.type}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{leave.fromDate ? new Date(leave.fromDate).toLocaleDateString() : ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{leave.toDate ? new Date(leave.toDate).toLocaleDateString() : ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{leave.reason}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${leave.status === 'approved' ? 'bg-green-100 text-green-700' : leave.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{leave.status}</span>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">{leave.createdAt ? new Date(leave.createdAt).toLocaleDateString() : ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

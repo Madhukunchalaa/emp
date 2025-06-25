@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { 
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import UserAvatar from './userAvathar';
 import { logout } from '../../store/slices/authSlice';
+import io from 'socket.io-client';
 
 const Navbar = ({ userRole = 'manager' }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -20,6 +21,10 @@ const Navbar = ({ userRole = 'manager' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const audioRef = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Update time every second
   useEffect(() => {
@@ -50,6 +55,21 @@ const Navbar = ({ userRole = 'manager' }) => {
       fetchUserDetails();
     }
   }, [userName, userRole]);
+
+  useEffect(() => {
+    const socket = io('http://localhost:5000'); // or your deployed backend
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user && user.id) {
+      socket.emit('join', { userId: user.id });
+    }
+    socket.on('notification', (data) => {
+      setNotificationCount((count) => count + 1);
+      setNotifications((prev) => [{ message: data.message, time: new Date() }, ...prev]);
+      if (audioRef.current) audioRef.current.play();
+      // Optionally show a toast here
+    });
+    return () => socket.disconnect();
+  }, []);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -88,7 +108,8 @@ const Navbar = ({ userRole = 'manager' }) => {
             { path: '/projects', label: 'Projects', icon: '📊' },
             { path: '/reports', label: 'Reports', icon: '📈' },
             { path: '/assign-project', label: 'Create Project', icon: '➕' },
-            { path: '/assign-task', label: 'Assign Task', icon: '📋' }
+            { path: '/assign-task', label: 'Assign Task', icon: '📋' },
+            { path: '/manager-leave', label: 'Leave Requests', icon: '🗂️' }
           ];
         case 'employee':
         case 'developer':
@@ -119,6 +140,12 @@ const Navbar = ({ userRole = 'manager' }) => {
     
     // console.log('Navbar - Generated links for role', userRole, ':', links); // Debug log
     return links;
+  };
+
+  const handleBellClick = () => {
+    setNotificationCount(0);
+    setShowDropdown((prev) => !prev);
+    // Optionally show a dropdown with notifications
   };
 
   return (
@@ -165,8 +192,29 @@ const Navbar = ({ userRole = 'manager' }) => {
           </div> */}
           
           {/* Notifications */}
-          <div className="p-2 rounded-xl bg-white/60 hover:bg-white/80 transition-all duration-200 cursor-pointer">
-            <Bell className="text-gray-600 hover:text-orange-500"/> {/*w-5 h-6*/} 
+          <div className="relative p-2 rounded-xl bg-white/60 hover:bg-white/80 transition-all duration-200 cursor-pointer" onClick={handleBellClick}>
+            <Bell className="text-gray-600 hover:text-orange-500" />
+            {notificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5">
+                {notificationCount}
+              </span>
+            )}
+            {/* Notification Dropdown */}
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                <div className="p-4 border-b font-semibold text-gray-700">Notifications</div>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-gray-500">No notifications</div>
+                ) : (
+                  notifications.map((notif, idx) => (
+                    <div key={idx} className="px-4 py-2 border-b last:border-b-0 text-gray-800">
+                      <div>{notif.message}</div>
+                      <div className="text-xs text-gray-400">{notif.time.toLocaleString()}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
           
           {/* Profile Dropdown */}
@@ -215,6 +263,7 @@ const Navbar = ({ userRole = 'manager' }) => {
               </div>
             </div>
           </div>
+          <audio ref={audioRef} src="/notification.wav" preload="auto" />
         </div>
       </div>
     </div>
