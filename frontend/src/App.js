@@ -22,6 +22,7 @@ import AssignProject from './components/dashboard/manager-componenets/AssignProj
 import Team from './components/dashboard/Team';
 import Projects from './components/dashboard/Projects';
 import Reports from './components/dashboard/Reports';
+import ManagerLeave from './components/dashboard/manager-componenets/ManagerLeave';
 
 // Employee Dashboard Components
 import MyTasks from './components/dashboard/MyTasks';
@@ -166,6 +167,15 @@ function App() {
                 </PrivateRoute>
               }
       />
+
+            <Route
+              path="/manager-leave"
+              element={
+                <PrivateRoute>
+                  <ManagerLeave />
+                </PrivateRoute>
+              }
+            />
 
             {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
