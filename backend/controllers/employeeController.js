@@ -818,12 +818,11 @@ exports.updateTaskStatus = async (req, res) => {
     // Find the specific task and verify it's assigned to the current employee
     let taskFound = false;
     let taskAssignedToEmployee = false;
-    
+
     for (const step of project.steps) {
       const task = step.tasks.id(taskId);
       if (task) {
         taskFound = true;
-        // Check if the task is assigned to the current employee
         if (task.assignedTo && task.assignedTo.toString() === employeeId) {
           taskAssignedToEmployee = true;
           task.status = status;
@@ -842,10 +841,10 @@ exports.updateTaskStatus = async (req, res) => {
 
     // Recalculate project progress
     const progress = calculateProjectProgress(project);
-    
+
     // Save the project
     await project.save();
-    
+
     // Populate the project data for response
     await project.populate('createdBy', 'name email');
     await project.populate({
@@ -853,8 +852,8 @@ exports.updateTaskStatus = async (req, res) => {
       select: 'name email avatar'
     });
 
-    res.json({ 
-      message: `Task status updated to ${status}`, 
+    res.json({
+      message: `Task status updated to ${status}`,
       project: { ...project.toObject(), progress },
       updatedTaskId: taskId,
       newStatus: status
@@ -869,19 +868,16 @@ exports.updateTaskStatus = async (req, res) => {
 exports.testDatabaseState = async (req, res) => {
   try {
     console.log('Testing database state...');
-    
-    // Get all projects
+
     const allProjects = await Project.find().populate('createdBy', 'name email');
     console.log('Total projects in database:', allProjects.length);
-    
-    // Get all projects with tasks
+
     const projectsWithTasks = allProjects.filter(p => p.steps && p.steps.length > 0);
     console.log('Projects with steps:', projectsWithTasks.length);
-    
-    // Count total tasks
+
     let totalTasks = 0;
     let assignedTasks = 0;
-    
+
     projectsWithTasks.forEach(project => {
       project.steps.forEach(step => {
         if (step.tasks && step.tasks.length > 0) {
@@ -900,10 +896,10 @@ exports.testDatabaseState = async (req, res) => {
         }
       });
     });
-    
+
     console.log('Total tasks:', totalTasks);
     console.log('Assigned tasks:', assignedTasks);
-    
+
     res.json({
       totalProjects: allProjects.length,
       projectsWithSteps: projectsWithTasks.length,
@@ -945,12 +941,12 @@ exports.updateProjectAsTaskStatus = async (req, res) => {
     project.status = status;
     project.updatedAt = new Date();
     await project.save();
-    
+
     await project.populate('createdBy', 'name email');
     await project.populate('assignedTo', 'name email');
 
-    res.json({ 
-      message: `Project status updated to ${status}`, 
+    res.json({
+      message: `Project status updated to ${status}`,
       project: project.toObject(),
       updatedProjectId: projectId,
       newStatus: status
@@ -958,5 +954,8 @@ exports.updateProjectAsTaskStatus = async (req, res) => {
   } catch (error) {
     console.error('Error updating project status:', error);
     res.status(500).json({ message: 'Error updating project status' });
+  }
+};
+
   }
 };
