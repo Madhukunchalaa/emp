@@ -1,6 +1,5 @@
 const Punch = require('../models/Punch');
 const Project = require('../models/Project');
-const Task = require('../models/Task');
 const User = require('../models/User');
 const DailyUpdate = require('../models/DailyUpdate');
 const bcrypt = require('bcryptjs');
@@ -171,38 +170,79 @@ exports.getAttendance = async (req, res) => {
   }
 };
 
-// Get assigned tasks (previously getProjects)
+// Utility to calculate project progress and auto-complete
+function calculateProjectProgress(project) {
+  let totalTasks = 0;
+  let completedTasks = 0;
+  if (project.steps && project.steps.length > 0) {
+    for (const step of project.steps) {
+      if (step.tasks && step.tasks.length > 0) {
+        totalTasks += step.tasks.length;
+        completedTasks += step.tasks.filter(t => t.status === 'completed').length;
+      }
+    }
+  }
+  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  // Auto-complete project if all tasks are completed
+  if (totalTasks > 0 && completedTasks === totalTasks && project.status !== 'completed') {
+    project.status = 'completed';
+  }
+  return progress;
+}
+
+// Get projects assigned to this employee (with steps and tasks)
 exports.getProjects = async (req, res) => {
   try {
-    console.log('Fetching tasks for employee:', req.user.id);
+    console.log('Employee getProjects called for user ID:', req.user.id);
     
-    // Get tasks assigned to this employee
-    const tasks = await Task.find({ assignedTo: req.user.id })
-      .populate('projectId', 'title description deadline')
-      .populate('assignedBy', 'name email')
-      .sort({ deadline: 1 });
-
-    console.log(`Found ${tasks.length} tasks for employee`);
-
-    // Transform tasks to match the expected format for the frontend
-    const transformedTasks = tasks.map(task => ({
-      _id: task._id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-      deadline: task.deadline,
-      estimatedHours: task.estimatedHours,
-      progress: task.progress,
-      projectId: task.projectId,
-      assignedBy: task.assignedBy,
-      createdAt: task.createdAt,
-      updatedAt: task.updatedAt
-    }));
-
-    res.status(200).json(transformedTasks);
+    // Find all projects where this user is assigned to at least one task
+    const projects = await Project.find({
+      'steps.tasks.assignedTo': req.user.id
+    })
+      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name email')
+      .populate({
+        path: 'steps.tasks.assignedTo',
+        select: 'name email avatar'
+      });
+    
+    console.log('Found projects before filtering:', projects.length);
+    console.log('Projects:', projects.map(p => ({ id: p._id, title: p.title, steps: p.steps?.length || 0 })));
+    
+    // Filter steps/tasks to only include those assigned to this user
+    const filteredProjects = projects.map(project => {
+      console.log('Processing project:', project.title);
+      console.log('Project steps:', project.steps);
+      
+      const filteredSteps = (project.steps || []).map(step => {
+        console.log('Processing step:', step.name, 'Tasks:', step.tasks?.length || 0);
+        const stepTasks = (step.tasks || []).filter(task => {
+          let assignedId = task.assignedTo;
+          if (assignedId && typeof assignedId === 'object' && assignedId._id) {
+            assignedId = assignedId._id;
+          }
+          const isAssigned = String(assignedId) === String(req.user.id);
+          console.log('Task:', task.title, 'AssignedTo:', task.assignedTo, 'UserID:', req.user.id, 'IsAssigned:', isAssigned);
+          return isAssigned;
+        });
+        console.log('Filtered tasks for step:', step.name, 'Count:', stepTasks.length);
+        return {
+          name: step.name,
+          tasks: stepTasks
+        };
+      }).filter(step => step.tasks.length > 0);
+      
+      console.log('Filtered steps for project:', project.title, 'Count:', filteredSteps.length);
+      const progress = calculateProjectProgress(project);
+      return { ...project.toObject(), steps: filteredSteps, progress };
+    });
+    
+    console.log('Final filtered projects:', filteredProjects.length);
+    console.log('Response data:', filteredProjects);
+    
+    res.status(200).json(filteredProjects);
   } catch (err) {
-    console.error('Error in getProjects (tasks):', err.message);
+    console.error('Error in getProjects:', err.message);
     res.status(500).json({ message: 'Server error', projects: [] });
   }
 };
@@ -758,39 +798,164 @@ exports.getEmployeeUpdates = async (req, res) => {
 
 };
 
-// Update task progress or mark as complete
-exports.updateTaskProgress = async (req, res) => {
+// Update task status for employee
+exports.updateTaskStatus = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const { progress } = req.body;
+    const { status } = req.body;
+    const employeeId = req.user.id;
 
-    // Validate progress
-    if (typeof progress !== 'number' || progress < 0 || progress > 100) {
-      return res.status(400).json({ message: 'Progress must be a number between 0 and 100' });
+    if (!status || !['pending', 'in-progress', 'completed'].includes(status)) {
+      return res.status(400).json({ message: 'Valid status is required (pending, in-progress, completed)' });
     }
 
-    // Find the task and check ownership
-    const task = await Task.findById(taskId);
-    if (!task) {
+    // Find the project containing this task
+    const project = await Project.findOne({ "steps.tasks._id": taskId });
+    if (!project) {
+      return res.status(404).json({ message: 'Task not found in any project' });
+    }
+
+    // Find the specific task and verify it's assigned to the current employee
+    let taskFound = false;
+    let taskAssignedToEmployee = false;
+
+    for (const step of project.steps) {
+      const task = step.tasks.id(taskId);
+      if (task) {
+        taskFound = true;
+        if (task.assignedTo && task.assignedTo.toString() === employeeId) {
+          taskAssignedToEmployee = true;
+          task.status = status;
+          break;
+        }
+      }
+    }
+
+    if (!taskFound) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    if (task.assignedTo.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to update this task' });
+
+    if (!taskAssignedToEmployee) {
+      return res.status(403).json({ message: 'You can only update tasks assigned to you' });
     }
 
-    // Update progress and status
-    task.progress = progress;
-    if (progress === 100) {
-      task.status = 'completed';
-      task.completedDate = new Date();
-    } else if (progress > 0 && task.status !== 'in_progress') {
-      task.status = 'in_progress';
-    }
-    await task.save();
+    // Recalculate project progress
+    const progress = calculateProjectProgress(project);
 
-    res.json({ message: 'Task progress updated', task });
+    // Save the project
+    await project.save();
+
+    // Populate the project data for response
+    await project.populate('createdBy', 'name email');
+    await project.populate({
+      path: 'steps.tasks.assignedTo',
+      select: 'name email avatar'
+    });
+
+    res.json({
+      message: `Task status updated to ${status}`,
+      project: { ...project.toObject(), progress },
+      updatedTaskId: taskId,
+      newStatus: status
+    });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ message: 'Error updating task status' });
+  }
+};
+
+// Test endpoint to check database state
+exports.testDatabaseState = async (req, res) => {
+  try {
+    console.log('Testing database state...');
+
+    const allProjects = await Project.find().populate('createdBy', 'name email');
+    console.log('Total projects in database:', allProjects.length);
+
+    const projectsWithTasks = allProjects.filter(p => p.steps && p.steps.length > 0);
+    console.log('Projects with steps:', projectsWithTasks.length);
+
+    let totalTasks = 0;
+    let assignedTasks = 0;
+
+    projectsWithTasks.forEach(project => {
+      project.steps.forEach(step => {
+        if (step.tasks && step.tasks.length > 0) {
+          totalTasks += step.tasks.length;
+          step.tasks.forEach(task => {
+            if (task.assignedTo) {
+              assignedTasks++;
+              console.log('Assigned task found:', {
+                project: project.title,
+                step: step.name,
+                task: task.title,
+                assignedTo: task.assignedTo
+              });
+            }
+          });
+        }
+      });
+    });
+
+    console.log('Total tasks:', totalTasks);
+    console.log('Assigned tasks:', assignedTasks);
+
+    res.json({
+      totalProjects: allProjects.length,
+      projectsWithSteps: projectsWithTasks.length,
+      totalTasks,
+      assignedTasks,
+      projects: projectsWithTasks.map(p => ({
+        id: p._id,
+        title: p.title,
+        steps: p.steps?.length || 0,
+        tasks: p.steps?.reduce((sum, step) => sum + (step.tasks?.length || 0), 0) || 0
+      }))
+    });
   } catch (err) {
-    console.error('Error updating task progress:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('Error in testDatabaseState:', err);
+    res.status(500).json({ message: 'Error testing database state', error: err.message });
+  }
+};
+
+// Update project status (when projects are treated as tasks)
+exports.updateProjectAsTaskStatus = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { status } = req.body;
+    const employeeId = req.user.id;
+
+    if (!status || !['assigned', 'pending', 'in-progress', 'completed'].includes(status)) {
+      return res.status(400).json({ message: 'Valid status is required (assigned, pending, in-progress, completed)' });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (project.assignedTo && project.assignedTo.toString() !== employeeId) {
+      return res.status(403).json({ message: 'You can only update projects assigned to you' });
+    }
+
+    project.status = status;
+    project.updatedAt = new Date();
+    await project.save();
+
+    await project.populate('createdBy', 'name email');
+    await project.populate('assignedTo', 'name email');
+
+    res.json({
+      message: `Project status updated to ${status}`,
+      project: project.toObject(),
+      updatedProjectId: projectId,
+      newStatus: status
+    });
+  } catch (error) {
+    console.error('Error updating project status:', error);
+    res.status(500).json({ message: 'Error updating project status' });
+  }
+};
+
   }
 };
