@@ -85,6 +85,6 @@ router.get('/chat/history', async (req, res) => {
 });
 
 // Task progress update route
-router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
+// router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
 
 module.exports = router; 
