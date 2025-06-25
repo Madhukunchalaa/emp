@@ -98,7 +98,8 @@ const Navbar = ({ userRole = 'manager' }) => {
             { path: '/my-tasks', label: 'My Tasks', icon: '📋' },
             { path: '/my-projects', label: 'My Projects', icon: '📊' },
             { path: '/daily-updates', label: 'Daily Updates', icon: '📝' },
-            { path: '/attendance', label: 'Attendance', icon: '⏰' }
+            { path: '/attendance', label: 'Attendance', icon: '⏰' },
+            { path: '/Leave', label: 'Leave', icon: '📝' }
           ];
         case 'Business':
         case 'business':
@@ -121,27 +122,30 @@ const Navbar = ({ userRole = 'manager' }) => {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-white/20 px-6 py-4">
+    <div className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-white/20">
       <div className="flex justify-between items-center">
         {/* Logo and Brand */}
-        <nav className="flex items-center space-x-8">
+        <nav className="flex items-center space-x-9">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-sm">SS</span>
+            <div className="logo ml-auto">
+              <span className="text-white font-bold text-sm">
+                <img src='/smartsolutions-logo.png' alt='smartsolutions' width={100}  className="ml-5" ></img>
+              </span>
             </div>
-            <span className="font-bold text-xl text-gray-800">Smart Solutions</span>
+            {/* <span className="font-bold text-xl text-gray-800">Smart Solutions</span> */}
           </div>
-          
+      
+        <div className="flex items-center justify-content-center">
           {/* Navigation Links */}
-          <div className="flex space-x-2 ml-8">
+          <div className="flex space-x-2 ml-20 justify-content-center align-items-center">
             {getNavLinks().map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={`font-medium px-4 py-2 rounded-xl transition-all duration-200 no-underline ${
                   isActiveRoute(link.path)
-                    ? 'text-white bg-gradient-to-r from-orange-500 to-red-500 shadow-md'
-                    : 'text-gray-700 hover:bg-white/60'
+                    ? 'text-white bg-gradient-to-r from-orange-500 to-red-500 shadow-md fw-bold'
+                    : 'text-gray-700 hover:bg-white/60 fw-bold'
                 }`}
               >
                 <span className="mr-2">{link.icon}</span>
@@ -149,19 +153,20 @@ const Navbar = ({ userRole = 'manager' }) => {
               </Link>
             ))}
           </div>
+          </div>
         </nav>
         
         {/* Right Side - Time, Notifications, Profile */}
         <div className="flex items-center space-x-4">
           {/* Time Display */}
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-800">{formatDate(currentTime)}</p>
+          {/* <div className="text-right">
+            <h2 className="text-sm font-medium text-gray-800" >{formatDate(currentTime)}</h2>
             <p className="text-xs text-gray-500">{formatTime(currentTime)}</p>
-          </div>
+          </div> */}
           
           {/* Notifications */}
           <div className="p-2 rounded-xl bg-white/60 hover:bg-white/80 transition-all duration-200 cursor-pointer">
-            <Bell className="w-5 h-5 text-gray-600 hover:text-orange-500" />
+            <Bell className="text-gray-600 hover:text-orange-500"/> {/*w-5 h-6*/} 
           </div>
           
           {/* Profile Dropdown */}
@@ -174,9 +179,12 @@ const Navbar = ({ userRole = 'manager' }) => {
                 className="border-2 border-white shadow-sm"
               />
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-800">{userName}</p>
-                <p className="text-xs text-gray-500">{role}</p>
-              </div>
+                  <p className="text-base font-bold text-gray-900 mx-3 tracking-wide">{userName}</p>
+                  <p className="text-[11px] uppercase text-gray-500 tracking-wider border border-gray-300 rounded-full px-2 py-0.5 inline-block mt-1">
+                    {role}
+                  </p>
+                </div>
+
             </div>
             
             {/* Dropdown Menu */}
@@ -210,6 +218,7 @@ const Navbar = ({ userRole = 'manager' }) => {
         </div>
       </div>
     </div>
+   
   );
 };
 
