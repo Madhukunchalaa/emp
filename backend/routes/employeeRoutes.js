@@ -19,6 +19,7 @@ const {
   updateTaskStatus,
   updateProjectAsTaskStatus,
   testDatabaseState
+
 } = require('../controllers/employeeController');
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
@@ -82,5 +83,8 @@ router.get('/chat/history', async (req, res) => {
   }).sort({ createdAt: 1 });
   res.json(messages);
 });
+
+// Task progress update route
+router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
 
 module.exports = router; 

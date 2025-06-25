@@ -16,9 +16,11 @@ import { employeeService } from '../../services/api';
 
 const MyTasks = () => {
   const dispatch = useDispatch();
+
   const { projects = [], loading = false, error = null } = useSelector((state) => state.employee || {});
   const [success, setSuccess] = useState('');
   const [taskUpdateLoading, setTaskUpdateLoading] = useState(false);
+
 
   useEffect(() => {
     dispatch(fetchEmployeeProjects());
@@ -93,6 +95,7 @@ const MyTasks = () => {
       alert(`Error: ${errorMessage}\n\nDetails: ${JSON.stringify(err.response?.data || err.message)}`);
     } finally {
       setTaskUpdateLoading(false);
+
     }
   };
 
@@ -257,6 +260,35 @@ const MyTasks = () => {
                           <span>Due: {new Date(task.deadline).toLocaleDateString()}</span>
                         </div>
                       )}
+                      <div className="flex items-center space-x-2 mt-2">
+                        <span className="font-semibold">Progress:</span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={progressValues[task._id] || 0}
+                          disabled={task.status === 'completed'}
+                          onChange={e => handleProgressChange(task._id, Number(e.target.value))}
+                          className="w-32"
+                        />
+                        <span>{progressValues[task._id] || 0}%</span>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="px-3 py-1 rounded bg-blue-500 text-white text-xs font-semibold disabled:opacity-50"
+                          disabled={updatingTaskId === task._id || task.status === 'completed' || progressValues[task._id] === task.progress}
+                          onClick={() => handleUpdateProgress(task._id)}
+                        >
+                          {updatingTaskId === task._id ? 'Updating...' : 'Update Progress'}
+                        </button>
+                        <button
+                          className="px-3 py-1 rounded bg-green-600 text-white text-xs font-semibold disabled:opacity-50"
+                          disabled={updatingTaskId === task._id || task.status === 'completed'}
+                          onClick={() => handleMarkComplete(task._id)}
+                        >
+                          {updatingTaskId === task._id ? 'Marking...' : 'Mark as Complete'}
+                        </button>
+                      </div>
                     </div>
                     {/* Status Update Dropdown */}
                     <div className="mt-4">
@@ -280,6 +312,12 @@ const MyTasks = () => {
           </div>
         </div>
       </div>
+
+      {message && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-xl shadow-lg z-50">
+          {message}
+        </div>
+      )}
     </div>
   );
 };
