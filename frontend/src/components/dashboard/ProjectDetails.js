@@ -17,11 +17,13 @@ import {
 } from 'lucide-react';
 import UserAvatar from '../common/userAvathar';
 import Navbar from '../common/Navbar';
+import ProjectSteps from '../common/ProjectSteps';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -31,22 +33,36 @@ const ProjectDetails = () => {
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
-        const [projectRes, tasksRes] = await Promise.all([
-          managerService.getProjectById(projectId),
-          managerService.getProjectTasks(projectId)
-        ]);
-        
-        setProject(projectRes.data);
-        
-        // Handle the new response format from getProjectTasks
-        let projectTasks = [];
-        if (tasksRes.data && tasksRes.data.tasks) {
-          projectTasks = Array.isArray(tasksRes.data.tasks) ? tasksRes.data.tasks : [];
-        } else if (Array.isArray(tasksRes.data)) {
-          projectTasks = tasksRes.data;
+        const projectRes = await managerService.getProjectById(projectId);
+        const projectData = projectRes.data;
+        setProject(projectData);
+
+        // Extract tasks from the project's steps
+        if (projectData && projectData.steps) {
+          const allTasks = projectData.steps.reduce((acc, step) => {
+            return acc.concat(step.tasks.map(task => ({ ...task, stepName: step.name })));
+          }, []);
+          setTasks(allTasks);
+
+          // Extract unique team members from tasks
+          const uniqueTeamMembers = [];
+          const memberIds = new Set();
+          
+          allTasks.forEach(task => {
+            if (task.assignedTo && !memberIds.has(task.assignedTo._id)) {
+              memberIds.add(task.assignedTo._id);
+              uniqueTeamMembers.push(task.assignedTo);
+            }
+          });
+
+          // Add project creator if not already in team
+          if (projectData.createdBy && !memberIds.has(projectData.createdBy._id)) {
+            uniqueTeamMembers.push(projectData.createdBy);
+          }
+
+          setTeamMembers(uniqueTeamMembers);
         }
         
-        setTasks(projectTasks);
       } catch (err) {
         console.error('Failed to fetch project details:', err);
         setError('Failed to load project details');
@@ -60,21 +76,79 @@ const ProjectDetails = () => {
     }
   }, [projectId]);
 
+  const handleUpdateTasks = async () => {
+    try {
+      const projectRes = await managerService.getProjectById(projectId);
+      const projectData = projectRes.data;
+      setProject(projectData);
+
+      if (projectData && projectData.steps) {
+        const allTasks = projectData.steps.reduce((acc, step) => {
+          return acc.concat(step.tasks.map(task => ({ ...task, stepName: step.name })));
+        }, []);
+        setTasks(allTasks);
+
+        // Extract unique team members from tasks
+        const uniqueTeamMembers = [];
+        const memberIds = new Set();
+        
+        allTasks.forEach(task => {
+          if (task.assignedTo && !memberIds.has(task.assignedTo._id)) {
+            memberIds.add(task.assignedTo._id);
+            uniqueTeamMembers.push(task.assignedTo);
+          }
+        });
+
+        // Add project creator if not already in team
+        if (projectData.createdBy && !memberIds.has(projectData.createdBy._id)) {
+          uniqueTeamMembers.push(projectData.createdBy);
+        }
+
+        setTeamMembers(uniqueTeamMembers);
+      }
+    } catch (err) {
+      console.error('Failed to refresh tasks:', err);
+      setError('Failed to refresh tasks.');
+    }
+  };
+
   const handleApproveTask = async (taskId, status) => {
     try {
       await managerService.approveRejectTask(taskId, status);
       setSuccess(`Task has been ${status}.`);
       // Refresh tasks
-      const tasksRes = await managerService.getProjectTasks(projectId);
-      let projectTasks = [];
-      if (tasksRes.data && tasksRes.data.tasks) {
-        projectTasks = Array.isArray(tasksRes.data.tasks) ? tasksRes.data.tasks : [];
-      } else if (Array.isArray(tasksRes.data)) {
-        projectTasks = tasksRes.data;
-      }
-      setTasks(projectTasks);
+      handleUpdateTasks();
     } catch (err) {
       setError('Failed to update task status.');
+    }
+  };
+
+  const handleUpdateTaskStatus = async (taskId, newStatus) => {
+    try {
+      setLoading(true);
+      const response = await managerService.updateProjectTaskStatus(taskId, newStatus);
+      setSuccess(`Task status updated to ${newStatus}.`);
+      
+      // Update the project data with the new progress
+      if (response.data && response.data.project) {
+        setProject(response.data.project);
+        
+        // Update tasks list
+        if (response.data.project.steps) {
+          const allTasks = response.data.project.steps.reduce((acc, step) => {
+            return acc.concat(step.tasks.map(task => ({ ...task, stepName: step.name })));
+          }, []);
+          setTasks(allTasks);
+        }
+      }
+      
+      // Auto-clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Failed to update task status:', err);
+      setError(err.response?.data?.message || 'Failed to update task status.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,6 +290,11 @@ const ProjectDetails = () => {
           </div>
         </div>
 
+        {/* Project Steps, Tasks, and Progress */}
+        <div className="bg-white/80 rounded-2xl shadow-sm p-6 mb-6">
+          <ProjectSteps project={project} />
+        </div>
+
         {/* Tabs */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mb-6">
           <div className="flex border-b border-white/20">
@@ -247,82 +326,97 @@ const ProjectDetails = () => {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              Team
+              Team ({teamMembers.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('files')}
+              className={`px-6 py-4 font-medium transition-all duration-200 ${
+                activeTab === 'files'
+                  ? 'text-orange-500 border-b-2 border-orange-500'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Files
             </button>
           </div>
 
           <div className="p-6">
             {activeTab === 'overview' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Project Description</h3>
-                  <p className="text-gray-600 leading-relaxed">{project.description}</p>
-                </div>
-
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Project Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Project Details</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <Calendar className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Deadline</p>
-                          <p className="font-medium text-gray-800">
-                            {new Date(project.deadline).toLocaleDateString()}
-                          </p>
-                        </div>
+                  <div className="bg-white/50 p-6 rounded-xl border-t border-white/20">
+                    <h4 className="font-semibold text-gray-800 mb-3">Details</h4>
+                    <div className="space-y-3 text-sm text-gray-600">
+                      <div className="flex items-start">
+                        <FileText className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Description:</span>{' '}
+                          {project.description}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Estimated Hours</p>
-                          <p className="font-medium text-gray-800">
-                            {project.estimatedHours || 'Not specified'}
-                          </p>
-                        </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Created:</span>{' '}
+                          {new Date(project.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <User className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Assigned To</p>
-                          <p className="font-medium text-gray-800">
-                            {project.assignedTo?.name || 'Unassigned'}
-                          </p>
-                        </div>
+                      <div className="flex items-center">
+                        <Clock className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Deadline:</span>{' '}
+                          {new Date(project.deadline).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <Users className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Team Size:</span>{' '}
+                          {teamMembers.length}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <BarChart3 className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Status:</span>{' '}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <AlertCircle className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" />
+                        <p>
+                          <span className="font-semibold text-gray-700">Priority:</span>{' '}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(project.priority)}`}>
+                            {project.priority}
+                          </span>
+                        </p>
                       </div>
                     </div>
                   </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Progress Overview</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-gray-600">Overall Progress</span>
-                          <span className="font-medium text-gray-800">{calculateProgress()}%</span>
+                  <div className="bg-white/50 p-6 rounded-xl border-t border-white/20">
+                    <h4 className="font-semibold text-gray-800 mb-3">Key Personnel</h4>
+                    <div className="space-y-3 text-sm text-gray-600">
+                      {project.createdBy && (
+                        <div className="flex items-center space-x-3">
+                          <UserAvatar username={project.createdBy.name} />
+                          <div>
+                            <p className="font-semibold text-gray-700">{project.createdBy.name}</p>
+                            <p className="text-xs text-gray-500">Project Creator</p>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${calculateProgress()}%` }}
-                          ></div>
+                      )}
+                      {project.assignedTo && (
+                        <div className="flex items-center space-x-3">
+                          <UserAvatar username={project.assignedTo.name} />
+                          <div>
+                            <p className="font-semibold text-gray-700">{project.assignedTo.name}</p>
+                            <p className="text-xs text-gray-500">Project Manager</p>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-3 bg-green-50 rounded-xl">
-                          <p className="text-2xl font-bold text-green-600">
-                            {tasks.filter(task => task.status === 'completed').length}
-                          </p>
-                          <p className="text-sm text-green-600">Completed</p>
-                        </div>
-                        <div className="text-center p-3 bg-blue-50 rounded-xl">
-                          <p className="text-2xl font-bold text-blue-600">
-                            {tasks.filter(task => task.status === 'in-progress').length}
-                          </p>
-                          <p className="text-sm text-blue-600">In Progress</p>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -330,147 +424,172 @@ const ProjectDetails = () => {
             )}
 
             {activeTab === 'tasks' && (
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800">Project Tasks</h3>
-                  <Link 
-                    to="/assign-task" 
-                    className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all duration-200"
-                  >
-                    Assign New Task
-                  </Link>
-                </div>
-
+              <div className="p-6">
                 {tasks.length === 0 ? (
                   <div className="text-center py-8">
-                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No tasks assigned to this project yet.</p>
+                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-2">No tasks have been created for this project yet.</p>
+                    <p className="text-sm text-gray-400">Use the "Assign Task" feature to create and assign tasks to team members.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {tasks.map((task) => (
-                      <div key={task._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h4 className="font-semibold text-gray-800">{task.title}</h4>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                                {task.status}
-                              </span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                {task.priority}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-                            
-                            <div className="flex items-center space-x-6 text-xs text-gray-500">
-                              <div className="flex items-center space-x-1">
-                                <User className="w-3 h-3" />
-                                <span>{task.assignedTo?.name || 'Unassigned'}</span>
-                              </div>
-                              {task.estimatedHours && (
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{task.estimatedHours}h</span>
-                                </div>
-                              )}
-                              {task.dueDate && (
-                                <div className="flex items-center space-x-1">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{new Date(task.dueDate).toLocaleDateString()}</span>
-                                </div>
-                              )}
-                            </div>
+                  <>
+                    {tasks.every(task => !task.assignedTo) && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+                          <div>
+                            <h4 className="font-semibold text-blue-800 mb-1">Tasks Need Assignment</h4>
+                            <p className="text-sm text-blue-600">
+                              All tasks in this project are currently unassigned. Use the "Assign Task" feature to assign tasks to team members.
+                            </p>
                           </div>
-                          
-                          <div className="flex space-x-2">
-                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                              <MessageSquare className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {task.submittedBy && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <div className="flex items-center space-x-2">
-                              <UserAvatar
-                                avatar={task.submittedBy.avatar}
-                                name={task.submittedBy.name}
-                                size="sm"
-                              />
-                              <div>
-                                <p className="text-xs text-gray-500">Submitted by</p>
-                                <p className="text-sm font-medium text-gray-800">{task.submittedBy.name}</p>
-                              </div>
-                              {task.submittedAt && (
-                                <span className="text-xs text-gray-500 ml-auto">
-                                  {new Date(task.submittedAt).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex justify-end space-x-2">
-                          {task.status === 'pending approval' && (
-                            <>
-                              <button
-                                onClick={() => handleApproveTask(task._id, 'approved')}
-                                className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleApproveTask(task._id, 'rejected')}
-                                className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Task
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Assigned To
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Priority
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Due Date
+                            </th>
+                            <th scope="col" className="relative px-6 py-3">
+                              <span className="sr-only">Actions</span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                        {tasks.map((task) => (
+                          <tr key={task._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                              <div className="text-sm text-gray-500">{task.stepName}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {task.assignedTo ? (
+                                <div className="flex items-center space-x-3">
+                                  <UserAvatar username={task.assignedTo.name} />
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-800">{task.assignedTo.name}</p>
+                                    <p className="text-xs text-gray-500">{task.assignedTo.role}</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm text-gray-500">Unassigned</span>
+                                  <span className="text-xs text-gray-400">(Use Assign Task to assign)</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                                  task.status
+                                )}`}
+                              >
+                                {task.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                                  task.priority
+                                )}`}
+                              >
+                                {task.priority}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Not set'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                {/* Status Update Dropdown */}
+                                <select
+                                  value={task.status}
+                                  onChange={(e) => handleUpdateTaskStatus(task._id, e.target.value)}
+                                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  disabled={loading}
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="in-progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                </select>
+                                
+                                {/* Approval buttons for pending approval tasks */}
+                                {task.status === 'pending approval' && (
+                                  <div className="flex space-x-1">
+                                    <button 
+                                      onClick={() => handleApproveTask(task._id, 'approved')}
+                                      className="text-green-600 hover:text-green-900 text-xs"
+                                      disabled={loading}
+                                    >
+                                      Approve
+                                    </button>
+                                    <button 
+                                      onClick={() => handleApproveTask(task._id, 'rejected')}
+                                      className="text-red-600 hover:text-red-900 text-xs"
+                                      disabled={loading}
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </div>
             )}
 
             {activeTab === 'team' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">Project Team</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tasks.map((task) => task.assignedTo).filter((employee, index, arr) => 
-                    employee && arr.findIndex(e => e._id === employee._id) === index
-                  ).map((employee) => (
-                    <div key={employee._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 text-center hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
-                      <div className="relative mb-3">
-                        <UserAvatar
-                          avatar={employee.avatar}
-                          name={employee.name}
-                          className="mx-auto"
-                        />
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white shadow-sm bg-green-400"></div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Project Team</h3>
+                {teamMembers.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {teamMembers.map(member => (
+                      <div key={member._id} className="bg-white/50 p-4 rounded-xl border flex items-center space-x-4">
+                        <UserAvatar username={member.name} />
+                        <div>
+                          <p className="font-semibold text-gray-800">{member.name}</p>
+                          <p className="text-sm text-gray-500">{member.role || 'Team Member'}</p>
+                          <p className="text-xs text-gray-400">{member.email}</p>
+                        </div>
                       </div>
-                      
-                      <h4 className="font-semibold text-gray-800 mb-1">{employee.name}</h4>
-                      <p className="text-sm text-gray-600 mb-2">{employee.role}</p>
-                      <p className="text-xs text-gray-500 mb-3">{employee.email}</p>
-                      
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-gray-800">
-                          {tasks.filter(task => task.assignedTo?._id === employee._id).length} tasks
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {tasks.filter(task => task.assignedTo?._id === employee._id && task.status === 'completed').length} completed
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No team members assigned yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'files' && (
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Project Files</h3>
+                <div className="text-center py-8">
+                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No files uploaded yet</p>
                 </div>
               </div>
             )}

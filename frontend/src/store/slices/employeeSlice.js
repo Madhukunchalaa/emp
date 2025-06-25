@@ -155,6 +155,12 @@ const employeeSlice = createSlice({
     clearSuccess: (state) => {
       state.success = null;
     },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+    setSuccess: (state, action) => {
+      state.success = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -310,5 +316,5 @@ const employeeSlice = createSlice({
   },
 });
 
-export const { clearError, clearSuccess } = employeeSlice.actions;
+export const { clearError, clearSuccess, setError, setSuccess } = employeeSlice.actions;
 export default employeeSlice.reducer; 
