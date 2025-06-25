@@ -5,14 +5,17 @@ import Navbar from '../../common/Navbar';
 import { Plus, Calendar, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 
 const AssignProject = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     deadline: '',
     priority: 'medium',
     category: '',
-    estimatedHours: ''
+    estimatedHours: '',
+    steps: []
   });
+  const [newStep, setNewStep] = useState('');
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,7 +31,24 @@ const AssignProject = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    setError('');
     setLoading(true);
+
+    // Validate required fields
+    if (!formData.title.trim() || !formData.description.trim() || !formData.deadline) {
+      setMessage('Please fill in all required fields');
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    // Validate steps
+    if (formData.steps.length === 0) {
+      setMessage('Please add at least one project step/phase');
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
 
     const selectedDate = new Date(formData.deadline);
     const today = new Date();
@@ -44,28 +64,45 @@ const AssignProject = () => {
     try {
       const projectData = {
         ...formData,
-        status: 'pending', // Project starts as pending until assigned
-        assignedTo: null // No assignment initially
+        status: 'pending',
+        assignedTo: null,
+        steps: formData.steps,
+        estimatedHours: formData.estimatedHours ? Number(formData.estimatedHours) : undefined
       };
 
+      console.log('Sending project data:', projectData);
       const res = await managerService.createProject(projectData);
-      setMessage('Project created successfully!');
+      console.log('Project creation response:', res);
+      
+      setMessage('Project created successfully! Redirecting to projects...');
       setIsSuccess(true);
+      
+      // Reset form
       setFormData({
         title: '',
         description: '',
         deadline: '',
         priority: 'medium',
         category: '',
-        estimatedHours: ''
+        estimatedHours: '',
+        steps: []
       });
 
-      // Auto-clear message after 5 seconds
-      setTimeout(() => setMessage(''), 5000);
+      // Redirect to projects list after 2 seconds
+      setTimeout(() => {
+        navigate('/projects');
+      }, 2000);
     } catch (err) {
       console.error('Project creation error:', err);
-      setMessage(err.response?.data?.message || 'Failed to create project');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to create project';
+      setMessage(errorMessage);
       setIsSuccess(false);
+      
+      // Log detailed error information for debugging
+      if (err.response) {
+        console.error('Error response:', err.response.data);
+        console.error('Error status:', err.response.status);
+      }
     } finally {
       setLoading(false);
     }
@@ -206,6 +243,53 @@ const AssignProject = () => {
                     className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-2">Project Steps/Phases *</label>
+                <div className="flex space-x-2 mb-2">
+                  <input
+                    type="text"
+                    value={newStep}
+                    onChange={e => setNewStep(e.target.value)}
+                    placeholder="Enter step/phase name"
+                    className="flex-1 p-2 border border-gray-200 rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newStep.trim() && !formData.steps.some(s => s.name === newStep.trim())) {
+                        setFormData(prev => ({
+                          ...prev,
+                          steps: [...prev.steps, { name: newStep.trim(), tasks: [] }]
+                        }));
+                        setNewStep('');
+                      }
+                    }}
+                    className="bg-orange-500 text-white px-4 py-2 rounded"
+                  >
+                    Add
+                  </button>
+                </div>
+                <ul className="list-disc pl-5">
+                  {formData.steps.map((step, idx) => (
+                    <li key={idx} className="mb-1 flex items-center">
+                      {step.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData(prev => ({
+                            ...prev,
+                            steps: prev.steps.filter((_, i) => i !== idx)
+                          }))
+                        }
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        &times;
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

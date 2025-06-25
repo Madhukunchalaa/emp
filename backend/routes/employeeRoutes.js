@@ -16,7 +16,10 @@ const {
   updateTodayWorkingOn,
   getMyDailyUpdates,
   updateDailyUpdate,
-  updateTaskProgress
+  updateTaskStatus,
+  updateProjectAsTaskStatus,
+  testDatabaseState
+
 } = require('../controllers/employeeController');
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
@@ -41,6 +44,9 @@ router.put('/profile', auth, updateProfile);
 router.get('/projects', auth, getProjects);
 router.patch('/projects/:projectId/status', auth, updateProjectStatus);
 router.patch('/projects/:projectId/comment', auth, updateProjectComment);
+router.put('/tasks/:taskId/status', auth, updateTaskStatus);
+router.put('/projects/:projectId/task-status', auth, updateProjectAsTaskStatus);
+router.get('/test-db', auth, testDatabaseState);
 
 // Attendance routes
 router.post('/attendance/punch-in', auth, punchIn);
@@ -79,6 +85,6 @@ router.get('/chat/history', async (req, res) => {
 });
 
 // Task progress update route
-router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
+// router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
 
 module.exports = router; 

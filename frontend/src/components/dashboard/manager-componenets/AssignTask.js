@@ -24,11 +24,13 @@ const AssignTask = () => {
     estimatedHours: '',
     assignmentType: 'now', // 'now' or 'schedule'
     scheduledDate: '',
-    scheduledTime: ''
+    scheduledTime: '',
+    stepName: ''
   });
   
   const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [projectSteps, setProjectSteps] = useState([]);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -57,6 +59,14 @@ const AssignTask = () => {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (formData.projectId) {
+      const selectedProject = projects.find(p => p._id === formData.projectId);
+      setProjectSteps(selectedProject?.steps || []);
+      setFormData(prev => ({ ...prev, stepName: '' }));
+    }
+  }, [formData.projectId, projects]);
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -95,6 +105,7 @@ const AssignTask = () => {
         estimatedHours: formData.estimatedHours,
         assignmentType: formData.assignmentType,
         status: formData.assignmentType === 'now' ? 'assigned' : 'scheduled',
+        stepName: formData.stepName,
         ...(formData.assignmentType === 'schedule' && {
           scheduledDate: formData.scheduledDate,
           scheduledTime: formData.scheduledTime
@@ -119,7 +130,8 @@ const AssignTask = () => {
         estimatedHours: '',
         assignmentType: 'now',
         scheduledDate: '',
-        scheduledTime: ''
+        scheduledTime: '',
+        stepName: ''
       });
 
       // Auto-clear message after 5 seconds
@@ -336,6 +348,24 @@ const AssignTask = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Step/Phase Selection */}
+              <div>
+                <label className="block font-semibold text-gray-700 mb-2">Select Step/Phase *</label>
+                <select
+                  name="stepName"
+                  value={formData.stepName}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  disabled={!projectSteps.length}
+                >
+                  <option value="">-- Select Step/Phase --</option>
+                  {projectSteps.map((step, idx) => (
+                    <option key={idx} value={step.name}>{step.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

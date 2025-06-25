@@ -1,21 +1,23 @@
 import axios from 'axios';
 
+
 // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://emp-1-rgfq.onrender.com/api';
+
+
+// const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://emp-1-rgfq.onrender.com/ap
 
 
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL
- 
 });
-
 // Flag to prevent multiple redirects and unwanted behavior during logout
 let isRedirecting = false;
 let isLoggingOut = false;
 
-// Add request interceptor to add auth token
+// Add request interceptor to add auth tokens
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -279,6 +281,21 @@ export const employeeService = {
       return Promise.reject(new Error('No auth token'));
     }
     return api.get(`/employee/my-daily-updates?page=${page}&limit=${limit}`);
+  },
+
+  updateTaskProgress: (taskId, progress) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    // Since we're treating projects as tasks, use the project endpoint
+    return api.put(`/employee/projects/${taskId}/task-status`, { status: progress });
+  },
+
+  updateTaskStatus: (taskId, status) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.put(`/employee/tasks/${taskId}/status`, { status });
   }
 };
 
@@ -293,14 +310,16 @@ export const managerService = {
   
   // Project management
   getProjects: () => api.get('/manager/projects'),
-  getProjectById: (projectId) => api.get(`/manager/projects/${projectId}`),
+  getProjectById: (id) => api.get(`/manager/projects/${id}`),
   createProject: (projectData) => api.post('/manager/projects', projectData),
-  assignProject: (projectId, assignedTo) => api.post('/manager/projects/assign', { projectId, assignedTo }),
-  getProjectTasks: (projectId) => api.get(`/manager/projects/${projectId}/tasks`),
-  
-  // Task management
+  getAssignedProjects: () => api.get('/manager/projects/assigned'),
   assignTask: (taskData) => api.post('/manager/tasks/assign', taskData),
-  approveRejectTask: (taskId, status) => api.put(`/manager/tasks/${taskId}/status`, { status }),
+  updateTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
+  updateProjectTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
+  approveRejectTask: (taskId, status) => api.put(`/manager/tasks/${taskId}/approve`, { status }),
+  getManagerDashboard: () => api.get('/manager/dashboard'),
+  getDesignerTasks: (designerId) => api.get(`/manager/designers/${designerId}/tasks`),
+  getTeam: () => api.get('/manager/team'),
   
   // Attendance
   getAttendanceHistory: () => api.get('/manager/attendance'),

@@ -25,10 +25,13 @@ import {
   Target,
   Bell,
   Plus,
-  Eye
+  Eye,
+  Play,
+  Square
 } from 'lucide-react';
 import Navbar from '../common/Navbar';
 import './Dashboard.css';
+import { employeeService } from '../../services/api';
 
 const EmployeeDashboard = () => {
   const dispatch = useDispatch();
@@ -45,6 +48,26 @@ const EmployeeDashboard = () => {
     pendingTasks: 0,
     totalHours: 0
   });
+  const [taskUpdateLoading, setTaskUpdateLoading] = useState(false);
+
+  // Extract all tasks from projects
+  const getAllTasks = () => {
+    const allTasks = [];
+    projects.forEach(project => {
+      project.steps?.forEach(step => {
+        step.tasks?.forEach(task => {
+          allTasks.push({
+            ...task,
+            projectTitle: project.title,
+            stepName: step.name,
+            projectId: project._id
+          });
+        });
+      });
+    });
+    console.log('DEBUG: allTasks array:', allTasks);
+    return allTasks;
+  };
 
   useEffect(() => {
     dispatch(fetchEmployeeProjects());
@@ -57,10 +80,25 @@ const EmployeeDashboard = () => {
   }, [error, success, dispatch]);
 
   useEffect(() => {
-    const totalTasks = projects.length;
-    const completedTasks = projects.filter(task => task.status === 'completed').length;
-    const pendingTasks = projects.filter(task => task.status === 'pending' || task.status === 'assigned').length;
-    const totalHours = projects.reduce((sum, task) => sum + (task.estimatedHours || 0), 0);
+    const totalTasks = projects.reduce((sum, project) => {
+      const projectTasks = project.steps?.reduce((stepSum, step) => 
+        stepSum + (step.tasks?.length || 0), 0) || 0;
+      return sum + projectTasks;
+    }, 0);
+    
+    const completedTasks = projects.reduce((sum, project) => {
+      const projectCompletedTasks = project.steps?.reduce((stepSum, step) => 
+        stepSum + (step.tasks?.filter(task => task.status === 'completed')?.length || 0), 0) || 0;
+      return sum + projectCompletedTasks;
+    }, 0);
+    
+    const pendingTasks = projects.reduce((sum, project) => {
+      const projectPendingTasks = project.steps?.reduce((stepSum, step) => 
+        stepSum + (step.tasks?.filter(task => task.status === 'pending' || task.status === 'in-progress')?.length || 0), 0) || 0;
+      return sum + projectPendingTasks;
+    }, 0);
+    
+    const totalHours = projects.reduce((sum, project) => sum + (project.estimatedHours || 0), 0);
 
     setStats({
       totalTasks,
@@ -86,6 +124,40 @@ const EmployeeDashboard = () => {
   const handleViewTask = (task) => {
     setSelectedTask(task);
     setShowTaskModal(true);
+  };
+
+  const handleUpdateTaskStatus = async (taskId, newStatus, task) => {
+    try {
+      setTaskUpdateLoading(true);
+      console.log('DEBUG: handleUpdateTaskStatus called with:', { taskId, newStatus, task });
+      let response;
+      if (task.stepName === 'Main Task') {
+        console.log('DEBUG: Using updateTaskProgress (project-as-task)');
+        response = await employeeService.updateTaskProgress(taskId, newStatus);
+      } else {
+        console.log('DEBUG: Using updateTaskStatus (real subdocument task)');
+        response = await employeeService.updateTaskStatus(taskId, newStatus);
+      }
+      // Show success message
+      dispatch({ type: 'employee/setSuccess', payload: `Task status updated to ${newStatus}` });
+      // Refresh the projects data to get updated state
+      dispatch(fetchEmployeeProjects());
+      // Update the selected task if it's the one being updated
+      if (selectedTask && selectedTask._id === taskId) {
+        setSelectedTask(prev => ({ ...prev, status: newStatus }));
+      }
+      console.log(`Task status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update task status';
+      dispatch({ type: 'employee/setError', payload: errorMessage });
+      // Revert the selected task change on error
+      if (selectedTask && selectedTask._id === taskId) {
+        setSelectedTask(prev => ({ ...prev, status: selectedTask.status }));
+      }
+    } finally {
+      setTaskUpdateLoading(false);
+    }
   };
 
   const today = attendance?.today || {};
@@ -336,7 +408,7 @@ const EmployeeDashboard = () => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">
-                {projects.length} task{projects.length !== 1 ? 's' : ''}
+                {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -347,7 +419,7 @@ const EmployeeDashboard = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="text-gray-500 mt-4">Loading your tasks...</p>
               </div>
-            ) : projects.length === 0 ? (
+            ) : getAllTasks().length === 0 ? (
               <div className="text-center py-8">
                 <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No tasks assigned yet.</p>
@@ -355,9 +427,9 @@ const EmployeeDashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {projects.map((task) => (
+                {getAllTasks().map((task, idx) => (
                   <div 
-                    key={task._id} 
+                    key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
                     className="bg-white/60 backdrop-blur-sm rounded-xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 cursor-pointer"
                     onClick={() => handleViewTask(task)}
                   >
@@ -367,23 +439,17 @@ const EmployeeDashboard = () => {
                         <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
                           {task.status}
                         </span>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                          {task.priority}
-                        </span>
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{task.description}</p>
+                    <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
+                    <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
                     
                     <div className="space-y-2 text-xs text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-3 h-3" />
-                        <span>Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
-                      </div>
-                      {task.estimatedHours && (
+                      {task.dueDate && (
                         <div className="flex items-center space-x-2">
-                          <Clock className="w-3 h-3" />
-                          <span>{task.estimatedHours}h estimated</span>
+                          <Calendar className="w-3 h-3" />
+                          <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>
@@ -481,12 +547,41 @@ const EmployeeDashboard = () => {
               </div>
               
               <div className="flex space-x-2 mt-6">
-                <button className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200 text-center">
-                  Update Progress
+                <button 
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200 text-center disabled:opacity-50"
+                  onClick={() => handleUpdateTaskStatus(selectedTask._id, 'in-progress', selectedTask)}
+                  disabled={taskUpdateLoading || selectedTask.status === 'in-progress'}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Play className="w-4 h-4" />
+                    <span>Start Task</span>
+                  </div>
                 </button>
-                <button className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition-all duration-200">
-                  Mark Complete
+                <button 
+                  className="flex-1 bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition-all duration-200 disabled:opacity-50"
+                  onClick={() => handleUpdateTaskStatus(selectedTask._id, 'completed', selectedTask)}
+                  disabled={taskUpdateLoading || selectedTask.status === 'completed'}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Mark Complete</span>
+                  </div>
                 </button>
+              </div>
+              
+              {/* Status Update Dropdown */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
+                <select
+                  value={selectedTask.status}
+                  onChange={(e) => handleUpdateTaskStatus(selectedTask._id, e.target.value, selectedTask)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  disabled={taskUpdateLoading}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
             </div>
           </div>
