@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -47,155 +47,163 @@ const theme = createTheme({
   },
 });
 
-function App() {
-  // Move chat notification state up to App
+function AppContent() {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [chatOpenWith, setChatOpenWith] = useState(null);
+  const location = useLocation();
+  const hideNavbarRoutes = ['/login', '/register', '/forgot-password'];
+  const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
+  return (
+    <ChatNotificationContext.Provider value={{ unreadMessages, setUnreadMessages, chatOpenWith, setChatOpenWith }}>
+      {!hideNavbar && <Navbar />}
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Dynamic Dashboard Route */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DynamicDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Manager Routes */}
+        <Route
+          path="/manager-dashboard"
+          element={
+            <PrivateRoute>
+              <ManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/team"
+          element={
+            <PrivateRoute>
+              <Team />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projects"
+          element={
+            <PrivateRoute>
+              <Projects />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <Reports />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/assign-project"
+          element={
+            <PrivateRoute>
+              <AssignProject />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/assign-task"
+          element={
+            <PrivateRoute>
+              <AssignTask />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/project/:projectId"
+          element={
+            <PrivateRoute>
+              <ProjectDetails />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/project-details" element={<ProjectDetails />} />
+
+        {/* Employee Dashboard Routes */}
+        <Route
+          path="/my-tasks"
+          element={
+            <PrivateRoute>
+              <MyTasks />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/my-projects"
+          element={
+            <PrivateRoute>
+              <MyProjects />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/daily-updates"
+          element={
+            <PrivateRoute>
+              <DailyUpdates />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendance"
+          element={
+            <PrivateRoute>
+              <Attendance />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/Leave'
+          element={
+            <PrivateRoute>
+              <Leave/>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/manager-leave"
+          element={
+            <PrivateRoute>
+              <ManagerLeave />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <PrivateRoute>
+              <ChatDashboard />
+            </PrivateRoute>
+          }
+        />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </ChatNotificationContext.Provider>
+  );
+}
+
+function App() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <ChatNotificationContext.Provider value={{ unreadMessages, setUnreadMessages, chatOpenWith, setChatOpenWith }}>
-          <Router>
-            <Navbar />
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-
-              {/* Dynamic Dashboard Route */}
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <DynamicDashboard />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Manager Routes */}
-              <Route
-                path="/manager-dashboard"
-                element={
-                  <PrivateRoute>
-                    <ManagerDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/team"
-                element={
-                  <PrivateRoute>
-                    <Team />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/projects"
-                element={
-                  <PrivateRoute>
-                    <Projects />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <PrivateRoute>
-                    <Reports />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/assign-project"
-                element={
-                  <PrivateRoute>
-                    <AssignProject />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/assign-task"
-                element={
-                  <PrivateRoute>
-                    <AssignTask />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/project/:projectId"
-                element={
-                  <PrivateRoute>
-                    <ProjectDetails />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="/project-details" element={<ProjectDetails />} />
-
-              {/* Employee Dashboard Routes */}
-              <Route
-                path="/my-tasks"
-                element={
-                  <PrivateRoute>
-                    <MyTasks />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/my-projects"
-                element={
-                  <PrivateRoute>
-                    <MyProjects />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/daily-updates"
-                element={
-                  <PrivateRoute>
-                    <DailyUpdates />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/attendance"
-                element={
-                  <PrivateRoute>
-                    <Attendance />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path='/Leave'
-                element={
-                  <PrivateRoute>
-                    <Leave/>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/manager-leave"
-                element={
-                  <PrivateRoute>
-                    <ManagerLeave />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/chat"
-                element={
-                  <PrivateRoute>
-                    <ChatDashboard />
-                  </PrivateRoute>
-                }
-              />
-              {/* Redirect root to login */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </Router>
-        </ChatNotificationContext.Provider>
+        <Router>
+          <AppContent />
+        </Router>
       </ThemeProvider>
     </Provider>
   );
