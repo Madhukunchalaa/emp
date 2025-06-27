@@ -3,7 +3,8 @@ import { Calendar, Clock, Users, BarChart3, MessageSquare, Eye, Plus, Bell, Tren
 import { managerService } from '../../services/api';
 import UserAvatar from '../common/userAvathar';
 import { Link } from 'react-router-dom';
-import Navbar from '../common/Navbar';
+import Chat from '../common/Chat';
+import jwtDecode from 'jwt-decode';
 
 export default function ManagerDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -23,6 +24,7 @@ export default function ManagerDashboard() {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [managerUser, setManagerUser] = useState(null);
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -179,6 +181,19 @@ export default function ManagerDashboard() {
     }
   }, [success]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userObj = payload.user || payload;
+        setManagerUser({ _id: userObj._id || userObj.id, ...userObj });
+      } catch (e) {
+        console.error('Failed to decode token for manager user', e);
+      }
+    }
+  }, []);
+
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { 
       hour12: false,
@@ -300,11 +315,11 @@ export default function ManagerDashboard() {
     return Array.from(team.values());
   };
 
+  console.log('employeeUser:', selectedEmployee);
+  console.log('managerUser:', managerUser);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="manager" />
-
       {/* Error/Success Messages */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
@@ -849,6 +864,13 @@ export default function ManagerDashboard() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Chat Panel */}
+      {selectedEmployee && managerUser && (
+        <div>
+          <Chat currentUser={selectedEmployee} otherUser={managerUser} />
         </div>
       )}
     </div>

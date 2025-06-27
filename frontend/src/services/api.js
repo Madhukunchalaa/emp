@@ -1,6 +1,6 @@
 import axios from 'axios';
-// const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://emp-1-rgfq.onrender.com/api';
+const API_URL = 'http://localhost:5000/api';
+// const API_URL = 'https://emp-1-rgfq.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -325,7 +325,17 @@ export const managerService = {
   approveRejectUpdate: (updateId, action, reason) => api.put(`/manager/updates/${updateId}/approve-reject`, { action, reason }),
   
   // Testing
-  testAssign: (data) => api.post('/manager/test-assign', data)
+  testAssign: (data) => api.post('/manager/test-assign', data),
+
+  getUserById: async (id) => {
+    try {
+      const response = await api.get(`/manager/user/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Get user by ID API error:', error);
+      throw error.response?.data || error;
+    }
+  },
 };
 
 // Admin service (if needed)
@@ -461,4 +471,26 @@ export const reviewLeaveRequest = async (leaveId, status) => {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
+};
+
+// Add this at the bottom of the file, outside any other export or function
+export const userService = {
+  getUserById: async (id) => {
+    try {
+      const response = await api.get(`/manager/user/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Get user by ID API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+  getAllUsers: async () => {
+    try {
+      const response = await api.get('/manager/users');
+      return response;
+    } catch (error) {
+      console.error('Get all users API error:', error);
+      throw error.response?.data || error;
+    }
+  },
 };

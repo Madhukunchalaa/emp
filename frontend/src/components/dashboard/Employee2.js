@@ -8,6 +8,7 @@ import { employeeService } from '../../services/api';
 import UpdateForm from './UpdateForm';
 import Chat from '../common/Chat';
 import { managerService } from '../../services/api';
+import jwtDecode from 'jwt-decode';
 
 
 const EmployeeDashboard = () => {
@@ -1226,6 +1227,20 @@ useEffect(() => {
     }
   }, []);
 
+  // Fetch manager user info for chat
+  useEffect(() => {
+    const fetchManager = async () => {
+      try {
+        const res = await managerService.getProfile();
+        const userObj = res.data.user || res.data;
+        setManagerUser({ _id: userObj._id || userObj.id, ...userObj });
+      } catch (err) {
+        console.error('Could not fetch manager info for chat', err);
+      }
+    };
+    fetchManager();
+  }, []);
+
   const handleOpenChat = async () => {
     try {
       const res = await managerService.getProfile();
@@ -1247,228 +1262,254 @@ useEffect(() => {
   }
 
   return (
-    <>
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-      <style>{`
-        .sidebar {
-          transition: all 0.3s ease;
-          min-height: 100vh;
-        }
-        .sidebar.collapsed {
-          width: 80px !important;
-        }
-        .sidebar-item {
-          transition: all 0.2s ease;
-          border: none;
-          background: none;
-        }
-        .sidebar-item:hover {
-          background-color: #f8f9fa !important;
-        }
-        .sidebar-item.active {
-          background-color: #e3f2fd !important;
-          color: #1976d2 !important;
-        }
-        .profile-avatar {
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .header-banner {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .main-content {
-          min-height: calc(100vh - 200px);
-        }
-        .working-status {
-          animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
-      
-      <div className="d-flex min-vh-100 bg-light">
-        {/* Sidebar */}
-        <div className={`bg-white shadow sidebar ${sidebarOpen ? '' : 'collapsed'}`} style={{ width: sidebarOpen ? '260px' : '80px' }}>
-          <div className="p-3 border-bottom">
-            <div className="d-flex align-items-center justify-content-between">
-              {sidebarOpen && <h4 className="mb-0 fw-bold">Employee Portal</h4>}
-              <button 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="btn btn-outline-secondary btn-sm"
-              >
-                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+    <div style={{ display: 'flex', position: 'relative' }}>
+      {/* Main dashboard content */}
+      <div style={{ flex: 1 }}>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+        <style>{`
+          .sidebar {
+            transition: all 0.3s ease;
+            min-height: 100vh;
+          }
+          .sidebar.collapsed {
+            width: 80px !important;
+          }
+          .sidebar-item {
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+          }
+          .sidebar-item:hover {
+            background-color: #f8f9fa !important;
+          }
+          .sidebar-item.active {
+            background-color: #e3f2fd !important;
+            color: #1976d2 !important;
+          }
+          .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          .header-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          .main-content {
+            min-height: calc(100vh - 200px);
+          }
+          .working-status {
+            animation: pulse 2s infinite;
+          }
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+          }
+        `}</style>
+        
+        <div className="d-flex min-vh-100 bg-light">
+          {/* Sidebar */}
+          <div className={`bg-white shadow sidebar ${sidebarOpen ? '' : 'collapsed'}`} style={{ width: sidebarOpen ? '260px' : '80px' }}>
+            <div className="p-3 border-bottom">
+              <div className="d-flex align-items-center justify-content-between">
+                {sidebarOpen && <h4 className="mb-0 fw-bold">Employee Portal</h4>}
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="btn btn-outline-secondary btn-sm"
+                >
+                  {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+              </div>
+            </div>
+            
+            <nav className="p-3">
+              <div className="d-grid gap-2">
+                {sidebarItems.map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveSection(item.id)}
+                      className={`sidebar-item btn d-flex align-items-center text-start p-2 rounded ${
+                        activeSection === item.id ? 'active' : ''
+                      }`}
+                    >
+                      <Icon size={20} className="me-3" />
+                      {sidebarOpen && <span className="fw-medium">{item.label}</span>}
+                    </button>
+                  );
+                })}
+                <button className="btn btn-outline-primary w-100 mb-3" onClick={handleOpenChat}>
+                  <User size={16} className="me-2" />
+                  Chat with Manager
+                </button>
+              </div>
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-fill d-flex flex-column">
+        {/* Header Banner */}
+        <header
+          className="header-banner text-white p-4 shadow"
+          style={{
+            background: 'linear-gradient(135deg, #3a0ca3, #4361ee)', // Same purple-blue gradient
+            borderBottom: '4px solid rgb(255, 193, 7)', // Matching accent
+          }}
+        >
+          <div className="container">
+            <div className="row align-items-center">
+              {/* Left Side: Greeting and Intro */}
+              <div className="col-md-7 text-center text-md-start mb-4 mb-md-0">
+                <h4 className="fw-semibold">
+                  👋 {greeting}, <span style={{ color: 'rgb(255, 193, 7)' }}>{name}</span>!
+                </h4>
+                <h1 className="display-5 fw-bold mt-2">Welcome back to the Employee Dashboard</h1>
+                <p className="lead text-white-50 mt-3">
+                  View tasks, log updates, and track your daily progress.
+                </p>
+              </div>
+
+              {/* Right Side: Illustration */}
+              <div className="col-md-5 text-center">
+                <img
+                  src="https://cdn.dribbble.com/userupload/23691475/file/original-9d72eaaf0be2992f8c5d86cbcdac4a96.gif"
+                  alt="Employee Illustration"
+                  className="img-fluid rounded shadow"
+                  style={{ maxHeight: '250px' }}
+                />
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="row mt-4 text-center">
+              {[
+                { label: 'Today\'s Hours', value: 5 },
+                { label: 'Pending Tasks', value: 2 },
+                { label: 'Completed Tasks', value: 4 },
+                { label: 'Weekly Total', value: 22 },
+              ].map((item, index) => (
+                <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
+                  <div
+                    className="p-3 rounded"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <h5 className="mb-0" style={{ color: 'rgb(255, 193, 7)' }}>{item.value}</h5>
+                    <small>{item.label}</small>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <nav className="p-3">
-            <div className="d-grid gap-2">
-              {sidebarItems.map(item => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className={`sidebar-item btn d-flex align-items-center text-start p-2 rounded ${
-                      activeSection === item.id ? 'active' : ''
-                    }`}
-                  >
-                    <Icon size={20} className="me-3" />
-                    {sidebarOpen && <span className="fw-medium">{item.label}</span>}
-                  </button>
-                );
-              })}
-              <button className="btn btn-outline-primary w-100 mb-3" onClick={handleOpenChat}>
-                <User size={16} className="me-2" />
-                Chat with Manager
-              </button>
-            </div>
-          </nav>
-        </div>
+        </header>
 
         {/* Main Content */}
-        <div className="flex-fill d-flex flex-column">
-  {/* Header Banner */}
-  <header
-    className="header-banner text-white p-4 shadow"
-    style={{
-      background: 'linear-gradient(135deg, #3a0ca3, #4361ee)', // Same purple-blue gradient
-      borderBottom: '4px solid rgb(255, 193, 7)', // Matching accent
-    }}
-  >
-    <div className="container">
-      <div className="row align-items-center">
-        {/* Left Side: Greeting and Intro */}
-        <div className="col-md-7 text-center text-md-start mb-4 mb-md-0">
-          <h4 className="fw-semibold">
-            👋 {greeting}, <span style={{ color: 'rgb(255, 193, 7)' }}>{name}</span>!
-          </h4>
-          <h1 className="display-5 fw-bold mt-2">Welcome back to the Employee Dashboard</h1>
-          <p className="lead text-white-50 mt-3">
-            View tasks, log updates, and track your daily progress.
-          </p>
-        </div>
-
-        {/* Right Side: Illustration */}
-        <div className="col-md-5 text-center">
-          <img
-            src="https://cdn.dribbble.com/userupload/23691475/file/original-9d72eaaf0be2992f8c5d86cbcdac4a96.gif"
-            alt="Employee Illustration"
-            className="img-fluid rounded shadow"
-            style={{ maxHeight: '250px' }}
-          />
-        </div>
+        <main className="flex-fill p-4 main-content">
+          {renderContent()}
+        </main>
       </div>
 
-      {/* Stats Cards */}
-      <div className="row mt-4 text-center">
-        {[
-          { label: 'Today\'s Hours', value: 5 },
-          { label: 'Pending Tasks', value: 2 },
-          { label: 'Completed Tasks', value: 4 },
-          { label: 'Weekly Total', value: 22 },
-        ].map((item, index) => (
-          <div className={`col-6 col-md-3 ${index >= 2 ? 'mt-3 mt-md-0' : ''}`} key={index}>
-            <div
-              className="p-3 rounded"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              <h5 className="mb-0" style={{ color: 'rgb(255, 193, 7)' }}>{item.value}</h5>
-              <small>{item.label}</small>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </header>
-
-  {/* Main Content */}
-  <main className="flex-fill p-4 main-content">
-    {renderContent()}
-  </main>
-</div>
 
 
+          {/* Right Sidebar - Profile */}
+          <div className="bg-white shadow" style={{ width: '320px' }}>
+            <div className="p-4">
+              <div className="text-center">
+                <div className="profile-avatar rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                  <User size={32} className="text-white" />
+                </div>
+                
+                <div className="mb-4">
+                  <h5 className="fw-semibold mb-1">{name}</h5>
+                  <p className="text-muted mb-1">{userEmail}</p>
+                  <small className="text-muted">{role}</small>
+                  {isWorking && (
+                    <div className="mt-2">
+                      <span className="badge bg-success working-status">Currently Working</span>
+                    </div>
+                  )}
+                </div>
 
-        {/* Right Sidebar - Profile */}
-        <div className="bg-white shadow" style={{ width: '320px' }}>
-          <div className="p-4">
-            <div className="text-center">
-              <div className="profile-avatar rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                <User size={32} className="text-white" />
-              </div>
-              
-              <div className="mb-4">
-                <h5 className="fw-semibold mb-1">{name}</h5>
-                <p className="text-muted mb-1">{userEmail}</p>
-                <small className="text-muted">{role}</small>
-                {isWorking && (
-                  <div className="mt-2">
-                    <span className="badge bg-success working-status">Currently Working</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <div className="card bg-light">
-                  <div className="card-body">
-                    <h6 className="card-title text-secondary">Today's Summary</h6>
-                    <div className="row text-center">
-                      <div className="col-4">
-                        <div className="fw-bold text-primary">8.5h</div>
-                        <small className="text-muted">Hours Logged</small>
-                      </div>
-                      <div className="col-4">
-                        <div className="fw-bold text-success">3</div>
-                        <small className="text-muted">Tasks Done</small>
-                      </div>
-                      <div className="col-4">
-                        <div className="fw-bold text-info">2</div>
-                        <small className="text-muted">Active Projects</small>
+                <div className="mb-4">
+                  <div className="card bg-light">
+                    <div className="card-body">
+                      <h6 className="card-title text-secondary">Today's Summary</h6>
+                      <div className="row text-center">
+                        <div className="col-4">
+                          <div className="fw-bold text-primary">8.5h</div>
+                          <small className="text-muted">Hours Logged</small>
+                        </div>
+                        <div className="col-4">
+                          <div className="fw-bold text-success">3</div>
+                          <small className="text-muted">Tasks Done</small>
+                        </div>
+                        <div className="col-4">
+                          <div className="fw-bold text-info">2</div>
+                          <small className="text-muted">Active Projects</small>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="mb-4">
-                <div className="card bg-light">
-                  <div className="card-body">
-                    <h6 className="card-title text-secondary">Quick Actions</h6>
-                    <div className="d-grid gap-2">
-                      <button className="btn btn-outline-primary btn-sm">
-                        <FileText size={14} className="me-1" />
-                        Add Update
-                      </button>
-                      <button className="btn btn-outline-success btn-sm">
-                        <Clock size={14} className="me-1" />
-                        View Timesheet
-                      </button>
+                <div className="mb-4">
+                  <div className="card bg-light">
+                    <div className="card-body">
+                      <h6 className="card-title text-secondary">Quick Actions</h6>
+                      <div className="d-grid gap-2">
+                        <button className="btn btn-outline-primary btn-sm">
+                          <FileText size={14} className="me-1" />
+                          Add Update
+                        </button>
+                        <button className="btn btn-outline-success btn-sm">
+                          <Clock size={14} className="me-1" />
+                          View Timesheet
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <button 
-                onClick={handleLogout}
-                className="btn btn-danger w-100 d-flex align-items-center justify-content-center"
-              >
-                <LogOut size={16} className="me-2" />
-                Logout
-              </button>
+                <button 
+                  onClick={handleLogout}
+                  className="btn btn-danger w-100 d-flex align-items-center justify-content-center"
+                >
+                  <LogOut size={16} className="me-2" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Persistent Chat Panel */}
+        {employeeUser && managerUser && (
+          <div style={{
+            width: 420,
+            minWidth: 320,
+            maxWidth: 420,
+            height: '100vh',
+            position: 'fixed',
+            right: 0,
+            top: 0,
+            background: 'rgba(255,255,255,0.98)',
+            boxShadow: '-2px 0 16px rgba(0,0,0,0.08)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            borderLeft: '1px solid #e0e0e0',
+          }}>
+            <Chat currentUser={employeeUser} otherUser={managerUser} />
+          </div>
+        )}
       </div>
+
+
 
       {/* Edit Update Modal */}
       {showEditModal && (
@@ -1657,7 +1698,7 @@ useEffect(() => {
           <div className="modal-backdrop fade show"></div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

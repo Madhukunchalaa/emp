@@ -56,7 +56,6 @@ import { fetchDesignerSubmissions, submitDesign } from '../../store/slices/desig
 import { fetchDesignerTasks, updateTaskStatus } from '../../store/slices/taskSlice';
 import { punchIn, punchOut, fetchAttendance } from '../../store/slices/employeeSlice';
 import { fetchProjects, updateProjectStatus } from '../../store/slices/projectSlice';
-import Navbar from '../common/Navbar';
 import { AlertCircle } from 'lucide-react';
 
 const GlassCard = ({ children, sx = {}, ...props }) => {
@@ -281,9 +280,6 @@ const DesignerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="designer" />
-
       {/* Error Message */}
       {designsError && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">

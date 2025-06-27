@@ -47,6 +47,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sendMessage', async (data) => {
+    console.log('sendMessage:', data); // Debug log
     // Save to DB, then emit to recipient
     const msg = await ChatMessage.create(data);
     io.to(data.to).emit('receiveMessage', msg);
