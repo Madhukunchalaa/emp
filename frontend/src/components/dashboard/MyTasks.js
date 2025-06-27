@@ -10,66 +10,98 @@ import {
   FileText,
   Target
 } from 'lucide-react';
-import Navbar from '../common/Navbar';
 import { fetchEmployeeProjects } from '../../store/slices/employeeSlice';
 import { employeeService } from '../../services/api';
 
 const MyTasks = () => {
   const dispatch = useDispatch();
-  const { projects: tasks = [], loading = false, error = null } = useSelector((state) => state.employee || {});
-  const [updatingTaskId, setUpdatingTaskId] = useState(null);
-  const [progressValues, setProgressValues] = useState({});
-  const [message, setMessage] = useState('');
+
+  const { projects = [], loading = false, error = null } = useSelector((state) => state.employee || {});
+  const [success, setSuccess] = useState('');
+  const [taskUpdateLoading, setTaskUpdateLoading] = useState(false);
+
 
   useEffect(() => {
     dispatch(fetchEmployeeProjects());
   }, [dispatch]);
 
-  // Set initial progress values when tasks load
-  useEffect(() => {
-    const initial = {};
-    tasks.forEach(task => {
-      initial[task._id] = task.progress || 0;
-    });
-    setProgressValues(initial);
-  }, [tasks]);
-
-  const handleProgressChange = (taskId, value) => {
-    setProgressValues(prev => ({ ...prev, [taskId]: value }));
-  };
-
-  const handleUpdateProgress = async (taskId) => {
-    setUpdatingTaskId(taskId);
-    try {
-      await employeeService.updateTaskProgress(taskId, progressValues[taskId]);
-      setMessage('Progress updated!');
-      dispatch(fetchEmployeeProjects());
-    } catch (err) {
-      setMessage('Failed to update progress');
-    } finally {
-      setUpdatingTaskId(null);
-      setTimeout(() => setMessage(''), 2000);
+  // Extract all tasks from all projects
+  const getAllTasks = () => {
+    console.log('Projects received:', projects);
+    const allTasks = [];
+    
+    // If projects don't have steps, treat them as individual tasks
+    if (projects.length > 0 && !projects[0].steps) {
+      console.log('Projects appear to be individual tasks, treating as tasks');
+      projects.forEach(project => {
+        console.log('Adding project as task:', project.title, 'Status:', project.status);
+        allTasks.push({
+          _id: project._id,
+          title: project.title,
+          description: project.description,
+          status: project.status,
+          priority: project.priority,
+          deadline: project.deadline,
+          estimatedHours: project.estimatedHours,
+          projectTitle: project.title,
+          stepName: 'Main Task',
+          projectId: project._id
+        });
+      });
+    } else {
+      // Original logic for projects with steps
+      projects.forEach(project => {
+        console.log('Processing project:', project.title, 'Steps:', project.steps);
+        project.steps?.forEach(step => {
+          console.log('Processing step:', step.name, 'Tasks:', step.tasks);
+          step.tasks?.forEach(task => {
+            console.log('Adding task:', task.title, 'Status:', task.status);
+            allTasks.push({
+              ...task,
+              projectTitle: project.title,
+              stepName: step.name,
+              projectId: project._id
+            });
+          });
+        });
+      });
     }
+    
+    console.log('All extracted tasks:', allTasks);
+    return allTasks;
   };
 
-  const handleMarkComplete = async (taskId) => {
-    setUpdatingTaskId(taskId);
+  const handleUpdateTaskStatus = async (taskId, newStatus, task) => {
     try {
-      await employeeService.updateTaskProgress(taskId, 100);
-      setMessage('Task marked as complete!');
+      setTaskUpdateLoading(true);
+      let response;
+      if (task.stepName === 'Main Task') {
+        // This is a project-as-task
+        response = await employeeService.updateTaskProgress(taskId, newStatus);
+      } else {
+        // This is a real subdocument task
+        response = await employeeService.updateTaskStatus(taskId, newStatus);
+      }
+      console.log('Update response:', response);
+      setSuccess(`Task status updated to ${newStatus}`);
       dispatch(fetchEmployeeProjects());
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setMessage('Failed to mark as complete');
+      console.error('Error updating task status:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update task status';
+      alert(`Error: ${errorMessage}\n\nDetails: ${JSON.stringify(err.response?.data || err.message)}`);
     } finally {
-      setUpdatingTaskId(null);
-      setTimeout(() => setMessage(''), 2000);
+      setTaskUpdateLoading(false);
+
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in-progress': return 'bg-blue-100 text-blue-800';
       case 'assigned': return 'bg-purple-100 text-purple-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -86,21 +118,29 @@ const MyTasks = () => {
     }
   };
 
+  const allTasks = getAllTasks();
   const stats = {
-    total: tasks.length,
-    completed: tasks.filter(task => task.status === 'completed').length,
-    inProgress: tasks.filter(task => task.status === 'in_progress').length,
-    pending: tasks.filter(task => task.status === 'pending' || task.status === 'assigned').length
+    total: allTasks.length,
+    completed: allTasks.filter(task => task.status === 'completed').length,
+    inProgress: allTasks.filter(task => task.status === 'in-progress').length,
+    pending: allTasks.filter(task => task.status === 'pending' || task.status === 'assigned').length
   };
+
+  // Debug log before return
+  console.log('loading:', loading, 'allTasks:', allTasks);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <Navbar userRole="employee" />
-
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>{success}</span>
         </div>
       )}
 
@@ -139,7 +179,7 @@ const MyTasks = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl shadow-lg">
-                <Clock className="w-5 h-5 text-white" />
+                <Clock className="w-5 h-5 text-white"/>
               </div>
               <span className="text-2xl font-bold text-gray-800">{stats.inProgress}</span>
             </div>
@@ -173,7 +213,7 @@ const MyTasks = () => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">
-                {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+                {allTasks.length} task{allTasks.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -184,7 +224,7 @@ const MyTasks = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="text-gray-500 mt-4">Loading your tasks...</p>
               </div>
-            ) : tasks.length === 0 ? (
+            ) : allTasks.length === 0 ? (
               <div className="text-center py-8">
                 <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No tasks assigned yet.</p>
@@ -192,9 +232,9 @@ const MyTasks = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tasks.map((task) => (
+                {allTasks.map((task, idx) => (
                   <div 
-                    key={task._id} 
+                    key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
                     className="bg-white/60 backdrop-blur-sm rounded-xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30"
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -208,49 +248,30 @@ const MyTasks = () => {
                         </span>
                       </div>
                     </div>
-                    
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{task.description}</p>
-                    
+                    <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
+                    <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
                     <div className="space-y-2 text-xs text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-3 h-3" />
-                        <span>Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
-                      </div>
-                      {task.estimatedHours && (
+                      {task.deadline && (
                         <div className="flex items-center space-x-2">
-                          <Clock className="w-3 h-3" />
-                          <span>{task.estimatedHours}h estimated</span>
+                          <Calendar className="w-3 h-3" />
+                          <span>Due: {new Date(task.deadline).toLocaleDateString()}</span>
                         </div>
                       )}
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className="font-semibold">Progress:</span>
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          value={progressValues[task._id] || 0}
-                          disabled={task.status === 'completed'}
-                          onChange={e => handleProgressChange(task._id, Number(e.target.value))}
-                          className="w-32"
-                        />
-                        <span>{progressValues[task._id] || 0}%</span>
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          className="px-3 py-1 rounded bg-blue-500 text-white text-xs font-semibold disabled:opacity-50"
-                          disabled={updatingTaskId === task._id || task.status === 'completed' || progressValues[task._id] === task.progress}
-                          onClick={() => handleUpdateProgress(task._id)}
-                        >
-                          {updatingTaskId === task._id ? 'Updating...' : 'Update Progress'}
-                        </button>
-                        <button
-                          className="px-3 py-1 rounded bg-green-600 text-white text-xs font-semibold disabled:opacity-50"
-                          disabled={updatingTaskId === task._id || task.status === 'completed'}
-                          onClick={() => handleMarkComplete(task._id)}
-                        >
-                          {updatingTaskId === task._id ? 'Marking...' : 'Mark as Complete'}
-                        </button>
-                      </div>
+                    </div>
+                    {/* Status Update Dropdown */}
+                    <div className="mt-4">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Update Status</label>
+                      <select
+                        value={task.status}
+                        onChange={e => handleUpdateTaskStatus(task._id, e.target.value, task)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        disabled={taskUpdateLoading}
+                      >
+                        <option value="assigned">Assigned</option>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                      </select>
                     </div>
                   </div>
                 ))}
@@ -259,12 +280,6 @@ const MyTasks = () => {
           </div>
         </div>
       </div>
-
-      {message && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-xl shadow-lg z-50">
-          {message}
-        </div>
-      )}
     </div>
   );
 };

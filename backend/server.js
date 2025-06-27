@@ -18,6 +18,8 @@ const io = new Server(server, {
   }
 });
 
+app.set('io', io); // Attach io to app for controller access
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -29,11 +31,13 @@ const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const managerRoutes = require('./routes/managerRoutes');
 const designRoutes = require('./routes/designRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/designs', designRoutes);
+app.use('/api/leaves', leaveRoutes);
 
 // Socket.IO chat logic
 const ChatMessage = require('./models/ChatMessage');
@@ -43,6 +47,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sendMessage', async (data) => {
+    console.log('sendMessage:', data); // Debug log
     // Save to DB, then emit to recipient
     const msg = await ChatMessage.create(data);
     io.to(data.to).emit('receiveMessage', msg);

@@ -1,6 +1,5 @@
 const User = require('../models/User');
 const Project = require('../models/Project');
-const Task = require('../models/Task');
 const Punch = require('../models/Punch');
 const DailyUpdate = require('../models/DailyUpdate');  
 const Update = require('../models/EveryUpdate');
@@ -61,278 +60,197 @@ return {
   }
 };
 
+// Utility to calculate project progress and auto-complete
+function calculateProjectProgress(project) {
+  let totalTasks = 0;
+  let completedTasks = 0;
+  if (project.steps && project.steps.length > 0) {
+    for (const step of project.steps) {
+      if (step.tasks && step.tasks.length > 0) {
+        totalTasks += step.tasks.length;
+        completedTasks += step.tasks.filter(t => t.status === 'completed').length;
+      }
+    }
+  }
+  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  // Auto-complete project if all tasks are completed
+  if (totalTasks > 0 && completedTasks === totalTasks && project.status !== 'completed') {
+    project.status = 'completed';
+  }
+  return progress;
+}
 
-// Get all projects
+// Get all projects (with steps and tasks)
 const getProjects = async (req, res) => {
   try {
     const projects = await Project.find()
-      .populate('assignedTo', 'name email')
-      .sort({ deadline: 1 });
-
-    // Get tasks for each project
-    const projectsWithTasks = await Promise.all(
-      projects.map(async (project) => {
-        const tasks = await Task.find({ projectId: project._id })
-          .populate('assignedTo', 'name email')
-          .populate('assignedBy', 'name email');
-        
-        return {
-          ...project.toObject(),
-          tasks: tasks
-        };
+      .populate('createdBy', 'name email')
+      .populate({
+        path: 'steps.tasks.assignedTo',
+        select: 'name email avatar'
       })
-    );
-
-    res.json(projectsWithTasks);
+      .sort({ deadline: 1 });
+    // Calculate progress for each project
+    const projectsWithProgress = projects.map(project => {
+      const progress = calculateProjectProgress(project);
+      return { ...project.toObject(), progress };
+    });
+    res.json(projectsWithProgress);
   } catch (error) {
     console.error('Error fetching projects:', error);
     res.status(500).json({ message: 'Error fetching projects' });
   }
 };
 
-// Get project by ID
+// Get project by ID (with steps and tasks)
 const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
-    
     const project = await Project.findById(id)
-      .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email');
-    
+      .populate('createdBy', 'name email')
+      .populate({
+        path: 'steps.tasks.assignedTo',
+        select: 'name email avatar'
+      });
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-
-    res.json(project);
+    const progress = calculateProjectProgress(project);
+    res.json({ ...project.toObject(), progress });
   } catch (error) {
     console.error('Error fetching project:', error);
     res.status(500).json({ message: 'Error fetching project' });
   }
 };
 
-// Get tasks for a specific project
+// Get all tasks for a specific project (grouped by steps)
 const getProjectTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
-    
-    // Check if project exists
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId)
+      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name email');
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-
-    // Get tasks for the project
-    const tasks = await Task.find({ projectId })
-      .populate('assignedTo', 'name email')
-      .populate('assignedBy', 'name email')
-      .sort({ createdAt: -1 });
-
-    res.json({
-      project,
-      tasks
-    });
+    const progress = calculateProjectProgress(project);
+    res.json({ steps: project.steps, progress });
   } catch (error) {
     console.error('Error fetching project tasks:', error);
     res.status(500).json({ message: 'Error fetching project tasks' });
   }
 };
 
-// Create project (without assignment)
+// Create project (with custom steps and tasks)
 const createProject = async (req, res) => {
   try {
-    const { title, description, deadline, priority, category, estimatedHours } = req.body;
-
-    // Validate required fields
+    const { title, description, deadline, priority, category, estimatedHours, steps } = req.body;
     if (!title || !description || !deadline) {
-      return res.status(400).json({ 
-        message: 'Title, description, and deadline are required'
-      });
+      return res.status(400).json({ message: 'Title, description, and deadline are required' });
     }
-
-    // Validate deadline is in the future
+    
     const deadlineDate = new Date(deadline);
-    if (deadlineDate < new Date()) {
-      return res.status(400).json({ 
-        message: 'Deadline must be in the future' 
-      });
+    if (isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid deadline date format' });
     }
-
-    // Create new project without assignment
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    deadlineDate.setHours(0, 0, 0, 0);
+    
+    if (deadlineDate < today) {
+      return res.status(400).json({ message: 'Deadline must be today or a future date' });
+    }
+    
     const project = new Project({
       title,
       description,
-      deadline: deadlineDate,
+      deadline: new Date(deadline),
       priority: priority || 'medium',
       category,
-      estimatedHours,
+      estimatedHours: estimatedHours ? Number(estimatedHours) : undefined,
       createdBy: req.user.id,
-      status: 'pending'
+      status: 'pending',
+      steps: steps || []
     });
-
+    
+    calculateProjectProgress(project); // Set status if all tasks are completed
     await project.save();
-
-    // Populate the createdBy field
     await project.populate('createdBy', 'name email');
-
-    res.status(201).json({
-      message: 'Project created successfully',
-      project
-    });
+    res.status(201).json({ message: 'Project created successfully', project });
   } catch (err) {
     console.error('Error in createProject:', err);
     if (err.name === 'ValidationError') {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: Object.values(err.errors).map(e => e.message)
-      });
+      return res.status(400).json({ message: 'Validation error', errors: Object.values(err.errors).map(e => e.message) });
     }
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: err.message 
-    });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
-// Assign project to employee
-const assignProject = async (req, res) => {
+// Assign a task to a step in a project
+const assignTaskToEmployee = async (req, res) => {
   try {
-    const { projectId, assignedTo } = req.body;
-
-    // Validate required fields
-    if (!projectId || !assignedTo) {
-      return res.status(400).json({ 
-        message: 'Project ID and assigned employee are required'
-      });
+    const { projectId, stepName, title, assignedTo } = req.body;
+    if (!projectId || !stepName || !title || !assignedTo) {
+      return res.status(400).json({ message: 'Project ID, step name, title, and assignedTo are required' });
     }
-
-    // Check if project exists
     const project = await Project.findById(projectId);
     if (!project) {
-      return res.status(404).json({ 
-        message: 'Project not found' 
-      });
+      return res.status(404).json({ message: 'Project not found' });
     }
-
-    // Check if assigned employee exists and is an employee
-    const validRoles = ['employee', 'developer', 'designer'];
-    const employee = await User.findOne({ 
-      _id: assignedTo, 
-      role: { $in: validRoles }
-    });
-    
-    if (!employee) {
-      return res.status(404).json({ 
-        message: 'Employee not found or is not an employee' 
-      });
+    // Find the step
+    const step = project.steps.find(s => s.name === stepName);
+    if (!step) {
+      return res.status(404).json({ message: 'Step not found in project' });
     }
-
-    // Update project with assignment
-    project.assignedTo = assignedTo;
-    project.status = 'active';
+    // Add the task
+    step.tasks.push({ title, assignedTo });
+    calculateProjectProgress(project); // Update status if needed
     await project.save();
 
-    // Populate the assignedTo field
-    await project.populate('assignedTo', 'name email');
+    // Emit notification to assigned employee
+    const io = req.app.get('io');
+    if (io && assignedTo) {
+      io.to(assignedTo.toString()).emit('notification', {
+        message: `A new task has been assigned to you: ${title}`
+      });
+    }
 
-    res.json({
-      message: 'Project assigned successfully',
-      project
-    });
+    res.status(201).json({ message: 'Task assigned successfully', project });
   } catch (err) {
-    console.error('Error in assignProject:', err);
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: err.message 
-    });
+    console.error('Error in assignTask:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
-// Assign task to employee
-const assignTask = async (req, res) => {
+// Assign a project to an employee
+const assignProjectToEmployee = async (req, res) => {
   try {
-    console.log('assignTask called with body:', req.body); // Debug log
-    
-    const { title, description, projectId, assignedTo, priority, estimatedHours, assignmentType, scheduledDate, scheduledTime } = req.body;
-
-    // Validate required fields
-    if (!title || !description || !projectId || !assignedTo) {
-      console.log('Validation failed - missing fields:', { title: !!title, description: !!description, projectId: !!projectId, assignedTo: !!assignedTo }); // Debug log
-      return res.status(400).json({ 
-        message: 'Title, description, project ID, and assigned employee are required'
-      });
+    const { projectId, employeeId } = req.body;
+    if (!projectId || !employeeId) {
+      return res.status(400).json({ message: 'Project ID and Employee ID are required' });
     }
 
-    // Check if project exists
     const project = await Project.findById(projectId);
-    console.log('Project found:', project ? 'Yes' : 'No'); // Debug log
-    
     if (!project) {
-      return res.status(404).json({ 
-        message: 'Project not found' 
-      });
+      return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Check if assigned employee exists and is an employee
-    const validRoles = ['employee', 'developer', 'designer'];
-    const employee = await User.findOne({ 
-      _id: assignedTo, 
-      role: { $in: validRoles }
-    });
-    
-    console.log('Employee found:', employee ? 'Yes' : 'No', employee ? `Role: ${employee.role}` : ''); // Debug log
-    
+    const employee = await User.findById(employeeId);
     if (!employee) {
-      return res.status(404).json({ 
-        message: 'Employee not found or is not an employee' 
-      });
+      return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Calculate deadline based on assignment type
-    let deadline;
-    if (assignmentType === 'schedule' && scheduledDate && scheduledTime) {
-      deadline = new Date(`${scheduledDate}T${scheduledTime}`);
-    } else {
-      // Use project deadline or set to 7 days from now
-      deadline = project.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    // Add employee to the project's team if not already there
+    if (!project.team.includes(employeeId)) {
+      project.team.push(employeeId);
     }
-
-    // Create task using the Task model
-    const task = new Task({
-      title,
-      description,
-      projectId,
-      assignedTo,
-      assignedBy: req.user.id,
-      priority: priority || 'medium',
-      estimatedHours: estimatedHours || 0,
-      deadline,
-      status: assignmentType === 'now' ? 'assigned' : 'pending'
-    });
-
-    console.log('Task object created:', task); // Debug log
-
-    await task.save();
-    await task.populate('assignedTo', 'name email');
-    await task.populate('projectId', 'title');
-
-    console.log('Task saved successfully'); // Debug log
-
-    res.status(201).json({
-      message: 'Task assigned successfully',
-      task
-    });
+    
+    await project.save();
+    res.status(200).json({ message: 'Project assigned successfully', project });
   } catch (err) {
-    console.error('Error in assignTask:', err);
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: Object.values(err.errors).map(e => e.message)
-      });
-    }
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: err.message 
-    });
+    console.error('Error in assignProjectToEmployee:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
@@ -715,26 +633,116 @@ const approveRejectUpdate = async (req, res) => {
   }
 };
 
-const updateTaskStatus = async (req, res) => {
+const approveRejectTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body; // 'approved' or 'rejected'
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Must be "approved" or "rejected".' });
+    }
+
+    const project = await Project.findOne({ "steps.tasks._id": taskId });
+
+    if (!project) {
+      return res.status(404).json({ message: 'Task not found in any project.' });
+    }
+
+    let task, step;
+    for (const s of project.steps) {
+      task = s.tasks.id(taskId);
+      if (task) {
+        step = s;
+        break;
+      }
+    }
+
+    if (task) {
+      task.status = status;
+      await project.save();
+
+      // Emit notification to assigned employee
+      const io = req.app.get('io');
+      if (io && task.assignedTo) {
+        io.to(task.assignedTo.toString()).emit('notification', {
+          message: `Your task "${task.title}" has been ${status}.`
+        });
+      }
+
+      res.json({ message: `Task ${status} successfully.`, task });
+    } else {
+      res.status(404).json({ message: 'Task not found.' });
+    }
+  } catch (error) {
+    console.error('Error updating task approval status:', error);
+    res.status(500).json({ message: 'Error updating task approval status' });
+  }
+};
+
+// Update task status within a project
+const updateProjectTaskStatus = async (req, res) => {
   try {
     const { taskId } = req.params;
     const { status } = req.body;
 
-    if (!status) {
-      return res.status(400).json({ message: 'Status is required' });
+    if (!status || !['pending', 'in-progress', 'completed'].includes(status)) {
+      return res.status(400).json({ message: 'Valid status is required (pending, in-progress, completed)' });
     }
 
-    const task = await Task.findById(taskId);
-    if (!task) {
+    // Find the project containing this task
+    const project = await Project.findOne({ "steps.tasks._id": taskId });
+    if (!project) {
+      return res.status(404).json({ message: 'Task not found in any project' });
+    }
+
+    // Find and update the specific task
+    let taskFound = false;
+    let assignedTo = null;
+    let taskTitle = '';
+    for (const step of project.steps) {
+      const task = step.tasks.id(taskId);
+      if (task) {
+        task.status = status;
+        assignedTo = task.assignedTo;
+        taskTitle = task.title;
+        taskFound = true;
+        break;
+      }
+    }
+
+    if (!taskFound) {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    task.status = status;
-    await task.save();
+    // Recalculate project progress
+    const progress = calculateProjectProgress(project);
+    
+    // Save the project
+    await project.save();
+    
+    // Populate the project data for response
+    await project.populate('createdBy', 'name email');
+    await project.populate({
+      path: 'steps.tasks.assignedTo',
+      select: 'name email avatar'
+    });
 
-    res.json({ message: `Task status updated to ${status}`, task });
+    // Emit notification to assigned employee
+    const io = req.app.get('io');
+    if (io && assignedTo) {
+      io.to(assignedTo.toString()).emit('notification', {
+        message: `Your task "${taskTitle}" status has been updated to ${status}.`
+      });
+    }
+
+    res.json({ 
+      message: `Task status updated to ${status}`, 
+      project: { ...project.toObject(), progress },
+      updatedTaskId: taskId,
+      newStatus: status
+    });
   } catch (error) {
-    console.error('Error updating task status:', error);
+    console.error('Error updating project task status:', error);
     res.status(500).json({ message: 'Error updating task status' });
   }
 };
@@ -753,17 +761,42 @@ const getEmployeeUpdates = async (req, res) => {
   }
 };
 
+const getManagerDashboard = async (req, res) => {
+  try {
+    const projectStats = await Project.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    const totalProjects = await Project.countDocuments();
+    const totalEmployees = await User.countDocuments({ role: { $in: ['developer', 'designer'] } });
+
+    const recentProjects = await Project.find().sort({ createdAt: -1 }).limit(5);
+
+    res.json({
+      totalProjects,
+      totalEmployees,
+      projectStats,
+      recentProjects
+    });
+  } catch (error) {
+    console.error('Error fetching manager dashboard data:', error);
+    res.status(500).json({ message: 'Error fetching dashboard data' });
+  }
+};
+
 module.exports = {
   getAllEmployeeUpdates,
   getProfile,
   getEmployees,
   getProjects,
   createProject,
-  assignProject,
-  assignTask,
+  assignProjectToEmployee,
+  assignTaskToEmployee,
+  updateProjectStatus,
+  getProjectTasks,
+  getProjectById,
   getPunchRecords,
   getEmployeeAttendance,
-  updateProjectStatus,
   getAttendanceHistory,
   getEmployeeDailyUpdates,
   getEmployeeUpdateSummary,
@@ -771,8 +804,8 @@ module.exports = {
   getEmployeeProfile,
   getProjectUpdates,
   approveRejectUpdate,
-  getProjectTasks,
-  getProjectById,
-  updateTaskStatus,
-  getEmployeeUpdates
+  approveRejectTask,
+  updateProjectTaskStatus,
+  getEmployeeUpdates,
+  getManagerDashboard
 };

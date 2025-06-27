@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { managerService } from '../../services/api';
 import UserAvatar from '../common/userAvathar';
-import Navbar from '../common/Navbar';
 import { 
   ArrowLeft, 
   Users, 
@@ -22,6 +21,8 @@ import {
   MapPin,
   Briefcase
 } from 'lucide-react';
+import Chat from '../common/Chat';
+import jwtDecode from 'jwt-decode';
 
 const Team = () => {
   const [employees, setEmployees] = useState([]);
@@ -39,9 +40,22 @@ const Team = () => {
     developers: 0,
     managers: 0
   });
+  const [chatEmployee, setChatEmployee] = useState(null);
+  const [managerUser, setManagerUser] = useState(null);
 
   useEffect(() => {
     fetchEmployees();
+    // Get manager user info from token for chat
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const userObj = decoded.user || decoded;
+        setManagerUser({ _id: userObj._id || userObj.id, ...userObj });
+      } catch (e) {
+        console.error('Failed to decode token for manager user', e);
+      }
+    }
   }, []);
 
   const fetchEmployees = async () => {
@@ -101,9 +115,6 @@ const Team = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="manager" />
-
       {/* Error Message */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
@@ -241,37 +252,17 @@ const Team = () => {
                 <p className="text-gray-500">No team members found.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEmployees.map((employee) => (
-                  <div key={employee._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 text-center hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 group">
-                    <div className="relative mb-3">
-                      <UserAvatar
-                        avatar={employee.avatar}
-                        name={employee.name}
-                        className="mx-auto"
-                      />
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white shadow-sm ${
-                        employee.status === 'active' ? 'bg-green-400' : 
-                        employee.status === 'inactive' ? 'bg-red-400' : 'bg-yellow-400'
-                      }`}></div>
+                  <div key={employee._id} className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+                    <UserAvatar name={employee.name} size={48} />
+                    <h3 className="mt-3 text-lg font-semibold text-gray-800">{employee.name}</h3>
+                    <p className="text-gray-500 text-sm">{employee.email}</p>
+                    <div className="flex space-x-2 mt-2">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getRoleColor(employee.role)}`}>{employee.role}</span>
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(employee.status)}`}>{employee.status}</span>
                     </div>
-                    
-                    <h3 className="text-base font-semibold text-gray-800 mb-1">{employee.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{employee.position || employee.role}</p>
-                    <p className="text-xs text-gray-500 mb-3 truncate">{employee.email}</p>
-                    
-                    <div className="mb-3 space-y-2">
-                      <div className={`flex items-center justify-center space-x-1 text-sm rounded-lg px-2 py-1 ${getRoleColor(employee.role)}`}>
-                        <Briefcase className="w-3 h-3" />
-                        <span className="capitalize">{employee.role}</span>
-                      </div>
-                      <div className={`flex items-center justify-center space-x-1 text-sm rounded-lg px-2 py-1 ${getStatusColor(employee.status)}`}>
-                        <CheckCircle className="w-3 h-3" />
-                        <span className="capitalize">{employee.status}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center gap-2">
+                    <div className="flex justify-center gap-2 mt-4">
                       <button 
                         onClick={() => handleViewEmployee(employee)}
                         className="flex items-center space-x-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:shadow-md transition-all duration-200"
@@ -279,7 +270,10 @@ const Team = () => {
                         <Eye className="w-3 h-3" />
                         <span>View</span>
                       </button>
-                      <button className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200">
+                      <button 
+                        className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                        onClick={() => setChatEmployee(employee)}
+                      >
                         <MessageSquare className="w-3 h-3" />
                         <span>Chat</span>
                       </button>
@@ -351,6 +345,25 @@ const Team = () => {
                 Message
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {chatEmployee && managerUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative">
+            <button 
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800" 
+              onClick={() => setChatEmployee(null)}
+            >
+              <span className="text-xl">&times;</span>
+            </button>
+            <h4 className="text-lg font-semibold mb-4 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2 text-primary" />
+              Chat with {chatEmployee.name}
+            </h4>
+            <Chat currentUser={managerUser} otherUser={chatEmployee} />
           </div>
         </div>
       )}

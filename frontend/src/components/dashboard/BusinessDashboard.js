@@ -13,7 +13,6 @@ import { punchIn } from '../../store/slices/employeeSlice';
 import { useDispatch } from 'react-redux';
 import {useNavigate, Link } from 'react-router-dom';
 import { employeeService } from '../../services/api';
-import Navbar from '../common/Navbar';
 
 const BusinessDevelopmentDashboard = () => {
   const navigate=useNavigate()
@@ -487,9 +486,6 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="business" />
-
       {/* Error Message */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">

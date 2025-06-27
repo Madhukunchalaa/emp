@@ -3,7 +3,8 @@ import { Calendar, Clock, Users, BarChart3, MessageSquare, Eye, Plus, Bell, Tren
 import { managerService } from '../../services/api';
 import UserAvatar from '../common/userAvathar';
 import { Link } from 'react-router-dom';
-import Navbar from '../common/Navbar';
+import Chat from '../common/Chat';
+import jwtDecode from 'jwt-decode';
 
 export default function ManagerDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -23,6 +24,7 @@ export default function ManagerDashboard() {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [managerUser, setManagerUser] = useState(null);
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -135,6 +137,27 @@ export default function ManagerDashboard() {
     fetchUpdates();
   }, []);
 
+  // Refresh projects data function
+  const refreshProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await managerService.getProjects();
+      const projects = extractData(res);
+      setProjectsData(projects);
+      setStats(prev => ({
+        ...prev,
+        totalProjects: projects.length,
+        completedProjects: projects.filter(project => project.status === 'completed').length
+      }));
+      setSuccess('Projects data refreshed successfully');
+    } catch (error) {
+      console.error('Failed to refresh projects:', error);
+      setError('Failed to refresh projects data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -157,6 +180,19 @@ export default function ManagerDashboard() {
       return () => clearTimeout(timer);
     }
   }, [success]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userObj = payload.user || payload;
+        setManagerUser({ _id: userObj._id || userObj.id, ...userObj });
+      } catch (e) {
+        console.error('Failed to decode token for manager user', e);
+      }
+    }
+  }, []);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -262,11 +298,28 @@ export default function ManagerDashboard() {
     }
   };
 
+  // Helper function to get unique team members from a project's steps
+  const getProjectTeam = (project) => {
+    if (!project || !project.steps) return [];
+    const team = new Map();
+    project.steps.forEach(step => {
+      if (step.tasks) {
+        step.tasks.forEach(task => {
+          // Ensure assignedTo is populated and has an _id
+          if (task.assignedTo && task.assignedTo._id && !team.has(task.assignedTo._id)) {
+            team.set(task.assignedTo._id, task.assignedTo);
+          }
+        });
+      }
+    });
+    return Array.from(team.values());
+  };
+
+  console.log('employeeUser:', selectedEmployee);
+  console.log('managerUser:', managerUser);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="manager" />
-
       {/* Error/Success Messages */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
@@ -466,6 +519,15 @@ export default function ManagerDashboard() {
           <div className="flex items-center justify-between p-5 border-b border-white/20">
             <h2 className="text-xl font-bold text-gray-800">Recent Projects</h2>
             <div className="flex space-x-2">
+              <button
+                onClick={refreshProjects}
+                disabled={loading}
+                className="flex items-center space-x-1 text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+              <span className="text-gray-400">|</span>
               <Link to="/assign-project" className="text-orange-500 hover:text-orange-600 font-medium no-underline">
                 Create Project
               </Link>
@@ -502,13 +564,36 @@ export default function ManagerDashboard() {
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>Deadline: {new Date(project.deadline).toLocaleDateString()}</span>
-                      <span>Assigned to: {project.assignedTo?.name || 'Unassigned'}</span>
+                      <div className="flex items-center">
+                        {getProjectTeam(project).slice(0, 3).map(member => (
+                          <UserAvatar key={member._id} name={member.name} className="-ml-2" />
+                        ))}
+                        {getProjectTeam(project).length > 3 && (
+                          <span className="ml-1 text-xs text-gray-500">+{getProjectTeam(project).length - 3}</span>
+                        )}
+                        {getProjectTeam(project).length === 0 && (
+                          <span className="text-xs text-gray-500">No one assigned</span>
+                        )}
+                      </div>
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Click to view details</span>
                         <Eye className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
                       </div>
+                    </div>
+                    <div className="text-gray-600">
+                      <span className="font-semibold">
+                        {(() => {
+                          const totalTasks = project.steps 
+                            ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.length : 0), 0) 
+                            : 0;
+                          const completedTasks = project.steps 
+                            ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.filter(t => t.status === 'completed').length : 0), 0) 
+                            : 0;
+                          return `${completedTasks} / ${totalTasks} tasks`;
+                        })()}
+                      </span>
                     </div>
                   </Link>
                 ))}
@@ -779,6 +864,13 @@ export default function ManagerDashboard() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Chat Panel */}
+      {selectedEmployee && managerUser && (
+        <div>
+          <Chat currentUser={selectedEmployee} otherUser={managerUser} />
         </div>
       )}
     </div>

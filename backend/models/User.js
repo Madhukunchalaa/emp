@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['developer', 'manager', 'designer', 'Business'], required: true },
   department: { type: String, default: '' },
   position: { type: String, default: '' },
+  managerIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: {
     type: Date,
     default: Date.now
