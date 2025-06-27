@@ -103,29 +103,32 @@ const Login = () => {
             }}
           >
             <img
-              src="/smartsolutions-logo.png" 
-              alt="Smart Solutions Logo"
-              style={{
-                width: '100%',
-                height: '140px',
-                color:"white",
-                objectFit: 'contain',
-                marginBottom: '12px',
-              }}
-            />
+            src="/smartsolutions-logo.png"
+            alt="Smart Solutions Logo"
+            style={{
+              width: '80%',
+              objectFit: 'contain',
+              
+            }}
+          />
+
           </Box>
-
-
+          
             <p style={{ 
-              opacity: 0.9, 
-              fontSize: '1.1rem', 
+              color: '#000',
+              fontSize: '30px', 
               lineHeight: 1.5,
-              fontWeight: '400',
-              maxWidth: '260px',
-              margin: '0 auto'
+              fontWeight: '500',
+              maxWidth: '300px',
+              margin: '0 auto',
+              fontFamily: `'Brush Script MT', cursive`, // Elegant cursive
+              opacity: 0.95,
+              textAlign: 'center',
             }}>
-              Your trusted gateway to professional dashboard and analytics
+              "We don’t just build brands. We make them unforgettable"
             </p>
+
+
           </Box>
         </Box>
 
@@ -346,5 +349,6 @@ const Login = () => {
     </Box>
   );
 };
+
 
 export default Login;
