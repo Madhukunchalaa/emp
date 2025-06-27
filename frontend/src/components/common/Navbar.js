@@ -127,7 +127,7 @@ const Navbar = ({ userRole = 'manager' }) => {
 
   const getNavLinks = () => {
     const links = (() => {
-      switch (userRole) {
+      switch (role || userRole) {
         case 'manager':
           return [
             { path: '/dashboard', label: 'Home', icon: '🏠' },
@@ -166,7 +166,7 @@ const Navbar = ({ userRole = 'manager' }) => {
     })();
     // Add Chat link for all roles
     links.push({ path: '/chat', label: 'Chat', icon: '💬' });
-    // console.log('Navbar - Generated links for role', userRole, ':', links); // Debug log
+    // console.log('Navbar - Generated links for role', role || userRole, ':', links); // Debug log
     return links;
   };
 
