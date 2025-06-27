@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { managerService } from '../../../services/api';
-import Navbar from '../../common/Navbar';
 import { 
   Clock, 
   Users, 
@@ -148,9 +147,6 @@ const AssignTask = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Bar */}
-      <Navbar userRole="manager" />
-
       <div className="px-6 py-6">
         {/* Page Header */}
         <div className="mb-6">

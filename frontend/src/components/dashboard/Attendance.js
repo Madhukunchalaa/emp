@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import Navbar from '../common/Navbar';
 import { punchIn, punchOut, fetchAttendance } from '../../store/slices/employeeSlice';
 
 const Attendance = () => {
@@ -155,8 +154,6 @@ const Attendance = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <Navbar userRole="employee" />
-
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />

@@ -4,6 +4,7 @@ const { auth } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const managerController = require('../controllers/managerController');
 const assign = require('../controllers/testController');
+const User = require('../models/User');
 
 // Profile routes
 router.get('/profile', auth, managerController.getProfile);
@@ -35,6 +36,28 @@ router.put('/updates/:updateId/approve-reject', auth, checkRole(['manager']), ma
 
 // Add this route to support GET /api/manager/updates
 router.get('/updates', auth, checkRole(['manager']), managerController.getEmployeeUpdates);
+
+// Get user by ID (for fetching manager info by managerId)
+router.get('/user/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all users except the current user
+router.get('/users', auth, async (req, res) => {
+  try {
+    const currentUserId = req.user?._id;
+    const users = await User.find({ _id: { $ne: currentUserId } });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // these are testing routes
 router.post('/test-assign', auth, assign);

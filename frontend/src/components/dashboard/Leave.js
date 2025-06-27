@@ -7,7 +7,6 @@ import {
   FileText,
   CheckCircle
 } from 'lucide-react';
-import Navbar from '../common/Navbar';
 import { applyForLeave, getMyLeaveHistory } from '../../services/api';
 
 const LeaveManagement = () => {
@@ -91,7 +90,6 @@ const LeaveManagement = () => {
   const calendarDays = generateCalendar();
 
   return (
-    <div><Navbar userRole='employee'/>
     <div className="min-h-screen from-blue-50 via-indigo-50 to-purple-50 p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -318,7 +316,6 @@ const LeaveManagement = () => {
           )}
         </div>
       </div>
-    </div>
     </div>
   );
 };
