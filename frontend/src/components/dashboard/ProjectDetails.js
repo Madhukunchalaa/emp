@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { managerService } from '../../services/api';
+import ProjectSteps from '../common/ProjectSteps';
 import { 
   ArrowLeft, 
   Calendar, 
