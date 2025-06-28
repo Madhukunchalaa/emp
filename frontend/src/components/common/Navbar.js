@@ -127,7 +127,7 @@ const Navbar = ({ userRole = 'manager' }) => {
 
   const getNavLinks = () => {
     const links = (() => {
-      switch (userRole) {
+      switch (role || userRole) {
         case 'manager':
           return [
             { path: '/dashboard', label: 'Home', icon: '🏠' },
@@ -166,7 +166,7 @@ const Navbar = ({ userRole = 'manager' }) => {
     })();
     // Add Chat link for all roles
     links.push({ path: '/chat', label: 'Chat', icon: '💬' });
-    // console.log('Navbar - Generated links for role', userRole, ':', links); // Debug log
+    // console.log('Navbar - Generated links for role', role || userRole, ':', links); // Debug log
     return links;
   };
 
@@ -215,7 +215,7 @@ const Navbar = ({ userRole = 'manager' }) => {
         <div className="flex items-center justify-between px-2 py-1">
           {/* Logo and Hamburger */}
           <div className="flex items-center space-x-2">
-            <img src='/smartsolutions-logo.png' alt='smartsolutions' width={80} className="h-7" />
+            <img src='/smartsolutions-logo.png' alt='smartsolutions' width={100} className="h-12 ml-6" />
             <button className="lg:hidden p-1 ml-2" onClick={() => setMobileMenuOpen(true)}>
               <Menu className="w-5 h-5 text-gray-700" />
             </button>
@@ -226,7 +226,7 @@ const Navbar = ({ userRole = 'manager' }) => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 no-underline ${
+                className={`flex items-center space-x-1 px-3 py-1.5 font-[600] rounded-lg text-md font-medium transition-all duration-200 no-underline ${
                   isActiveRoute(link.path)
                     ? 'bg-gradient-to-r from-orange-400 to-red-400 text-white shadow'
                     : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
@@ -242,7 +242,7 @@ const Navbar = ({ userRole = 'manager' }) => {
             ))}
           </nav>
           {/* Right side: notifications and profile */}
-          <div className="flex items-center space-x-2 ml-auto">
+          <div className="flex items-center space-x-2 ml-6">
             {/* Notifications */}
             <div className="relative p-1.5 rounded-lg bg-gray-100 hover:bg-orange-50 transition-all duration-200 cursor-pointer" onClick={handleBellClick}>
               <Bell className="w-4 h-4 text-gray-600 hover:text-orange-500" />
@@ -270,7 +270,7 @@ const Navbar = ({ userRole = 'manager' }) => {
             </div>
             {/* Profile Dropdown */}
             <div className="relative group">
-              <div className="flex items-center space-x-2 cursor-pointer bg-gray-100 rounded-lg p-1.5 hover:bg-orange-50 transition-all duration-200">
+              <div className="flex items-center space-x-2 cursor-pointer rounded-lg p-1.5  transition-all duration-200">
                 <UserAvatar
                   src="https://i.pravatar.cc/40?img=5"
                   name={userName}
