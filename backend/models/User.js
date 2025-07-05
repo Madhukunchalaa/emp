@@ -32,10 +32,11 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   employeeID: { type: String, unique: true, sparse: true },
-  role: { type: String, enum: ['developer', 'manager', 'designer', 'Business'], required: true },
+  role: { type: String, enum: ['admin', 'manager', 'team-leader', 'employee', 'designer', 'developer', 'Business'], required: false, default: null },
   department: { type: String, default: '' },
   position: { type: String, default: '' },
   managerIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  teamLeaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: {
     type: Date,
     default: Date.now

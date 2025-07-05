@@ -32,12 +32,14 @@ const employeeRoutes = require('./routes/employeeRoutes');
 const managerRoutes = require('./routes/managerRoutes');
 const designRoutes = require('./routes/designRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const empIdRoutes = require('./controllers/empIdController');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/empid', empIdRoutes);
 
 // Socket.IO chat logic
 const ChatMessage = require('./models/ChatMessage');

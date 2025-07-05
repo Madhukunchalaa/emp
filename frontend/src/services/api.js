@@ -301,6 +301,11 @@ export const managerService = {
   getEmployees: () => api.get('/manager/employees'),
   getEmployeeProfile: (id) => api.get(`/manager/employees/${id}`),
   
+  // Team Leader management
+  getTeamLeaders: () => api.get('/manager/team-leaders'),
+  assignProjectToTeamLeader: (projectData) => api.post('/manager/projects/assign-to-team-leader', projectData),
+  getTeamLeaderProjects: () => api.get('/manager/team-leader-projects'),
+  
   // Project management
   getProjects: () => api.get('/manager/projects'),
   getProjectById: (id) => api.get(`/manager/projects/${id}`),
@@ -493,4 +498,55 @@ export const userService = {
       throw error.response?.data || error;
     }
   },
+};
+
+// Team Leader API functions
+export const getTeamMembers = async () => {
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:5000/api/team-leader/team-members', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.json();
+};
+
+export const getAvailableEmployees = async () => {
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:5000/api/team-leader/available-employees', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.json();
+};
+
+export const createTaskForTeamMember = async (taskData) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:5000/api/team-leader/create-task', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(taskData)
+  });
+  return res.json();
+};
+
+export const assignEmployeeToTeam = async (teamId, employeeId) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`http://localhost:5000/api/team-leader/assign-employee`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ teamId, employeeId })
+  });
+  return res.json();
+};
+
+export const getTeamTasks = async () => {
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:5000/api/team-leader/team-tasks', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.json();
 };

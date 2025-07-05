@@ -532,6 +532,10 @@ export default function ManagerDashboard() {
                 Create Project
               </Link>
               <span className="text-gray-400">|</span>
+              <Link to="/assign-project-to-team-leader" className="text-purple-500 hover:text-purple-600 font-medium no-underline">
+                Assign to Team Leader
+              </Link>
+              <span className="text-gray-400">|</span>
               <Link to="/projects" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
             </div>
           </div>
