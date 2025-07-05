@@ -784,6 +784,134 @@ const getManagerDashboard = async (req, res) => {
   }
 };
 
+// Get team leaders for project assignment
+const getTeamLeaders = async (req, res) => {
+  try {
+    const teamLeaders = await User.find({ role: 'team-leader' }).select('-password');
+    
+    // Get additional info for each team leader
+    const teamLeadersWithInfo = await Promise.all(
+      teamLeaders.map(async (teamLeader) => {
+        // Count team members
+        const teamMemberCount = await User.countDocuments({ teamLeaderId: teamLeader._id });
+        
+        // Count active projects
+        const activeProjectCount = await Project.countDocuments({ 
+          assignedTo: teamLeader._id,
+          status: { $in: ['active', 'in-progress', 'assigned'] }
+        });
+        
+        return {
+          ...teamLeader.toObject(),
+          teamMemberCount,
+          activeProjectCount
+        };
+      })
+    );
+    
+    res.json(teamLeadersWithInfo);
+  } catch (error) {
+    console.error('Error fetching team leaders:', error);
+    res.status(500).json({ message: 'Error fetching team leaders' });
+  }
+};
+
+// Assign project to team leader (new hierarchy: Manager → Team Leader → Employee)
+const assignProjectToTeamLeader = async (req, res) => {
+  try {
+    const { projectId, teamLeaderId } = req.body;
+    
+    if (!projectId || !teamLeaderId) {
+      return res.status(400).json({ message: 'Project ID and Team Leader ID are required' });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    const teamLeader = await User.findById(teamLeaderId);
+    if (!teamLeader || teamLeader.role !== 'team-leader') {
+      return res.status(404).json({ message: 'Team Leader not found' });
+    }
+
+    // Assign project to team leader
+    project.assignedTo = teamLeaderId;
+    project.status = 'assigned';
+    project.assignedBy = req.user.id; // Manager who assigned the project
+    project.assignedAt = new Date();
+    
+    await project.save();
+    
+    // Populate the response
+    await project.populate('assignedTo', 'name email');
+    await project.populate('createdBy', 'name email');
+    await project.populate('assignedBy', 'name email');
+
+    // Emit notification to team leader
+    const io = req.app.get('io');
+    if (io && teamLeaderId) {
+      io.to(teamLeaderId.toString()).emit('notification', {
+        message: `A new project "${project.title}" has been assigned to you by your manager.`
+      });
+    }
+
+    res.status(200).json({ 
+      message: 'Project assigned to team leader successfully', 
+      project 
+    });
+  } catch (err) {
+    console.error('Error in assignProjectToTeamLeader:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Get projects assigned to team leaders by this manager
+const getTeamLeaderProjects = async (req, res) => {
+  try {
+    const managerId = req.user.id;
+    
+    // Get projects assigned by this manager to team leaders
+    const projects = await Project.find({
+      assignedBy: managerId,
+      assignedTo: { $exists: true, $ne: null }
+    })
+    .populate('assignedTo', 'name email role')
+    .populate('createdBy', 'name email')
+    .populate('assignedBy', 'name email')
+    .sort({ assignedAt: -1 });
+
+    // Add team member count and progress for each project
+    const projectsWithDetails = await Promise.all(
+      projects.map(async (project) => {
+        const progress = calculateProjectProgress(project);
+        
+        // Count team members under the team leader
+        const teamMemberCount = await User.countDocuments({ 
+          teamLeaderId: project.assignedTo._id 
+        });
+        
+        // Get team leader's team members
+        const teamMembers = await User.find({ 
+          teamLeaderId: project.assignedTo._id 
+        }).select('name email role');
+        
+        return {
+          ...project.toObject(),
+          progress,
+          teamMemberCount,
+          teamMembers
+        };
+      })
+    );
+
+    res.json(projectsWithDetails);
+  } catch (error) {
+    console.error('Error fetching team leader projects:', error);
+    res.status(500).json({ message: 'Error fetching team leader projects' });
+  }
+};
+
 module.exports = {
   getAllEmployeeUpdates,
   getProfile,
@@ -807,5 +935,8 @@ module.exports = {
   approveRejectTask,
   updateProjectTaskStatus,
   getEmployeeUpdates,
-  getManagerDashboard
+  getManagerDashboard,
+  getTeamLeaders,
+  assignProjectToTeamLeader,
+  getTeamLeaderProjects
 };

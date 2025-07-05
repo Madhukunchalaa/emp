@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bootstrap-icons": "^1.13.1",
     "recharts": "^2.15.3"
   }

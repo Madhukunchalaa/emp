@@ -3,6 +3,7 @@ const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateOTP, sendOTPEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail } = require('../utils/emailService');
+const EmpId = require('../models/empId');
 
 // Use a default secret if JWT_SECRET is not set
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -10,19 +11,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // Register with OTP verification
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, empid } = req.body;
-    console.log('Registration attempt for:', { name, email, role });
-
-    // Validate role
-    const validRoles = ['developer', 'designer', 'manager', 'Business'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: 'Invalid role specified' });
-    }
+    const { name, email, password, empid } = req.body;
+    console.log('Registration attempt for:', { name, email, empid });
 
     // Check if user already exists
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Validate empid
+    const empIdDoc = await EmpId.findOne({ employeeId: empid });
+    if (!empIdDoc) {
+      return res.status(400).json({ message: 'Invalid Employee ID' });
+    }
+    if (empIdDoc.isUsed) {
+      return res.status(400).json({ message: 'Employee ID already used' });
     }
 
     // Generate OTP
@@ -36,8 +40,7 @@ exports.register = async (req, res) => {
       email,
       otp,
       type: 'email_verification',
-      // Store registration details in a subfield
-      registrationData: { name, password, role, empid }
+      registrationData: { name, password, empid }
     });
     otpRecord.markModified && otpRecord.markModified('registrationData');
     await otpRecord.save();
@@ -80,15 +83,25 @@ exports.verifyRegistrationOTP = async (req, res) => {
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
     }
-    // Create new user from registrationData
-    const { name, password, role, empid } = otpRecord.registrationData;
-    user = new User({ name, email, password, role, empid });
+    // Get empid and role
+    const { name, password, empid } = otpRecord.registrationData;
+    const empIdDoc = await EmpId.findOne({ employeeId: empid });
+    if (!empIdDoc) {
+      return res.status(400).json({ message: 'Invalid Employee ID' });
+    }
+    if (empIdDoc.isUsed) {
+      return res.status(400).json({ message: 'Employee ID already used' });
+    }
+    // Create new user with empid and role
+    user = new User({ name, email, password, empid, role: empIdDoc.role });
     await user.save();
     await otpRecord.markAsUsed();
-    
+    // Mark empid as used and assign to user
+    empIdDoc.isUsed = true;
+    empIdDoc.assignedTo = user._id;
+    await empIdDoc.save();
     // Send welcome email
-    await sendWelcomeEmail(email, name, role);
-    
+    await sendWelcomeEmail(email, name);
     res.json({ message: 'Registration successful! You can now login.' });
   } catch (err) {
     console.error('Verify registration OTP error:', err);

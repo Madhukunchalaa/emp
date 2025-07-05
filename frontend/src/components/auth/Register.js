@@ -27,7 +27,6 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    role: 'developer',
     empid: '',
     profileImage: null
   });
@@ -102,7 +101,6 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
         empid: formData.empid
       };
 
@@ -148,7 +146,6 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
         empid: formData.empid
       };
 
@@ -263,21 +260,6 @@ const Register = () => {
         value={formData.password}
         onChange={handleChange}
       />
-      <FormControl fullWidth margin="normal">
-        <InputLabel id="role-label">Role</InputLabel>
-        <Select
-          labelId="role-label"
-          name="role"
-          value={formData.role}
-          label="Role"
-          onChange={handleChange}
-        >
-          <MenuItem value="developer">Developer</MenuItem>
-          <MenuItem value="designer">Designer</MenuItem>
-          <MenuItem value="manager">Manager</MenuItem>
-          <MenuItem value="Business">Business Development</MenuItem>
-        </Select>
-      </FormControl>
       <Button 
         type="submit" 
         fullWidth 
