@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { adminService } from '../../services/api';
 
 const roles = [
   { value: 'employee', label: 'Employee' },
@@ -38,28 +38,25 @@ const EmpIdAdmin = () => {
 
   const fetchEmpIds = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/empid');
+      const res = await adminService.getEmpIds();
       setEmpIds(res.data);
     } catch (err) {}
   };
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/empid/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await adminService.getAdminUsers();
       setUsers(res.data);
     } catch (err) {}
   };
   const fetchProjects = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/empid/admin/projects', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await adminService.getAdminProjects();
       setProjects(res.data);
     } catch (err) {}
   };
   const fetchReports = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/empid/admin/reports', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await adminService.getAdminReports();
       setReports(res.data);
     } catch (err) {}
   };
@@ -78,18 +75,13 @@ const EmpIdAdmin = () => {
     setSuccess('');
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(
-        'http://localhost:5000/api/empid',
-        { employeeId: form.empid, role: form.role },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await adminService.createEmpId({ employeeId: form.empid, role: form.role });
       setSuccess(res.data.message || 'Employee ID and role added successfully.');
       setForm({ empid: '', role: 'employee' });
       fetchEmpIds();
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Failed to add Employee ID. Please check the details.'
+        err.message || 'Failed to add Employee ID. Please check the details.'
       );
     } finally {
       setLoading(false);
@@ -102,16 +94,11 @@ const EmpIdAdmin = () => {
     setSuccess('');
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(
-        'http://localhost:5000/api/empid/batch',
-        batchForm,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await adminService.createBatchEmpIds(batchForm);
       setSuccess(res.data.msg || 'Batch EmpIDs created.');
       fetchEmpIds();
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to create batch EmpIDs.');
+      setError(err.message || 'Failed to create batch EmpIDs.');
     } finally {
       setLoading(false);
     }
@@ -228,12 +215,7 @@ const EmpIdAdmin = () => {
                     style={{ background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}
                     onClick={async () => {
                       try {
-                        const token = localStorage.getItem('token');
-                        await axios.put(
-                          `http://localhost:5000/api/empid/admin/promote/${u._id}`,
-                          {},
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
+                        await adminService.promoteUser(u._id);
                         fetchUsers();
                       } catch (err) {
                         console.error('Failed to promote user:', err);

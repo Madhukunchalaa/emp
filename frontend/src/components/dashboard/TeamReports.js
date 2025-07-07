@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert } from '@mui/material';
-import axios from 'axios';
+import { teamLeaderService } from '../../services/api';
 
 const TeamReports = () => {
   const [reportOpen, setReportOpen] = useState(false);
@@ -11,9 +11,7 @@ const TeamReports = () => {
   const handleSendReport = async () => {
     setError(''); setSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/team-leader/report', reportData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await teamLeaderService.sendReport(reportData);
       setSuccess('Report sent to manager!');
       setReportOpen(false);
       setReportData({ title: '', content: '' });
