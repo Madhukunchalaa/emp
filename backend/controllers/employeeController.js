@@ -918,6 +918,69 @@ exports.testDatabaseState = async (req, res) => {
   }
 };
 
+// Get tasks assigned to employee by team leaders
+exports.getMyTasks = async (req, res) => {
+  try {
+    const employeeId = req.user.id;
+    console.log('Getting tasks for employee:', employeeId);
+
+    // Import the Task model (DesignTask)
+    const Task = require('../models/DesignTask');
+    
+    // Get tasks assigned to this employee
+    const tasks = await Task.find({ assignedTo: employeeId })
+      .populate('assignedBy', 'name email role')
+      .populate('assignedTo', 'name email role')
+      .sort({ createdAt: -1 });
+
+    console.log('Found tasks for employee:', tasks.length);
+    
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error getting employee tasks:', error);
+    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+  }
+};
+
+// Update task status for employee
+exports.updateMyTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+    const employeeId = req.user.id;
+
+    if (!status || !['pending', 'in_progress', 'completed'].includes(status)) {
+      return res.status(400).json({ message: 'Valid status is required (pending, in_progress, completed)' });
+    }
+
+    // Import the Task model (DesignTask)
+    const Task = require('../models/DesignTask');
+    
+    // Find and update the task
+    const task = await Task.findOneAndUpdate(
+      { _id: taskId, assignedTo: employeeId },
+      { 
+        status,
+        updatedAt: new Date()
+      },
+      { new: true }
+    ).populate('assignedBy', 'name email role')
+     .populate('assignedTo', 'name email role');
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found or not assigned to you' });
+    }
+
+    res.json({
+      message: `Task status updated to ${status}`,
+      task
+    });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ message: 'Error updating task status' });
+  }
+};
+
 // Update project status (when projects are treated as tasks)
 exports.updateProjectAsTaskStatus = async (req, res) => {
   try {

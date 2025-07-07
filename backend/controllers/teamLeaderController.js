@@ -7,19 +7,11 @@ const Punch = require('../models/Punch');
 // Get available employees for task assignment
 const getAvailableEmployees = async (req, res) => {
   try {
-    const teamLeaderId = req.user._id;
-    
-    // Get employees that can be assigned to this team leader
-    // This includes developers and designers who don't have a team leader yet
+    // Return all employees with role developer or designer
     const availableEmployees = await User.find({
-      role: 'developer',
-      $or: [
-        { teamLeaderId: { $exists: false } },
-        { teamLeaderId: null },
-        { teamLeaderId: teamLeaderId } // Already assigned to this team leader
-      ]
+      role: { $in: ['developer', 'designer'] }
     }).select('-password');
-    
+    console.log('Available employees found (all):', availableEmployees.length);
     res.json(availableEmployees);
   } catch (error) {
     console.error('Error fetching available employees:', error);
@@ -65,7 +57,7 @@ const getAssignedProjects = async (req, res) => {
     // Get projects assigned to this team leader (both directly and through manager assignment)
     const assignedProjects = await Project.find({ 
       assignedTo: teamLeaderId,
-      status: { $in: ['assigned', 'active', 'in-progress', 'pending'] }
+      status: { $in: ['assigned', 'active', 'in_progress', 'pending'] }
     }).populate('createdBy', 'name email')
     .populate('assignedTo', 'name email')
     .sort({ createdAt: -1 });
@@ -88,7 +80,7 @@ const getTeamLeaderDashboard = async (req, res) => {
     // Get projects assigned to team leader (both directly and through manager assignment)
     const assignedProjects = await Project.find({ 
       assignedTo: teamLeaderId,
-      status: { $in: ['assigned', 'active', 'in-progress', 'pending'] }
+      status: { $in: ['assigned', 'active', 'in_progress', 'pending'] }
     }).populate('createdBy', 'name email')
     .populate('assignedTo', 'name email')
     .sort({ createdAt: -1 });
@@ -111,6 +103,7 @@ const getTeamLeaderDashboard = async (req, res) => {
       activeProjects: assignedProjects.length,
       pendingTasks: teamTasks.filter(task => task.status === 'pending').length,
       completedTasks: teamTasks.filter(task => task.status === 'completed').length,
+      inProgressTasks: teamTasks.filter(task => task.status === 'in_progress').length,
       totalTasks: teamTasks.length
     };
     
@@ -193,6 +186,8 @@ const createTaskForTeamMember = async (req, res) => {
     const { title, description, teamMemberId, deadline, priority, projectId } = req.body;
     const teamLeaderId = req.user._id;
     
+    console.log('Creating task with data:', { title, description, teamMemberId, deadline, priority, projectId });
+    
     // Verify team member belongs to team leader
     const teamMember = await User.findOne({ 
       _id: teamMemberId, 
@@ -200,8 +195,11 @@ const createTaskForTeamMember = async (req, res) => {
     });
     
     if (!teamMember) {
+      console.log('Team member not found or not authorized:', { teamMemberId, teamLeaderId });
       return res.status(403).json({ error: 'Team member not found or not authorized' });
     }
+    
+    console.log('Team member found:', teamMember.name);
     
     // Create the new task with correct fields for DesignTask model
     const newTask = new Task({
@@ -211,8 +209,10 @@ const createTaskForTeamMember = async (req, res) => {
       dueDate: deadline, // Use deadline as dueDate
       priority: priority || 'medium',
       status: 'pending', // Use allowed enum value
-      projectId: projectId || null
+      // Remove projectId as it's not in the model schema
     });
+    
+    console.log('Task object to save:', newTask);
     
     await newTask.save();
     
@@ -220,10 +220,12 @@ const createTaskForTeamMember = async (req, res) => {
       .populate('assignedTo', 'name email role')
       .populate('assignedBy', 'name email role');
     
+    console.log('Task created successfully:', populatedTask._id);
+    
     res.status(201).json(populatedTask);
   } catch (error) {
     console.error('Error creating task:', error);
-    res.status(500).json({ error: 'Failed to create task' });
+    res.status(500).json({ error: 'Failed to create task', details: error.message });
   }
 };
 
@@ -316,7 +318,7 @@ const getTeamMemberReport = async (req, res) => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => task.status === 'completed').length;
     const pendingTasks = tasks.filter(task => task.status === 'pending').length;
-    const inProgressTasks = tasks.filter(task => task.status === 'in-progress').length;
+    const inProgressTasks = tasks.filter(task => task.status === 'in_progress').length;
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) : 0;
     
     const report = {
@@ -362,7 +364,7 @@ const getTeamPerformanceSummary = async (req, res) => {
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(task => task.status === 'completed').length;
     const pendingTasks = allTasks.filter(task => task.status === 'pending').length;
-    const inProgressTasks = allTasks.filter(task => task.status === 'in-progress').length;
+    const inProgressTasks = allTasks.filter(task => task.status === 'in_progress').length;
     const teamCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) : 0;
     
     // Get recent updates
@@ -510,6 +512,116 @@ const punchOut = async (req, res) => {
   }
 };
 
+// Get team for a project
+const getProjectTeam = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const project = await Project.findById(projectId).populate('team', 'name email role');
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    res.json(project.team);
+  } catch (error) {
+    console.error('Error fetching project team:', error);
+    res.status(500).json({ error: 'Failed to fetch project team' });
+  }
+};
+
+// Add a member to a project's team
+const addMemberToProjectTeam = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { empId } = req.body;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    if (!project.team.includes(empId)) {
+      project.team.push(empId);
+      await project.save();
+    }
+    const updatedProject = await Project.findById(projectId).populate('team', 'name email role');
+    res.json(updatedProject.team);
+  } catch (error) {
+    console.error('Error adding member to project team:', error);
+    res.status(500).json({ error: 'Failed to add member to project team' });
+  }
+};
+
+// Remove a member from a project's team
+const removeMemberFromProjectTeam = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { empId } = req.body;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    project.team = project.team.filter(id => id.toString() !== empId);
+    await project.save();
+    const updatedProject = await Project.findById(projectId).populate('team', 'name email role');
+    res.json(updatedProject.team);
+  } catch (error) {
+    console.error('Error removing member from project team:', error);
+    res.status(500).json({ error: 'Failed to remove member from project team' });
+  }
+};
+
+// Get activity log for team leader
+const getActivityLog = async (req, res) => {
+  try {
+    const teamLeaderId = req.user._id;
+    const teamMembers = await User.find({ teamLeaderId }).select('_id');
+    const teamMemberIds = teamMembers.map(member => member._id);
+    
+    // Get recent activities from team members
+    const activities = await DailyUpdate.find({
+      userId: { $in: teamMemberIds }
+    }).populate('userId', 'name email role')
+    .sort({ createdAt: -1 })
+    .limit(20);
+    
+    // Format activities for display
+    const activityLog = activities.map(activity => ({
+      message: `${activity.userId.name} updated: ${activity.content}`,
+      timestamp: activity.createdAt
+    }));
+    
+    res.json(activityLog);
+  } catch (error) {
+    console.error('Error fetching activity log:', error);
+    res.status(500).json({ error: 'Failed to fetch activity log' });
+  }
+};
+
+// Get tasks for a specific team member
+const getMemberTasks = async (req, res) => {
+  try {
+    const { memberId } = req.params;
+    const teamLeaderId = req.user._id;
+    
+    // Verify team member belongs to team leader
+    const teamMember = await User.findOne({ 
+      _id: memberId, 
+      teamLeaderId 
+    });
+    
+    if (!teamMember) {
+      return res.status(403).json({ error: 'Team member not found or not authorized' });
+    }
+    
+    // Get tasks for this team member
+    const tasks = await Task.find({ assignedTo: memberId })
+      .populate('assignedBy', 'name email')
+      .sort({ createdAt: -1 });
+    
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching member tasks:', error);
+    res.status(500).json({ error: 'Failed to fetch member tasks' });
+  }
+};
+
 module.exports = {
   getTeamLeaderDashboard,
   getTeamMembers,
@@ -525,4 +637,9 @@ module.exports = {
   getAssignedProjects,
   punchIn,
   punchOut,
+  getProjectTeam,
+  addMemberToProjectTeam,
+  removeMemberFromProjectTeam,
+  getActivityLog,
+  getMemberTasks,
 }; 

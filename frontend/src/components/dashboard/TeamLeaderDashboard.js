@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Snackbar, Alert, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction } from '@mui/material';
-import axios from 'axios';
 import './Dashboard.css';
 import { Briefcase, CheckSquare, Users, TrendingUp, FileText, Plus, Send, Clock, UserPlus, Eye, Delete, History } from 'lucide-react';
+import jwtDecode from 'jwt-decode';
+import { teamLeaderService, employeeService } from '../../services/api';
 
 const TeamLeaderDashboard = () => {
   // Stats
@@ -33,10 +34,22 @@ const TeamLeaderDashboard = () => {
   const [memberTasks, setMemberTasks] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
   const [reportFields, setReportFields] = useState({ teamUpdates: '', taskSummary: '', challenges: '', completionStatus: '' });
+  const [currentTeamLeaderId, setCurrentTeamLeaderId] = useState(null);
 
   useEffect(() => {
     fetchAllData();
     fetchActivityLog();
+    // Get current TL ID from token
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const userObj = decoded.user || decoded;
+        setCurrentTeamLeaderId(userObj._id || userObj.id);
+      } catch (e) {
+        setCurrentTeamLeaderId(null);
+      }
+    }
   }, []);
 
   const fetchAllData = async () => {
@@ -44,20 +57,17 @@ const TeamLeaderDashboard = () => {
     setError('');
     try {
       // Fetch team members
-      const teamRes = await axios.get('http://localhost:5000/api/team-leader/team-members', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const teamRes = await teamLeaderService.getTeamMembers();
       setTeamMembers(teamRes.data);
+      
       // Fetch projects assigned to team leader
-      const projRes = await axios.get('http://localhost:5000/api/team-leader/projects', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const projRes = await teamLeaderService.getAssignedProjects();
       setProjects(projRes.data);
+      
       // Fetch tasks assigned by team leader
-      const taskRes = await axios.get('http://localhost:5000/api/team-leader/team-tasks', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const taskRes = await teamLeaderService.getTeamTasks();
       setTasks(taskRes.data);
+      
       // Stats
       const totalTasks = taskRes.data.length;
       const completedTasks = taskRes.data.filter(t => t.status === 'completed').length;
@@ -78,9 +88,7 @@ const TeamLeaderDashboard = () => {
 
   const fetchActivityLog = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/team-leader/activity-log', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const res = await teamLeaderService.getActivityLog();
       setActivityLog(res.data);
     } catch (err) {
       // Ignore log errors
@@ -91,10 +99,11 @@ const TeamLeaderDashboard = () => {
   const handlePunch = async (type) => {
     setError(''); setPunchStatus('');
     try {
-      const url = type === 'in'
-        ? 'http://localhost:5000/api/employee/attendance/punch-in'
-        : 'http://localhost:5000/api/employee/attendance/punch-out';
-      await axios.post(url, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if (type === 'in') {
+        await employeeService.punchIn();
+      } else {
+        await employeeService.punchOut();
+      }
       setPunchStatus(type === 'in' ? 'Punched In!' : 'Punched Out!');
     } catch (err) {
       setError('Failed to punch ' + type);
@@ -104,19 +113,36 @@ const TeamLeaderDashboard = () => {
   // Assign Task
   const handleAssignTask = async () => {
     setError(''); setSuccess('');
+    
+    // Validate required fields
+    if (!assignTaskData.member) {
+      setError('Please select a team member');
+      return;
+    }
+    if (!assignTaskData.title || assignTaskData.title.trim() === '') {
+      setError('Please enter a task title');
+      return;
+    }
+    if (!assignTaskData.deadline) {
+      setError('Please select a deadline');
+      return;
+    }
+    
     try {
-      await axios.post('http://localhost:5000/api/team-leader/tasks', {
-        memberId: assignTaskData.member,
+      console.log('Sending task data:', assignTaskData);
+      await teamLeaderService.createTask({
+        teamMemberId: assignTaskData.member,
         title: assignTaskData.title,
         description: assignTaskData.description,
         deadline: assignTaskData.deadline,
-      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      });
       setSuccess('Task assigned successfully!');
       setAssignTaskOpen(false);
       setAssignTaskData({ member: '', title: '', description: '', deadline: '' });
       fetchAllData();
     } catch (err) {
-      setError('Failed to assign task');
+      console.error('Error assigning task:', err);
+      setError(err.message || 'Failed to assign task');
     }
   };
 
@@ -126,14 +152,10 @@ const TeamLeaderDashboard = () => {
     setManageTeamOpen(true);
     try {
       // Fetch all employees (not in this project)
-      const res = await axios.get('http://localhost:5000/api/team-leader/employee-pool', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const res = await teamLeaderService.getAvailableEmployees();
       setEmployeePool(res.data);
       // Fetch current team for this project
-      const teamRes = await axios.get(`http://localhost:5000/api/team-leader/project/${project._id}/team`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const teamRes = await teamLeaderService.getProjectTeam(project._id);
       setProjectTeam(teamRes.data);
     } catch (err) {
       setError('Failed to fetch team data');
@@ -141,14 +163,10 @@ const TeamLeaderDashboard = () => {
   };
   const handleAddToTeam = async (empId) => {
     try {
-      await axios.post(`http://localhost:5000/api/team-leader/project/${selectedProject._id}/add-member`, { empId }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await teamLeaderService.addMemberToProject(selectedProject._id, empId);
       setSuccess('Employee added to team');
       // Refresh team
-      const teamRes = await axios.get(`http://localhost:5000/api/team-leader/project/${selectedProject._id}/team`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const teamRes = await teamLeaderService.getProjectTeam(selectedProject._id);
       setProjectTeam(teamRes.data);
     } catch (err) {
       setError('Failed to add employee');
@@ -156,14 +174,10 @@ const TeamLeaderDashboard = () => {
   };
   const handleRemoveFromTeam = async (empId) => {
     try {
-      await axios.post(`http://localhost:5000/api/team-leader/project/${selectedProject._id}/remove-member`, { empId }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await teamLeaderService.removeMemberFromProject(selectedProject._id, empId);
       setSuccess('Employee removed from team');
       // Refresh team
-      const teamRes = await axios.get(`http://localhost:5000/api/team-leader/project/${selectedProject._id}/team`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const teamRes = await teamLeaderService.getProjectTeam(selectedProject._id);
       setProjectTeam(teamRes.data);
     } catch (err) {
       setError('Failed to remove employee');
@@ -175,9 +189,7 @@ const TeamLeaderDashboard = () => {
     setSelectedMember(member);
     setViewTasksOpen(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/team-leader/member/${member._id}/tasks`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const res = await teamLeaderService.getMemberTasks(member._id);
       setMemberTasks(res.data);
     } catch (err) {
       setError('Failed to fetch member tasks');
@@ -191,11 +203,9 @@ const TeamLeaderDashboard = () => {
   const handleSendReport = async () => {
     setError(''); setSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/team-leader/report', {
+      await teamLeaderService.sendReport({
         ...reportData,
         ...reportFields
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setSuccess('Report sent to manager!');
       setReportOpen(false);
@@ -417,7 +427,16 @@ const TeamLeaderDashboard = () => {
             fullWidth
           >
             {employeePool.map(emp => (
-              <MenuItem key={emp._id} value={emp._id}>{emp.name} ({emp.email})</MenuItem>
+              <MenuItem key={emp._id} value={emp._id}>
+                {emp.name} ({emp.email})
+                {emp.teamLeaderId && (
+                  <span style={{ color: 'gray', fontSize: 12, marginLeft: 8 }}>
+                    {emp.teamLeaderId === currentTeamLeaderId
+                      ? ' (Already in your team)'
+                      : ' (Assigned to another TL)'}
+                  </span>
+                )}
+              </MenuItem>
             ))}
           </TextField>
         </DialogContent>

@@ -14,6 +14,8 @@ router.get('/available-employees', auth, checkRole(['team-leader']), teamLeaderC
 router.post('/assign-employee', auth, checkRole(['team-leader']), teamLeaderController.assignEmployeeToTeam);
 router.get('/team-member/:teamMemberId/report', auth, checkRole(['team-leader']), teamLeaderController.getTeamMemberReport);
 router.get('/team-performance-summary', auth, checkRole(['team-leader']), teamLeaderController.getTeamPerformanceSummary);
+router.get('/activity-log', auth, checkRole(['team-leader']), teamLeaderController.getActivityLog);
+router.get('/member/:memberId/tasks', auth, checkRole(['team-leader']), teamLeaderController.getMemberTasks);
 
 // Task management routes
 router.get('/team-tasks', auth, checkRole(['team-leader']), teamLeaderController.getTeamTasks);
@@ -27,5 +29,10 @@ router.post('/projects/assign', auth, checkRole(['team-leader']), teamLeaderCont
 // Punch in/out routes for team leader
 router.post('/punch-in', auth, checkRole(['team-leader']), teamLeaderController.punchIn);
 router.post('/punch-out', auth, checkRole(['team-leader']), teamLeaderController.punchOut);
+
+// Project team management routes
+router.get('/project/:projectId/team', auth, checkRole(['team-leader']), teamLeaderController.getProjectTeam);
+router.post('/project/:projectId/add-member', auth, checkRole(['team-leader']), teamLeaderController.addMemberToProjectTeam);
+router.post('/project/:projectId/remove-member', auth, checkRole(['team-leader']), teamLeaderController.removeMemberFromProjectTeam);
 
 module.exports = router; 

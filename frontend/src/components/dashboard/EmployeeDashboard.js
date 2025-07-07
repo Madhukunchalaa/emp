@@ -53,10 +53,14 @@ const EmployeeDashboard = () => {
   const [taskUpdateLoading, setTaskUpdateLoading] = useState(false);
   const [managerUser, setManagerUser] = useState(null);
   const [employeeUser, setEmployeeUser] = useState(null);
+  const [teamLeaderTasks, setTeamLeaderTasks] = useState([]);
+  const [teamLeaderTasksLoading, setTeamLeaderTasksLoading] = useState(false);
 
-  // Extract all tasks from projects
+  // Extract all tasks from projects and team leader assignments
   const getAllTasks = () => {
     const allTasks = [];
+    
+    // Add project tasks
     projects.forEach(project => {
       project.steps?.forEach(step => {
         step.tasks?.forEach(task => {
@@ -64,11 +68,25 @@ const EmployeeDashboard = () => {
             ...task,
             projectTitle: project.title,
             stepName: step.name,
-            projectId: project._id
+            projectId: project._id,
+            taskType: 'project'
           });
         });
       });
     });
+    
+    // Add team leader tasks
+    teamLeaderTasks.forEach(task => {
+      allTasks.push({
+        ...task,
+        projectTitle: 'Team Leader Assignment',
+        stepName: 'Direct Task',
+        taskType: 'team-leader',
+        title: task.content || task.title,
+        description: task.content || task.description
+      });
+    });
+    
     console.log('DEBUG: allTasks array:', allTasks);
     return allTasks;
   };
@@ -76,6 +94,23 @@ const EmployeeDashboard = () => {
   useEffect(() => {
     dispatch(fetchEmployeeProjects());
     dispatch(fetchAttendance());
+    
+    // Fetch team leader assigned tasks
+    const fetchTeamLeaderTasks = async () => {
+      try {
+        setTeamLeaderTasksLoading(true);
+        const response = await employeeService.getMyTasks();
+        setTeamLeaderTasks(response.data || []);
+        console.log('Team leader tasks loaded:', response.data?.length || 0);
+      } catch (error) {
+        console.error('Error fetching team leader tasks:', error);
+        setTeamLeaderTasks([]);
+      } finally {
+        setTeamLeaderTasksLoading(false);
+      }
+    };
+    
+    fetchTeamLeaderTasks();
   }, [dispatch]);
 
   useEffect(() => {
@@ -135,17 +170,31 @@ const EmployeeDashboard = () => {
       setTaskUpdateLoading(true);
       console.log('DEBUG: handleUpdateTaskStatus called with:', { taskId, newStatus, task });
       let response;
-      if (task.stepName === 'Main Task') {
+      
+      // Handle team leader tasks
+      if (task.taskType === 'team-leader') {
+        console.log('DEBUG: Using updateMyTaskStatus (team leader task)');
+        response = await employeeService.updateMyTaskStatus(taskId, newStatus);
+        // Update the task in local state
+        setTeamLeaderTasks(prev => prev.map(t => 
+          t._id === taskId ? { ...t, status: newStatus } : t
+        ));
+      } else if (task.stepName === 'Main Task') {
         console.log('DEBUG: Using updateTaskProgress (project-as-task)');
         response = await employeeService.updateTaskProgress(taskId, newStatus);
       } else {
         console.log('DEBUG: Using updateTaskStatus (real subdocument task)');
         response = await employeeService.updateTaskStatus(taskId, newStatus);
       }
+      
       // Show success message
       dispatch({ type: 'employee/setSuccess', payload: `Task status updated to ${newStatus}` });
-      // Refresh the projects data to get updated state
-      dispatch(fetchEmployeeProjects());
+      
+      // Refresh the projects data to get updated state (only for project tasks)
+      if (task.taskType !== 'team-leader') {
+        dispatch(fetchEmployeeProjects());
+      }
+      
       // Update the selected task if it's the one being updated
       if (selectedTask && selectedTask._id === taskId) {
         setSelectedTask(prev => ({ ...prev, status: newStatus }));
@@ -159,6 +208,36 @@ const EmployeeDashboard = () => {
       if (selectedTask && selectedTask._id === taskId) {
         setSelectedTask(prev => ({ ...prev, status: selectedTask.status }));
       }
+    } finally {
+      setTaskUpdateLoading(false);
+    }
+  };
+
+  const handleUpdateTeamLeaderTaskStatus = async (taskId, newStatus) => {
+    try {
+      setTaskUpdateLoading(true);
+      console.log('Updating team leader task status:', { taskId, newStatus });
+      
+      const response = await employeeService.updateMyTaskStatus(taskId, newStatus);
+      
+      // Show success message
+      dispatch({ type: 'employee/setSuccess', payload: `Task status updated to ${newStatus}` });
+      
+      // Update the task in local state
+      setTeamLeaderTasks(prev => prev.map(task => 
+        task._id === taskId ? { ...task, status: newStatus } : task
+      ));
+      
+      // Update the selected task if it's the one being updated
+      if (selectedTask && selectedTask._id === taskId) {
+        setSelectedTask(prev => ({ ...prev, status: newStatus }));
+      }
+      
+      console.log(`Team leader task status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating team leader task status:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update task status';
+      dispatch({ type: 'employee/setError', payload: errorMessage });
     } finally {
       setTaskUpdateLoading(false);
     }
@@ -484,6 +563,11 @@ const EmployeeDashboard = () => {
                           <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
                             {task.status}
                           </span>
+                          {task.taskType === 'team-leader' && (
+                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
+                              Team Leader
+                            </span>
+                          )}
                         </div>
                       </div>
                       
@@ -491,10 +575,17 @@ const EmployeeDashboard = () => {
                       <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
                       
                       <div className="space-y-2 text-xs text-gray-500">
-                        {task.dueDate && (
+                        {(task.dueDate || task.deadline) && (
                           <div className="flex items-center space-x-2">
                             <Calendar className="w-3 h-3" />
-                            <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                            <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                        {task.priority && (
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-1 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}>
+                              {task.priority}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -562,7 +653,14 @@ const EmployeeDashboard = () => {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-1">{selectedTask.title}</h4>
-                    <p className="text-sm text-gray-600">{selectedTask.description}</p>
+                    <p className="text-sm text-gray-600">{selectedTask.description || selectedTask.content}</p>
+                    {selectedTask.taskType === 'team-leader' && (
+                      <div className="mt-2">
+                        <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
+                          Team Leader Assignment
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -575,12 +673,17 @@ const EmployeeDashboard = () => {
                     <div>
                       <span className="text-gray-500">Priority:</span>
                       <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}>
-                        {selectedTask.priority}
+                        {selectedTask.priority || 'medium'}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Deadline:</span>
-                      <span className="ml-2 text-gray-700">{new Date(selectedTask.deadline).toLocaleDateString()}</span>
+                      <span className="ml-2 text-gray-700">
+                        {(selectedTask.deadline || selectedTask.dueDate) ? 
+                          new Date(selectedTask.deadline || selectedTask.dueDate).toLocaleDateString() : 
+                          'Not set'
+                        }
+                      </span>
                     </div>
                     {selectedTask.estimatedHours && (
                       <div>
@@ -624,7 +727,7 @@ const EmployeeDashboard = () => {
                     disabled={taskUpdateLoading}
                   >
                     <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
+                    <option value="in_progress">In Progress</option>
                     <option value="completed">Completed</option>
                   </select>
                 </div>

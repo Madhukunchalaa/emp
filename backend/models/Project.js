@@ -39,6 +39,7 @@ const projectSchema = new mongoose.Schema({
   deadline: { type: Date, required: true },
   comment: { type: String, trim: true, default: '' },
   steps: [stepSchema],
+  team: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
