@@ -90,7 +90,7 @@ const Navbar = ({ userRole = 'manager', children }) => {
 
   // Socket connection for real-time notifications
   useEffect(() => {
-    const socket = io('http://localhost:5000');
+    const socket = io('https://emp-1-rgfq.onrender.com');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     if (user && user.id) {

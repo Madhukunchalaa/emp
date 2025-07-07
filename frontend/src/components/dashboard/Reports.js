@@ -374,10 +374,10 @@ const Reports = () => {
                 <div>
                   <h5 className="font-medium text-gray-800 mb-2">Attachment:</h5>
                   <img 
-                    src={`http://localhost:5000/${selectedUpdate.imageUrl}`}
+                    src={`https://emp-1-rgfq.onrender.com/${selectedUpdate.imageUrl}`}
                     alt="Update attachment"
                     className="w-full max-w-xs object-cover rounded-lg border border-gray-200 cursor-pointer"
-                    onClick={() => window.open(`http://localhost:5000/${selectedUpdate.imageUrl}`, '_blank')}
+                    onClick={() => window.open(`https://emp-1-rgfq.onrender.com/${selectedUpdate.imageUrl}`, '_blank')}
                   />
                 </div>
               )}
