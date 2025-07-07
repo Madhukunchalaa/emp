@@ -115,17 +115,55 @@ const Login = () => {
             />
           </Box>
 
-
-            <p style={{ 
-              opacity: 0.9, 
-              fontSize: '1.1rem', 
-              lineHeight: 1.5,
-              fontWeight: '400',
-              maxWidth: '260px',
-              margin: '0 auto'
+            {/* Enhanced Stylish Tagline */}
+            <Box sx={{ 
+              position: 'relative',
+              maxWidth: '300px',
+              margin: '0 auto',
+              padding: '20px 0'
             }}>
-              Your trusted gateway to professional dashboard and analytics
-            </p>
+              {/* Decorative line above */}
+              <Box sx={{
+                width: '40px',
+                height: '2px',
+                background: 'rgba(255, 255, 255, 0.6)',
+                margin: '0 auto 16px',
+                borderRadius: '1px'
+              }} />
+              
+              <h4 style={{ 
+                fontSize: '1.4rem', 
+                fontWeight: '300',
+                letterSpacing: '0.5px',
+                lineHeight: '1.4',
+                margin: '0 0 8px 0',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+              }}>
+                <span style={{ fontWeight: '600' }}>Innovate</span> • <span style={{ fontWeight: '600' }}>Execute</span> • <span style={{ fontWeight: '600' }}>Excel</span>
+              </h4>
+              
+              <p style={{ 
+                opacity: 0.85, 
+                fontSize: '1rem', 
+                lineHeight: 1.5,
+                fontWeight: '400',
+                margin: '0',
+                fontStyle: 'italic',
+                letterSpacing: '0.2px'
+              }}>
+                "Where intelligence meets efficiency"
+              </p>
+              
+              {/* Decorative line below */}
+              <Box sx={{
+                width: '40px',
+                height: '2px',
+                background: 'rgba(255, 255, 255, 0.6)',
+                margin: '16px auto 0',
+                borderRadius: '1px'
+              }} />
+            </Box>
           </Box>
         </Box>
 
