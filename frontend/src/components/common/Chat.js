@@ -4,7 +4,7 @@ import { ChatNotificationContext } from './Navbar';
 import { chatService } from '../../services/api';
 
 // Socket URL - should be configurable for deployment
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'https://emp-1-rgfq.onrender.com/api';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'https://emp-1-rgfq.onrender.com';
 
 const socket = io(SOCKET_URL, { transports: ['websocket'] });
 
