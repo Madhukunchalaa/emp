@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 exports.register = async (req, res) => {
   try {
     const { name, email, password, empid } = req.body;
-    console.log('Registration attempt for:', { name, email, empid });
+  
 
     // Check if user already exists
     let user = await User.findOne({ email });
