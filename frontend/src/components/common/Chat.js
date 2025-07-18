@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import { io } from 'socket.io-client';
 import { ChatNotificationContext } from './Navbar';
+import { chatService } from '../../services/api';
 
-// Hardcoded API URL for local development
-const apiUrl = 'http://localhost:5000/api';
-const SOCKET_URL = 'http://localhost:5000';
+// Socket URL - should be configurable for deployment
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'https://emp-1-rgfq.onrender.com';
 
 const socket = io(SOCKET_URL, { transports: ['websocket'] });
 
@@ -20,9 +20,17 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
     if (!currentUser?._id || !otherUser?._id || !socket) return;
     socket.emit('join', { userId: currentUser._id });
 
-    fetch(`${apiUrl}/employee/chat/history?user1=${currentUser._id}&user2=${otherUser._id}`)
-      .then(res => res.json())
-      .then(setMessages);
+    const fetchChatHistory = async () => {
+      try {
+        const response = await chatService.getChatHistory(currentUser._id, otherUser._id);
+        setMessages(response.data || []);
+      } catch (error) {
+        console.error('Error fetching chat history:', error);
+        setMessages([]);
+      }
+    };
+
+    fetchChatHistory();
 
     socket.on('receiveMessage', msg => {
       if (
@@ -55,15 +63,15 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
     }
     let fileUrl = null, fileName = null;
     if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch(`${apiUrl}/employee/chat/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      fileUrl = data.fileUrl;
-      fileName = data.fileName;
+      try {
+        const response = await chatService.uploadChatFile(file);
+        fileUrl = response.data.fileUrl;
+        fileName = response.data.fileName;
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Failed to upload file. Please try again.');
+        return;
+      }
     }
     const messageObj = {
       from: currentUser._id,

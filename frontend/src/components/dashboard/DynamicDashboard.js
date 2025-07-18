@@ -3,6 +3,7 @@ import ManagerDashboard from './ManagerDashboard';
 import EmployeeDashboard from './EmployeeDashboard';
 import DesignerDashboard from './DesignerDashboard';
 import BusinessDashboard from './BusinessDashboard';
+import TeamLeaderDashboard from './TeamLeaderDashboard';
 
 const DynamicDashboard = () => {
   const userRole = localStorage.getItem('userRole'); // should be lowercase
@@ -17,6 +18,8 @@ const DynamicDashboard = () => {
       return <DesignerDashboard />;
     case 'business':
       return <BusinessDashboard />;
+    case 'team-leader':
+      return <TeamLeaderDashboard />;
     default:
       return <div>Loading dashboard... If you are not redirected, please login again.</div>;
   }

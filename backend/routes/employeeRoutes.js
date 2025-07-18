@@ -18,7 +18,9 @@ const {
   updateDailyUpdate,
   updateTaskStatus,
   updateProjectAsTaskStatus,
-  testDatabaseState
+  testDatabaseState,
+  getMyTasks,
+  updateMyTaskStatus
 
 } = require('../controllers/employeeController');
 const dailyUpdates=require('../controllers/updateControoler')
@@ -47,6 +49,10 @@ router.patch('/projects/:projectId/comment', auth, updateProjectComment);
 router.put('/tasks/:taskId/status', auth, updateTaskStatus);
 router.put('/projects/:projectId/task-status', auth, updateProjectAsTaskStatus);
 router.get('/test-db', auth, testDatabaseState);
+
+// Task routes (for team leader assigned tasks)
+router.get('/my-tasks', auth, getMyTasks);
+router.put('/my-tasks/:taskId/status', auth, updateMyTaskStatus);
 
 // Attendance routes
 router.post('/attendance/punch-in', auth, punchIn);

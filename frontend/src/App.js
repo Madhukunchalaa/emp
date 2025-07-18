@@ -21,6 +21,7 @@ import ManagerDashboard from './components/dashboard/ManagerDashboard';
 import ProjectDetails from './components/dashboard/ProjectDetails';
 import AssignTask from './components/dashboard/manager-componenets/AssignTask';
 import AssignProject from './components/dashboard/manager-componenets/AssignProject';
+import AssignProjectToTeamLeader from './components/dashboard/manager-componenets/AssignProjectToTeamLeader';
 import Team from './components/dashboard/Team';
 import Projects from './components/dashboard/Projects';
 import Reports from './components/dashboard/Reports';
@@ -34,6 +35,11 @@ import Attendance from './components/dashboard/Attendance';
 import Leave from './components/dashboard/Leave';
 
 import ChatDashboard from './components/dashboard/ChatDashboard';
+import EmpIdAdmin from './components/admin/EmpIdAdmin';
+
+import TeamManagement from './components/dashboard/TeamManagement';
+import TeamTasks from './components/dashboard/TeamTasks';
+import TeamReports from './components/dashboard/TeamReports';
 
 const theme = createTheme({
   palette: {
@@ -115,6 +121,14 @@ function AppContent() {
           }
         />
         <Route
+          path="/assign-project-to-team-leader"
+          element={
+            <PrivateRoute>
+              <AssignProjectToTeamLeader />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/assign-task"
           element={
             <PrivateRoute>
@@ -189,6 +203,10 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route path="/admin/empid" element={<EmpIdAdmin />} />
+        <Route path="/team-management" element={<PrivateRoute><TeamManagement /></PrivateRoute>} />
+        <Route path="/team-tasks" element={<PrivateRoute><TeamTasks /></PrivateRoute>} />
+        <Route path="/team-reports" element={<PrivateRoute><TeamReports /></PrivateRoute>} />
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

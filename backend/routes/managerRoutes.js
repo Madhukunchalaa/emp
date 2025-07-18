@@ -65,4 +65,9 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Manager routes are working!' });
 });
 
+// Team Leader Management Routes
+router.get('/team-leaders', auth, checkRole(['manager']), managerController.getTeamLeaders);
+router.post('/projects/assign-to-team-leader', auth, checkRole(['manager']), managerController.assignProjectToTeamLeader);
+router.get('/team-leader-projects', auth, checkRole(['manager']), managerController.getTeamLeaderProjects);
+
 module.exports = router; 

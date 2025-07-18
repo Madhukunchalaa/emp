@@ -25,7 +25,12 @@ export const login = createAsyncThunk(
       // Store token and user data in localStorage
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('userRole', response.data.user.role.toLowerCase());
+      if (response.data.user.role) {
+        localStorage.setItem('userRole', response.data.user.role.toLowerCase());
+      } else {
+        // If user has no role, show a user-friendly error and do not proceed
+        throw new Error('Your account is pending admin approval. Please contact your administrator.');
+      }
       
       return response.data;
     } catch (error) {

@@ -22,6 +22,8 @@ const projectSchema = new mongoose.Schema({
   description: { type: String, required: true, trim: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedAt: { type: Date },
   status: {
     type: String,
     enum: ['pending', 'active', 'completed', 'on-hold', 'cancelled', 'assigned', 'scheduled'],
@@ -37,6 +39,7 @@ const projectSchema = new mongoose.Schema({
   deadline: { type: Date, required: true },
   comment: { type: String, trim: true, default: '' },
   steps: [stepSchema],
+  team: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

@@ -1,6 +1,6 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:5000/api';
-// const API_URL = 'https://emp-1-rgfq.onrender.com/api';
+// const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://emp-1-rgfq.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -198,6 +198,37 @@ export const employeeService = {
     return api.patch(`/employee/projects/${projectId}/status`, { status });
   },
 
+  // Get tasks assigned by team leaders
+  getMyTasks: () => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.get('/employee/my-tasks');
+  },
+
+  // Update task status
+  updateMyTaskStatus: (taskId, status) => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.put(`/employee/my-tasks/${taskId}/status`, { status });
+  },
+
+  // Punch in/out
+  punchIn: () => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.post('/employee/attendance/punch-in');
+  },
+
+  punchOut: () => {
+    if (!authService.isAuthenticated()) {
+      return Promise.reject(new Error('No auth token'));
+    }
+    return api.post('/employee/attendance/punch-out');
+  },
+
   updateProjectComment: (projectId, comment) => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
@@ -301,6 +332,11 @@ export const managerService = {
   getEmployees: () => api.get('/manager/employees'),
   getEmployeeProfile: (id) => api.get(`/manager/employees/${id}`),
   
+  // Team Leader management
+  getTeamLeaders: () => api.get('/manager/team-leaders'),
+  assignProjectToTeamLeader: (projectData) => api.post('/manager/projects/assign-to-team-leader', projectData),
+  getTeamLeaderProjects: () => api.get('/manager/team-leader-projects'),
+  
   // Project management
   getProjects: () => api.get('/manager/projects'),
   getProjectById: (id) => api.get(`/manager/projects/${id}`),
@@ -338,48 +374,72 @@ export const managerService = {
   },
 };
 
-// Admin service (if needed)
+// Admin API functions
 export const adminService = {
-  getUsers: () => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Get all employee IDs
+  getEmpIds: async () => {
+    try {
+      const response = await api.get('/empid');
+      return response;
+    } catch (error) {
+      console.error('Get employee IDs API error:', error);
+      throw error.response?.data || error;
     }
-    return api.get('/admin/users');
   },
 
-  createUser: (userData) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Get admin users
+  getAdminUsers: async () => {
+    try {
+      const response = await api.get('/empid/admin/users');
+      return response;
+    } catch (error) {
+      console.error('Get admin users API error:', error);
+      throw error.response?.data || error;
     }
-    return api.post('/admin/users', userData);
   },
 
-  updateUser: (userId, userData) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Get admin projects
+  getAdminProjects: async () => {
+    try {
+      const response = await api.get('/empid/admin/projects');
+      return response;
+    } catch (error) {
+      console.error('Get admin projects API error:', error);
+      throw error.response?.data || error;
     }
-    return api.put(`/admin/users/${userId}`, userData);
   },
 
-  deleteUser: (userId) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Get admin reports
+  getAdminReports: async () => {
+    try {
+      const response = await api.get('/empid/admin/reports');
+      return response;
+    } catch (error) {
+      console.error('Get admin reports API error:', error);
+      throw error.response?.data || error;
     }
-    return api.delete(`/admin/users/${userId}`);
   },
 
-  getSystemSettings: () => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Create employee ID
+  createEmpId: async (empIdData) => {
+    try {
+      const response = await api.post('/empid', empIdData);
+      return response;
+    } catch (error) {
+      console.error('Create employee ID API error:', error);
+      throw error.response?.data || error;
     }
-    return api.get('/admin/settings');
   },
 
-  updateSystemSettings: (settings) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
+  // Create batch employee IDs
+  createBatchEmpIds: async (batchData) => {
+    try {
+      const response = await api.post('/empid/batch', batchData);
+      return response;
+    } catch (error) {
+      console.error('Create batch employee IDs API error:', error);
+      throw error.response?.data || error;
     }
-    return api.put('/admin/settings', settings);
   }
 };
 
@@ -493,4 +553,210 @@ export const userService = {
       throw error.response?.data || error;
     }
   },
+};
+
+// Team Leader API functions
+export const getTeamMembers = async () => {
+  try {
+    const response = await api.get('/team-leader/team-members');
+    return response;
+  } catch (error) {
+    console.error('Get team members API error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const getAvailableEmployees = async () => {
+  try {
+    const response = await api.get('/team-leader/available-employees');
+    return response;
+  } catch (error) {
+    console.error('Get available employees API error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const createTaskForTeamMember = async (taskData) => {
+  try {
+    const response = await api.post('/team-leader/tasks', taskData);
+    return response;
+  } catch (error) {
+    console.error('Create task API error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const assignEmployeeToTeam = async (employeeId) => {
+  try {
+    const response = await api.post('/team-leader/assign-employee', { employeeId });
+    return response;
+  } catch (error) {
+    console.error('Assign employee API error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const getTeamTasks = async () => {
+  try {
+    const response = await api.get('/team-leader/team-tasks');
+    return response;
+  } catch (error) {
+    console.error('Get team tasks API error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+// Chat API functions
+export const chatService = {
+  // Get chat history
+  getChatHistory: async (user1, user2) => {
+    try {
+      const response = await api.get(`/employee/chat/history?user1=${user1}&user2=${user2}`);
+      return response;
+    } catch (error) {
+      console.error('Get chat history API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Upload chat file
+  uploadChatFile: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/employee/chat/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Upload chat file API error:', error);
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Team Leader API functions
+export const teamLeaderService = {
+  // Get team members
+  getTeamMembers: async () => {
+    try {
+      const response = await api.get('/team-leader/team-members');
+      return response;
+    } catch (error) {
+      console.error('Get team members API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get assigned projects
+  getAssignedProjects: async () => {
+    try {
+      const response = await api.get('/team-leader/assigned-projects');
+      return response;
+    } catch (error) {
+      console.error('Get assigned projects API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get team tasks
+  getTeamTasks: async () => {
+    try {
+      const response = await api.get('/team-leader/team-tasks');
+      return response;
+    } catch (error) {
+      console.error('Get team tasks API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get activity log
+  getActivityLog: async () => {
+    try {
+      const response = await api.get('/team-leader/activity-log');
+      return response;
+    } catch (error) {
+      console.error('Get activity log API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Create task for team member
+  createTask: async (taskData) => {
+    try {
+      const response = await api.post('/team-leader/tasks', taskData);
+      return response;
+    } catch (error) {
+      console.error('Create task API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get available employees
+  getAvailableEmployees: async () => {
+    try {
+      const response = await api.get('/team-leader/available-employees');
+      return response;
+    } catch (error) {
+      console.error('Get available employees API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get project team
+  getProjectTeam: async (projectId) => {
+    try {
+      const response = await api.get(`/team-leader/project/${projectId}/team`);
+      return response;
+    } catch (error) {
+      console.error('Get project team API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Add member to project team
+  addMemberToProject: async (projectId, empId) => {
+    try {
+      const response = await api.post(`/team-leader/project/${projectId}/add-member`, { empId });
+      return response;
+    } catch (error) {
+      console.error('Add member to project API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Remove member from project team
+  removeMemberFromProject: async (projectId, empId) => {
+    try {
+      const response = await api.post(`/team-leader/project/${projectId}/remove-member`, { empId });
+      return response;
+    } catch (error) {
+      console.error('Remove member from project API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get member tasks
+  getMemberTasks: async (memberId) => {
+    try {
+      const response = await api.get(`/team-leader/member/${memberId}/tasks`);
+      return response;
+    } catch (error) {
+      console.error('Get member tasks API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Send report
+  sendReport: async (reportData) => {
+    try {
+      const response = await api.post('/team-leader/report', reportData);
+      return response;
+    } catch (error) {
+      console.error('Send report API error:', error);
+      throw error.response?.data || error;
+    }
+  }
 };

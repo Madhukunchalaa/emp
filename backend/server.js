@@ -30,14 +30,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const managerRoutes = require('./routes/managerRoutes');
+const teamLeaderRoutes = require('./routes/teamLeaderRoutes');
 const designRoutes = require('./routes/designRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const empIdRoutes = require('./controllers/empIdController');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/manager', managerRoutes);
+app.use('/api/team-leader', teamLeaderRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/empid', empIdRoutes);
 
 // Socket.IO chat logic
 const ChatMessage = require('./models/ChatMessage');
