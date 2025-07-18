@@ -32,6 +32,12 @@ const Navbar = ({ userRole = 'manager' }) => {
   const audioRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Add missing refs and state for dropdowns
+  const profileDropdownRef = useRef(null);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const notificationDropdownRef = useRef(null);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+
   // --- Chat notification state ---
   const [unreadMessages, setUnreadMessages] = useState({}); // { userId: count }
   const [chatOpenWith, setChatOpenWith] = useState(null); // userId of open chat
@@ -274,7 +280,7 @@ const Navbar = ({ userRole = 'manager' }) => {
           {/* Right side: notifications and profile */}
           <div className="flex items-center space-x-2 ml-6">
             {/* Notifications */}
-            <div className="relative p-1.5 rounded-lg bg-gray-100 hover:bg-orange-50 transition-all duration-200 cursor-pointer" onClick={handleBellClick}>
+            <div ref={notificationDropdownRef} className="relative p-1.5 rounded-lg bg-gray-100 hover:bg-orange-50 transition-all duration-200 cursor-pointer" onClick={handleBellClick}>
               <Bell className="w-4 h-4 text-gray-600 hover:text-orange-500" />
               {notificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1.5">
@@ -299,7 +305,7 @@ const Navbar = ({ userRole = 'manager' }) => {
               )}
             </div>
             {/* Profile Dropdown */}
-            <div className="relative group">
+            <div ref={profileDropdownRef} className="relative group">
               <div className="flex items-center space-x-2 cursor-pointer rounded-lg p-1.5  transition-all duration-200">
                 <UserAvatar
                   src="https://i.pravatar.cc/40?img=5"
