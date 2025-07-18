@@ -7,7 +7,9 @@ import {
   Settings, 
   User,
   Menu,
-  X
+  X,
+  Clock,
+  ChevronDown
 } from 'lucide-react';
 import UserAvatar from './userAvathar';
 import { logout } from '../../store/slices/authSlice';
@@ -34,12 +36,29 @@ const Navbar = ({ userRole = 'manager' }) => {
   const [unreadMessages, setUnreadMessages] = useState({}); // { userId: count }
   const [chatOpenWith, setChatOpenWith] = useState(null); // userId of open chat
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
+        setNotificationDropdownOpen(false);
+      }
+      if (mobileMenuOpen && !event.target.closest('.mobile-menu-container')) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
+
   // Update time every second
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
+ const timer = setInterval(() => {
+   setCurrentTime(new Date());
+ }, 1000);
+ return () => clearInterval(timer);
   }, []);
 
   // Fetch user details if not already set
@@ -48,11 +67,9 @@ const Navbar = ({ userRole = 'manager' }) => {
       const fetchUserDetails = async () => {
         try {
           const user = JSON.parse(localStorage.getItem('user') || '{}');
-          // console.log('Navbar - User data from localStorage:', user); // Debug log
           setUserName(user.name || 'User');
           setUserEmail(user.email || '');
           setRole(user.role || userRole);
-          // console.log('Navbar - Set role to:', user.role || userRole); // Debug log
         } catch (error) {
           console.error('Failed to fetch user details:', error);
           setUserName('User');
@@ -65,29 +82,33 @@ const Navbar = ({ userRole = 'manager' }) => {
   }, [userName, userRole]);
 
   useEffect(() => {
-    const socket = io('http://localhost:5000'); // or your deployed backend
+    const socket = io('https://emp-1-rgfq.onrender.com');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (user && user.id) {
       socket.emit('join', { userId: user.id });
     }
-    // Listen for chat messages
     socket.on('chat_message', (data) => {
-      // data: { from: senderId, message: ... }
       if (chatOpenWith !== data.from) {
         setUnreadMessages((prev) => ({
           ...prev,
           [data.from]: (prev[data.from] || 0) + 1
         }));
       }
-      // Optionally play sound, show toast, etc.
       if (audioRef.current) audioRef.current.play();
     });
-    // Listen for other notifications (optional)
     socket.on('notification', (data) => {
       setNotificationCount((count) => count + 1);
-      setNotifications((prev) => [{ message: data.message, time: new Date() }, ...prev]);
+      setNotifications((prev) => [
+        { 
+          id: Date.now(), 
+          message: data.message, 
+          time: new Date(),
+          type: data.type || 'info',
+          read: false
+        }, 
+        ...prev
+      ]);
       if (audioRef.current) audioRef.current.play();
-      // Optionally show a toast here
     });
     return () => socket.disconnect();
   }, [chatOpenWith]);
@@ -100,29 +121,26 @@ const Navbar = ({ userRole = 'manager' }) => {
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { 
-      hour12: false,
+      hour12: true,
       hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      minute: '2-digit'
     });
   };
-
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', { 
       weekday: 'short',
-      year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+ dispatch(logout());
+ navigate('/login');
   };
 
   const isActiveRoute = (path) => {
-    return location.pathname === path;
+ return location.pathname === path;
   };
 
   const getNavLinks = () => {
@@ -166,7 +184,6 @@ const Navbar = ({ userRole = 'manager' }) => {
     })();
     // Add Chat link for all roles
     links.push({ path: '/chat', label: 'Chat', icon: '💬' });
-    // console.log('Navbar - Generated links for role', role || userRole, ':', links); // Debug log
     return links;
   };
 
@@ -174,6 +191,19 @@ const Navbar = ({ userRole = 'manager' }) => {
     setNotificationCount(0);
     setShowDropdown((prev) => !prev);
     // Optionally show a dropdown with notifications
+  };
+
+  const markNotificationAsRead = (id) => {
+ setNotifications(prev => 
+   prev.map(notif => 
+  notif.id === id ? { ...notif, read: true } : notif
+   )
+ );
+  };
+
+  const clearAllNotifications = () => {
+ setNotifications([]);
+ setNotificationCount(0);
   };
 
   // Mobile nav dropdown

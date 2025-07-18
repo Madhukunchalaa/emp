@@ -397,17 +397,6 @@ const EmployeeDashboard = () => {
               <h3 className="font-semibold text-gray-800 mb-1">Pending</h3>
               <p className="text-sm text-gray-500">Tasks to complete</p>
             </div>
-
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.totalHours}h</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Total Hours</h3>
-              <p className="text-sm text-gray-500">Estimated work</p>
-            </div>
           </div>
 
           {/* Main Dashboard Grid */}
@@ -480,42 +469,6 @@ const EmployeeDashboard = () => {
                 </div>
               </button>
             </div>
-
-            {/* Quick Actions Card */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl shadow-lg">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Quick Actions</h3>
-                  <p className="text-sm text-gray-600">Common tasks</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <button className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Eye className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">View All Tasks</span>
-                  </div>
-                </button>
-                
-                <button className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">View Schedule</span>
-                  </div>
-                </button>
-                
-                <button className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Bell className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Notifications</span>
-                  </div>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Tasks Section */}
@@ -526,7 +479,7 @@ const EmployeeDashboard = () => {
                   <Briefcase className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">My Tasks</h2>
+                  <h2 className="text-xl font-bold text-gray-800">My Tasks</    h2>
                   <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
                 </div>
               </div>
