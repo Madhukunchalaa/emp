@@ -28,13 +28,11 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-<<<<<<< HEAD
+
     role: 'developer',
-    empid: ''
-=======
+
     empid: '',
     profileImage: null
->>>>>>> aa1ba8e01a05be1c6b55967e2b89eb4640e74845
   });
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -232,8 +230,7 @@ const Register = () => {
           },
         }}
       />
-<<<<<<< HEAD
-      
+
       <FormControl 
         fullWidth 
         margin="normal"
@@ -267,9 +264,6 @@ const Register = () => {
           <MenuItem value="Business">Business Development</MenuItem>
         </Select>
       </FormControl>
-      
-=======
->>>>>>> aa1ba8e01a05be1c6b55967e2b89eb4640e74845
       <Button 
         type="submit" 
         fullWidth 
