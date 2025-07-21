@@ -239,9 +239,9 @@ const Navbar = ({ userRole = 'manager', children }) => {
    setChatOpenWith 
  }}>
    <div className="flex flex-col">
-  <header className="sticky top-0 z-40  bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 shadow-sm">
+  <header className="sticky top-0 z-40 bg-gradient-to-br from-green-100 via-white to-emerald-100 shadow-sm">
     {/* Top Bar */}
-    <div className="flex h-16 items-center justify-between px-4 lg:px-6 border-b border-gray-200/60">
+    <div className="flex h-16 items-center justify-between px-4 lg:px-6 border-b border-green-200/60">
    {/* Logo Section */}
    <div className="flex items-center space-x-4">
      <img src='/smartsolutions-logo.png' alt='Smart Solutions' className="h-10 w-auto" />
@@ -255,8 +255,8 @@ const Navbar = ({ userRole = 'manager', children }) => {
       to={link.path}
       className={`px-3 py-2 rounded-md text-md font-bold transition-colors no-underline ${
      isActiveRoute(link.path)
-       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-       : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+       ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-white shadow'
+       : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
       }`}
     >
       <span className="flex items-center space-x-2">
@@ -270,7 +270,7 @@ const Navbar = ({ userRole = 'manager', children }) => {
    {/* Right Section */}
    <div className="flex items-center space-x-4">
      {/* Time Display */}
-     <div className="hidden md:flex items-center space-x-2 text-gray-500">
+     <div className="hidden md:flex items-center space-x-2 text-emerald-700">
     <Clock className="w-4 h-4" />
     <span className="text-sm">{formatTime(currentTime)}</span>
      </div>
@@ -279,41 +279,41 @@ const Navbar = ({ userRole = 'manager', children }) => {
      <div className="relative" ref={notificationDropdownRef}>
     <button
       onClick={handleNotificationClick}
-      className="p-2 rounded-full hover:bg-gray-100 relative"
+      className="p-2 rounded-full hover:bg-green-100 relative"
     >
-      <Bell className="w-5 h-5 text-gray-600" />
+      <Bell className="w-5 h-5 text-green-500" />
       {notificationCount > 0 && (
-     <span className="absolute top-0 right-0 h-5 w-5 text-xs flex items-center justify-center bg-red-500 text-white rounded-full">
+     <span className="absolute top-0 right-0 h-5 w-5 text-xs flex items-center justify-center bg-emerald-500 text-white rounded-full">
        {notificationCount}
      </span>
       )}
     </button>
     {/* Notification Dropdown */}
     {notificationDropdownOpen && (
-      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-     <div className="flex items-center justify-between px-4 pb-2 border-b border-gray-100">
-       <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-green-200 py-2 z-50">
+     <div className="flex items-center justify-between px-4 pb-2 border-b border-green-100">
+       <h3 className="text-sm font-semibold text-emerald-700">Notifications</h3>
        <button
       onClick={clearAllNotifications}
-      className="text-xs text-gray-500 hover:text-gray-700"
+      className="text-xs text-green-400 hover:text-emerald-700"
        >
       Clear all
        </button>
      </div>
      <div className="max-h-96 overflow-y-auto">
        {notifications.length === 0 ? (
-      <p className="text-sm text-gray-500 text-center py-4">No notifications</p>
+      <p className="text-sm text-emerald-400 text-center py-4">No notifications</p>
        ) : (
       notifications.map((notification) => (
         <div
        key={notification.id}
-       className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${
-         !notification.read ? 'bg-orange-50' : ''
+       className={`px-4 py-3 hover:bg-green-50 cursor-pointer ${
+         !notification.read ? 'bg-green-50' : ''
        }`}
        onClick={() => markNotificationAsRead(notification.id)}
         >
        <p className="text-sm text-gray-800">{notification.message}</p>
-       <p className="text-xs text-gray-500 mt-1">
+       <p className="text-xs text-emerald-400 mt-1">
          {formatTime(new Date(notification.time))}
        </p>
         </div>
@@ -328,22 +328,22 @@ const Navbar = ({ userRole = 'manager', children }) => {
      <div className="relative" ref={profileDropdownRef}>
     <button
       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-      className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100"
+      className="flex items-center space-x-2 p-2 rounded-full hover:bg-green-100"
     >
-      <UserAvatar name={userName} size="sm" />
-      <span className="hidden md:block text-sm font-medium text-gray-700">{userName}</span>
-      <ChevronDown className="w-4 h-4 text-gray-500" />
+      <UserAvatar name={userName} size="sm" className="bg-green-500 text-white" />
+      <span className="hidden md:block text-sm font-medium text-emerald-700">{userName}</span>
+      <ChevronDown className="w-4 h-4 text-green-400" />
     </button>
     {profileDropdownOpen && (
-      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-     <div className="px-4 py-2 border-b border-gray-100">
-       <p className="text-sm font-medium text-gray-900">{userName}</p>
-       <p className="text-xs text-gray-500">{userEmail}</p>
+      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-green-200 py-2 z-50">
+     <div className="px-4 py-2 border-b border-green-100">
+       <p className="text-sm font-medium text-emerald-700">{userName}</p>
+       <p className="text-xs text-emerald-400">{userEmail}</p>
      </div>
      <div className="py-1">
        <button
       onClick={handleLogout}
-      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center space-x-2"
        >
       <LogOut className="w-4 h-4" />
       <span>Logout</span>
@@ -356,17 +356,17 @@ const Navbar = ({ userRole = 'manager', children }) => {
     </div>
 
     {/* Mobile Navigation */}
-    <div className="md:hidden border-b border-gray-200">
+    <div className="md:hidden border-b border-green-200">
    <div className="px-4 py-3">
      <button
     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-    className="w-full flex items-center justify-between py-2 rounded-lg border border-gray-200 px-4"
+    className="w-full flex items-center justify-between py-2 rounded-lg border border-green-200 px-4"
      >
-    <span className="text-sm font-medium text-gray-700">Menu</span>
+    <span className="text-sm font-medium text-emerald-700">Menu</span>
     {mobileMenuOpen ? (
-      <X className="w-5 h-5 text-gray-500" />
+      <X className="w-5 h-5 text-green-400" />
     ) : (
-      <Menu className="w-5 h-5 text-gray-500" />
+      <Menu className="w-5 h-5 text-green-400" />
     )}
      </button>
    </div>
@@ -379,8 +379,8 @@ const Navbar = ({ userRole = 'manager', children }) => {
      onClick={() => setMobileMenuOpen(false)}
      className={`block px-3 py-2 rounded-md text-base font-medium ${
        isActiveRoute(link.path)
-      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-      : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+      ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-white shadow'
+      : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
      }`}
       >
      <span className="flex items-center space-x-2">
@@ -394,10 +394,10 @@ const Navbar = ({ userRole = 'manager', children }) => {
     </div>
   </header>
 
-  {/* Main Content */}
+  {/* Main Content
   <main className="flex-1 p-6">
     {children}
-  </main>
+  </main> */}
 
   {/* Audio for notifications */}
   <audio ref={audioRef} src="/notification.wav" />

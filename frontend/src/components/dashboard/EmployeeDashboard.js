@@ -317,237 +317,263 @@ const EmployeeDashboard = () => {
 
   return (
     <>
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Employee Dashboard</h1>
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Debug Section - Remove this in production
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
-            <h4 className="font-bold mb-2">Debug Info:</h4>
-            <p>User Role from localStorage: {localStorage.getItem('userRole')}</p>
-            <p>User Data: {localStorage.getItem('user')}</p>
-            <button 
-              onClick={() => {
-                console.log('Current localStorage:', {
-                  token: localStorage.getItem('token'),
-                  user: localStorage.getItem('user'),
-                  userRole: localStorage.getItem('userRole')
-                });
-              }}
-              className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-            >
-              Log localStorage
-            </button>
-          </div>
-        )} */}
-
-        <div className="px-6 py-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
-              {getGreeting()}, {user.name}!
-            </h1>
-            <p className="text-gray-600">Here's your personalized workspace for today.</p>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.totalTasks}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Total Tasks</h3>
-              <p className="text-sm text-gray-500">Assigned to you</p>
+      <div className="min-h-screen flex bg-gray-100">
+        {/* Sidebar */}
+        <aside className="hidden md:flex flex-col w-64 h-screen bg-white/80 backdrop-blur-lg shadow-xl border-r border-white/30 p-6 fixed left-0 top-0 z-20">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-3 h-8 bg-gradient-to-b from-orange-400 to-pink-400 rounded-full" />
+              <span className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent">Employee</span>
             </div>
-
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.completedTasks}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Completed</h3>
-              <p className="text-sm text-gray-500">Tasks finished</p>
-            </div>
-
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.pendingTasks}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Pending</h3>
-              <p className="text-sm text-gray-500">Tasks to complete</p>
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Employee Dashboard</h1>
+            <div className="text-xs text-gray-500">Your workspace overview</div>
+          </div>
+          <div className="mb-8">
+            <div className="text-gray-700 font-semibold mb-2">Stats</div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-orange-600"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
+              <div className="flex items-center gap-2 text-green-600"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
+              <div className="flex items-center gap-2 text-yellow-600"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
             </div>
           </div>
+          <div className="mt-auto">
+            <div className="text-xs text-gray-400">Logged in as</div>
+            <div className="font-bold text-gray-700">{user.name}</div>
+          </div>
+        </aside>
+        {/* Main Content */}
+        <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Attendance Card */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <Clock className="w-5 h-5 text-white"/>
+          {success && (
+            <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>{success}</span>
+            </div>
+          )}
+
+          {/* Debug Section - Remove this in production
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+              <h4 className="font-bold mb-2">Debug Info:</h4>
+              <p>User Role from localStorage: {localStorage.getItem('userRole')}</p>
+              <p>User Data: {localStorage.getItem('user')}</p>
+              <button 
+                onClick={() => {
+                  console.log('Current localStorage:', {
+                    token: localStorage.getItem('token'),
+                    user: localStorage.getItem('user'),
+                    userRole: localStorage.getItem('userRole')
+                  });
+                }}
+                className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+              >
+                Log localStorage
+              </button>
+            </div>
+          )} */}
+
+          <div className="px-6 py-6">
+            <div className="mb-6">
+              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-2
+              ">{getGreeting()}, {user.name}!</h2>
+              <p className="text-gray-600">Here's your personalized workspace for today.</p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-gray-800">{stats.totalTasks}</span>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Attendance</h3>
-                  <p className="text-sm text-gray-600">Track your work hours</p>
+                <h3 className="font-semibold text-gray-800 mb-1">Total Tasks</h3>
+                <p className="text-sm text-gray-500">Assigned to you</p>
+              </div>
+
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-gray-800">{stats.completedTasks}</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 mb-1">Completed</h3>
+                <p className="text-sm text-gray-500">Tasks finished</p>
+              </div>
+
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-yellow-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-gray-800">{stats.pendingTasks}</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 mb-1">Pending</h3>
+                <p className="text-sm text-gray-500">Tasks to complete</p>
+              </div>
+            </div>
+
+            {/* Main Dashboard Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12 mx-auto">
+              {/* Attendance Card */}
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-blue-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+                    <Clock className="w-5 h-5 text-white"/>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Attendance</h3>
+                    <p className="text-sm text-gray-600">Track your work hours</p>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Today's Status</p>
+                  {isPunchedIn ? (
+                    <div className="flex items-center space-x-2 text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      <span className="font-medium">Ready to start your day</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
+                    isPunchedIn 
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg' 
+                      : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg'
+                  }`}
+                  onClick={isPunchedIn ? handlePunchOut : handlePunchIn}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    {isPunchedIn ? <LogOut className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+                    <span>{isPunchedIn ? 'Punch Out' : 'Punch In'}</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Daily Update Card */}
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-pink-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
+                    <CheckSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Daily Update</h3>
+                    <p className="text-sm text-gray-600">Log your progress</p>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-4">
+                  Share what you've accomplished today with your manager.
+                </p>
+
+                <button
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+                  onClick={() => setDailyUpdateDialogOpen(true)}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Plus className="w-4 h-4" />
+                    <span>Add Update</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Tasks Section */}
+            <section className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 max-w-7xl mx-auto my-16 animate-fade-in">
+              <div className="flex items-center justify-between px-10 py-8 border-b border-white/30">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Briefcase className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">My Tasks</h2>
+                    <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">
+                    {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
               
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Today's Status</p>
-                {isPunchedIn ? (
-                  <div className="flex items-center space-x-2 text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
+              <div className="p-10">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                    <p className="text-gray-500 mt-4">Loading your tasks...</p>
+                  </div>
+                ) : getAllTasks().length === 0 ? (
+                  <div className="text-center py-8">
+                    <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No tasks assigned yet.</p>
+                    <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <span className="font-medium">Ready to start your day</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {getAllTasks().map((task, idx) => (
+                      <div 
+                        key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
+                        className={`relative bg-white/90 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-green-400' : task.status === 'pending' ? 'border-yellow-400' : 'border-orange-400'} p-6 hover:shadow-2xl hover:bg-white transition-all duration-300 cursor-pointer group animate-fade-in`}
+                        onClick={() => handleViewTask(task)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <h4 className="font-semibold text-gray-800 line-clamp-2">{task.title}</h4>
+                          <div className="flex flex-col space-y-1">
+                            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
+                              {task.status}
+                            </span>
+                            {task.taskType === 'team-leader' && (
+                              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
+                                Team Leader
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
+                        <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
+                        
+                        <div className="space-y-2 text-xs text-gray-500">
+                          {(task.dueDate || task.deadline) && (
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-3 h-3" />
+                              <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          {task.priority && (
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-1 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Add a subtle animated bar at the bottom on hover */}
+                        <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-
-              <button
-                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
-                  isPunchedIn 
-                    ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg' 
-                    : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg'
-                }`}
-                onClick={isPunchedIn ? handlePunchOut : handlePunchIn}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  {isPunchedIn ? <LogOut className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-                  <span>{isPunchedIn ? 'Punch Out' : 'Punch In'}</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Daily Update Card */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <CheckSquare className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Daily Update</h3>
-                  <p className="text-sm text-gray-600">Log your progress</p>
-                </div>
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-4">
-                Share what you've accomplished today with your manager.
-              </p>
-
-              <button
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-                onClick={() => setDailyUpdateDialogOpen(true)}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Plus className="w-4 h-4" />
-                  <span>Add Update</span>
-                </div>
-              </button>
-            </div>
+            </section>
           </div>
-
-          {/* Tasks Section */}
-          <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-            <div className="flex items-center justify-between p-6 border-b border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800">My Tasks</    h2>
-                  <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">
-                  {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-4">Loading your tasks...</p>
-                </div>
-              ) : getAllTasks().length === 0 ? (
-                <div className="text-center py-8">
-                  <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No tasks assigned yet.</p>
-                  <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getAllTasks().map((task, idx) => (
-                    <div 
-                      key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                      className="bg-white/60 backdrop-blur-sm rounded-xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 cursor-pointer"
-                      onClick={() => handleViewTask(task)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-semibold text-gray-800 line-clamp-2">{task.title}</h4>
-                        <div className="flex flex-col space-y-1">
-                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
-                            {task.status}
-                          </span>
-                          {task.taskType === 'team-leader' && (
-                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
-                              Team Leader
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
-                      <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
-                      
-                      <div className="space-y-2 text-xs text-gray-500">
-                        {(task.dueDate || task.deadline) && (
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-3 h-3" />
-                            <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                        {task.priority && (
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-1 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}>
-                              {task.priority}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
         </div>
 
         {/* Daily Update Modal */}
