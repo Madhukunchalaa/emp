@@ -40,7 +40,11 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  todayWorkingOn: {
+    type: String,
+    default: "",
+  },
 });
 
 // Add indexes

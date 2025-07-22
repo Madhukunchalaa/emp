@@ -1018,4 +1018,37 @@ exports.updateProjectAsTaskStatus = async (req, res) => {
     console.error('Error updating project status:', error);
     res.status(500).json({ message: 'Error updating project status' });
   }
+
+  exports.workUpdate = async (req, res) => {
+    try {
+      const { userId, update } = req.body;
+  
+      if (!userId || !update) {
+        return res.status(400).json({ message: "Missing userId or update" });
+      }
+  
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { todayWorkingOn: update },
+        { new: true }
+      );
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      res.status(200).json({
+        message: "Work status updated successfully",
+        user,
+      });
+  
+    } catch (error) {
+      console.error("Error updating work:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+
+
+
 };

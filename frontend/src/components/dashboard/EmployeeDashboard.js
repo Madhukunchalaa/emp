@@ -151,10 +151,34 @@ const EmployeeDashboard = () => {
   const handlePunchOut = () => dispatch(punchOut());
 
   const handleSubmitDailyUpdate = () => {
+    // Debug logs
+    console.log('Current employeeUser:', employeeUser);
+    console.log('Current user ID:', employeeUser?._id);
+    
+    // Get user ID from localStorage as backup
+    const token = localStorage.getItem('token');
+    const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+    const userId = employeeUser?._id || decodedToken?.id || decodedToken?.user?._id;
+    
+    console.log('Final userId to be used:', userId);
+
+    if (!userId) {
+      dispatch({ type: 'employee/setError', payload: 'Could not determine user ID. Please try logging in again.' });
+      return;
+    }
+
+    if (!dailyUpdateText.trim()) {
+      dispatch({ type: 'employee/setError', payload: 'Please enter an update' });
+      return;
+    }
+
     const updateData = {
-      date: new Date().toISOString(),
-      description: dailyUpdateText.trim()
+      update: dailyUpdateText.trim(),
+      userId: userId
     };
+
+    console.log('Sending update data:', updateData);
+
     dispatch(addDailyUpdate(updateData));
     setDailyUpdateDialogOpen(false);
     setDailyUpdateText('');
@@ -312,8 +336,7 @@ const EmployeeDashboard = () => {
   }, []);
 
   // Add debug logs before rendering chat panel
-  console.log('employeeUser:', employeeUser);
-  console.log('managerUser:', managerUser);
+
 
   return (
     <>
@@ -334,26 +357,7 @@ const EmployeeDashboard = () => {
           </div>
         )}
 
-        {/* Debug Section - Remove this in production
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
-            <h4 className="font-bold mb-2">Debug Info:</h4>
-            <p>User Role from localStorage: {localStorage.getItem('userRole')}</p>
-            <p>User Data: {localStorage.getItem('user')}</p>
-            <button 
-              onClick={() => {
-                console.log('Current localStorage:', {
-                  token: localStorage.getItem('token'),
-                  user: localStorage.getItem('user'),
-                  userRole: localStorage.getItem('userRole')
-                });
-              }}
-              className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-            >
-              Log localStorage
-            </button>
-          </div>
-        )} */}
+       
 
         <div className="px-6 py-6">
           <div className="mb-6">
@@ -698,7 +702,7 @@ const EmployeeDashboard = () => {
                   <button 
                     className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200 text-center disabled:opacity-50"
                     onClick={() => handleUpdateTaskStatus(selectedTask._id, 'in-progress', selectedTask)}
-                    disabled={taskUpdateLoading || selectedTask.status === 'in-progress'}
+                   
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <Play className="w-4 h-4" />
@@ -760,4 +764,4 @@ const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard; 
+export default EmployeeDashboard;

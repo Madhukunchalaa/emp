@@ -20,9 +20,12 @@ const {
   updateProjectAsTaskStatus,
   testDatabaseState,
   getMyTasks,
-  updateMyTaskStatus
+  updateMyTaskStatus,
+ 
 
 } = require('../controllers/employeeController');
+const { workUpdate } = require('../controllers/updateController'); // ✅
+
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
 const path = require('path');
@@ -66,6 +69,8 @@ router.put('/daily-updates/:updateId', auth, upload.single('image'), updateDaily
 router.get('/daily-updates', auth, getDailyUpdates);
 router.get('/my-daily-updates', auth, getMyDailyUpdates);
 router.get('/today-update', auth, getTodayUpdate);
+router.post("/work-update", workUpdate);
+
 
 // Today's working on route
 router.put('/today-working-on', auth, updateTodayWorkingOn);

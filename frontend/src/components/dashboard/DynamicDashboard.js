@@ -1,7 +1,7 @@
 import React from 'react';
 import ManagerDashboard from './ManagerDashboard';
 import EmployeeDashboard from './EmployeeDashboard';
-import DesignerDashboard from './DesignerDashboard';
+// import DesignerDashboard from './DesignerDashboard';
 import BusinessDashboard from './BusinessDashboard';
 import TeamLeaderDashboard from './TeamLeaderDashboard';
 
@@ -15,7 +15,7 @@ const DynamicDashboard = () => {
     case 'developer':
       return <EmployeeDashboard />;
     case 'designer':
-      return <DesignerDashboard />;
+      return <EmployeeDashboard />;
     case 'business':
       return <BusinessDashboard />;
     case 'team-leader':

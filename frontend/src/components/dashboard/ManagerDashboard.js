@@ -486,6 +486,7 @@ export default function ManagerDashboard() {
                     <h3 className="text-base font-semibold text-gray-800 mb-1">{employee.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">{employee.position || employee.role}</p>
                     <p className="text-xs text-gray-500 mb-3 truncate">{employee.email}</p>
+                               <p className="text-xs text-green-500 mb-3 truncate">Today working on: {employee.todayWorkingOn}</p>
                     
                     <div className="mb-3">
                       <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 bg-gray-100/70 rounded-lg px-2 py-1">

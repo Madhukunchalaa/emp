@@ -103,13 +103,21 @@ export const addDailyUpdate = createAsyncThunk(
   'employee/addDailyUpdate',
   async (updateData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/employee/daily-update', updateData);
+      console.log('Sending daily update to API:', updateData); 
+
+      if (!updateData.update || !updateData.userId) {
+        throw new Error('Missing required fields: update and userId');
+      }
+
+      const response = await api.post('/employee/work-update', updateData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error adding daily update');
+      console.error('API Error Response:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
+
 
 export const createDailyUpdate = createAsyncThunk(
   'employee/createDailyUpdate',
@@ -317,4 +325,4 @@ const employeeSlice = createSlice({
 });
 
 export const { clearError, clearSuccess, setError, setSuccess } = employeeSlice.actions;
-export default employeeSlice.reducer; 
+export default employeeSlice.reducer;
