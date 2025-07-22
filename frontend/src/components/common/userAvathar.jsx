@@ -1,22 +1,22 @@
 import React from 'react';
 import { User } from 'lucide-react';
 
-const UserAvatar = ({ name, avatar }) => {
+const UserAvatar = ({ name, avatar, size = 'sm', className = '' }) => {
   const showImage = avatar;
-
+  const sizeClass = size === 'sm' ? 'w-10 h-10' : size === 'md' ? 'w-16 h-16' : size;
   return (
-    <div className="w-16 h-16 rounded-full mx-auto border-4 border-white shadow-md bg-orange-500 flex items-center justify-center">
+    <div className={`rounded-full mx-auto border-4 border-green-500 shadow-md bg-white flex items-center justify-center ${sizeClass} ${className}`}>
       {showImage ? (
         <img
           src={
             avatar ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(avatar)}&background=FE7C01&color=fff`
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(avatar)}&background=10B981&color=fff`
           }
           alt={`${name} Avatar`}
           className="w-full h-full rounded-full object-cover"
         />
       ) : (
-        <User className="w-6 h-6 text-white" />
+        <User className="w-6 h-6 text-green-600" />
       )}
     </div>
   );

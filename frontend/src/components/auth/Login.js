@@ -103,17 +103,30 @@ const Login = () => {
             }}
           >
             <img
-              src="/smartsolutions-logo.png" 
-              alt="Smart Solutions Logo"
-              style={{
-                width: '100%',
-                height: '140px',
-                color:"white",
-                objectFit: 'contain',
-                marginBottom: '12px',
-              }}
-            />
+            src="/smartsolutions-logo.png"
+            alt="Smart Solutions Logo"
+            style={{
+              width: '80%',
+              objectFit: 'contain',
+              
+            }}
+          />
+
           </Box>
+          
+            <p style={{ 
+              color: '#000',
+              fontSize: '30px', 
+              lineHeight: 1.5,
+              fontWeight: '500',
+              maxWidth: '300px',
+              margin: '0 auto',
+              fontFamily: `'Brush Script MT', cursive`, // Elegant cursive
+              opacity: 0.95,
+              textAlign: 'center',
+            }}>
+              "We don’t just build brands. We make them unforgettable"
+            </p>
 
             {/* Enhanced Stylish Tagline */}
             <Box sx={{ 
@@ -122,47 +135,6 @@ const Login = () => {
               margin: '0 auto',
               padding: '20px 0'
             }}>
-              {/* Decorative line above */}
-              <Box sx={{
-                width: '40px',
-                height: '2px',
-                background: 'rgba(255, 255, 255, 0.6)',
-                margin: '0 auto 16px',
-                borderRadius: '1px'
-              }} />
-              
-              <h4 style={{ 
-                fontSize: '1.4rem', 
-                fontWeight: '300',
-                letterSpacing: '0.5px',
-                lineHeight: '1.4',
-                margin: '0 0 8px 0',
-                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
-              }}>
-                <span style={{ fontWeight: '600' }}>Innovate</span> • <span style={{ fontWeight: '600' }}>Execute</span> • <span style={{ fontWeight: '600' }}>Excel</span>
-              </h4>
-              
-              <p style={{ 
-                opacity: 0.85, 
-                fontSize: '1rem', 
-                lineHeight: 1.5,
-                fontWeight: '400',
-                margin: '0',
-                fontStyle: 'italic',
-                letterSpacing: '0.2px'
-              }}>
-                "Where intelligence meets efficiency"
-              </p>
-              
-              {/* Decorative line below */}
-              <Box sx={{
-                width: '40px',
-                height: '2px',
-                background: 'rgba(255, 255, 255, 0.6)',
-                margin: '16px auto 0',
-                borderRadius: '1px'
-              }} />
             </Box>
           </Box>
         </Box>
@@ -384,5 +356,6 @@ const Login = () => {
     </Box>
   );
 };
+
 
 export default Login;
