@@ -527,7 +527,7 @@ const Register = () => {
 <h2 style={{ 
   fontWeight: '500', 
   marginBottom: '8px',
-  fontFamily: 'Brush Script MT', cursive, // Elegant cursive 
+  fontFamily: `'Brush Script MT', cursive`, // Elegant cursive 
   fontSize: '2.2rem',
   color: 'white',
   letterSpacing: '-0.01em'
@@ -536,7 +536,7 @@ const Register = () => {
 </h2>
 
 <p style={{ 
-  fontFamily: 'Brush Script MT', cursive, // Elegant cursive
+  fontFamily: `'Brush Script MT', cursive`, // Elegant cursive
   color: '#000',
   fontSize: '1.5rem',
   lineHeight: 1.5,
