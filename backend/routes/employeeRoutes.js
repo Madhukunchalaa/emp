@@ -20,9 +20,18 @@ const {
   updateProjectAsTaskStatus,
   testDatabaseState,
   getMyTasks,
+<<<<<<< HEAD
   updateMyTaskStatus
 
 } = require('../controllers/employeeController');
+=======
+  updateMyTaskStatus,
+ 
+
+} = require('../controllers/employeeController');
+const { workUpdate } = require('../controllers/updateController'); // ✅
+
+>>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
 const dailyUpdates=require('../controllers/updateControoler')
 const multer = require('multer');
 const path = require('path');
@@ -66,6 +75,34 @@ router.put('/daily-updates/:updateId', auth, upload.single('image'), updateDaily
 router.get('/daily-updates', auth, getDailyUpdates);
 router.get('/my-daily-updates', auth, getMyDailyUpdates);
 router.get('/today-update', auth, getTodayUpdate);
+router.post("/work-update", workUpdate);
+
+
+// Today's working on route
+router.put('/today-working-on', auth, updateTodayWorkingOn);
+
+router.post('/updates',auth,upload.single('image'),dailyUpdates)
+
+// Chat file upload endpoint
+router.post('/chat/upload', upload.single('file'), (req, res) => {
+  res.json({ fileUrl: `/uploads/chat/${req.file.filename}`, fileName: req.file.originalname });
+});
+
+// Chat history endpoint
+const ChatMessage = require('../models/ChatMessage');
+router.get('/chat/history', async (req, res) => {
+  const { user1, user2 } = req.query;
+  const messages = await ChatMessage.find({
+    $or: [
+      { from: user1, to: user2 },
+      { from: user2, to: user1 }
+    ]
+  }).sort({ createdAt: 1 });
+  res.json(messages);
+});
+
+// Task progress update route
+// router.patch('/tasks/:taskId/progress', auth, updateTaskProgress);
 
 // Today's working on route
 router.put('/today-working-on', auth, updateTodayWorkingOn);

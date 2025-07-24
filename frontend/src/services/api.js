@@ -276,7 +276,11 @@ export const employeeService = {
     }
     
     // For FormData, don't set Content-Type header - let axios handle it automatically
+<<<<<<< HEAD
     return api.post('/employee/daily-update', updateData);
+=======
+    return api.post('/employee/work-update', updateData);
+>>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
   },
 
   updateDailyUpdate: (updateId, updateData) => {

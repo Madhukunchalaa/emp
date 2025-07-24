@@ -612,5 +612,9 @@ const Register = () => {
   );
 };
 
+<<<<<<< HEAD
 export default Register;
 
+=======
+export default Register;
+>>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917

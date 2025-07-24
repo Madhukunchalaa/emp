@@ -4,8 +4,13 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
+<<<<<<< HEAD
       user: 'madhkunchala@gmail.com',
       pass: 'slqkzjsofeygepgq',
+=======
+      user: 'madhu@smartsolutionsdigi.com',
+      pass: 'pesw gfjm hnem wsex',
+>>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
     },
   });
 };
