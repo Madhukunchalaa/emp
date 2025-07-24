@@ -3,13 +3,8 @@ import { io } from 'socket.io-client';
 import { ChatNotificationContext } from './Navbar';
 import { chatService } from '../../services/api';
 
-<<<<<<< HEAD
 // Socket URL - should be configurable for deployment
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'https://emp-1-rgfq.onrender.com';
 
-const socket = io(SOCKET_URL, { transports: ['websocket'] });
-
-=======
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'https://emp-1-rgfq.onrender.com';
 const socket = io(SOCKET_URL, { transports: ['websocket'] });
 
@@ -18,7 +13,6 @@ function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
 export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
@@ -49,17 +43,11 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
         (msg.from === otherUser._id && msg.to === currentUser._id)
       ) {
         setMessages(msgs => [...msgs, msg]);
-<<<<<<< HEAD
         // Play sound if message is from the other user and chat is open
         if (msg.from === otherUser._id && audioRef && audioRef.current) {
           audioRef.current.play();
         }
-        // If chat is not open with this user, increment unread count
-=======
-        if (msg.from === otherUser._id && audioRef && audioRef.current) {
-          audioRef.current.play();
-        }
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
+       
         if (msg.from === otherUser._id && chatOpenWith !== otherUser._id && setUnreadMessages) {
           setUnreadMessages(prev => ({ ...prev, [otherUser._id]: (prev[otherUser._id] || 0) + 1 }));
         }
@@ -102,17 +90,12 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
     }
     setText('');
     setFile(null);
-<<<<<<< HEAD
-    // Mark as read for this user
-=======
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
     if (setUnreadMessages) {
       setUnreadMessages(prev => ({ ...prev, [otherUser._id]: 0 }));
     }
   };
 
   return (
-<<<<<<< HEAD
     <div style={{ width: '100%', height: '100%', ...style, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       {/* Header */}
       <div style={{
@@ -171,7 +154,7 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
               </div>
               <div style={{ fontSize: 11, color: '#888', margin: isSender ? '2px 8px 0 0' : '2px 0 0 8px', alignSelf: isSender ? 'flex-end' : 'flex-start' }}>
                 {timeStr}, {dateStr}
-=======
+
     <div className="w-full h-full flex flex-col justify-end bg-[#b2dfdb] rounded-2xl shadow-2xl border border-white/30 overflow-hidden" style={style}>
       {/* Header */}
       <div className="px-6 py-4 bg-[#075e54] text-white font-bold text-lg flex items-center rounded-t-2xl shadow-md">
@@ -204,7 +187,7 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
               </div>
               <div className={`text-xs mt-1 ${isSender ? 'text-green-700' : 'text-gray-400'} px-2`}>
                 {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(msg.createdAt).toLocaleDateString()}
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
+
               </div>
             </div>
           );
@@ -212,7 +195,6 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
         <div ref={messagesEndRef} />
       </div>
       {/* Input Bar */}
-<<<<<<< HEAD
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -234,13 +216,13 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
             color: '#25d366',
             padding: '0 6px'
           }}
-=======
+
       <div className="flex items-center gap-2 px-4 py-3 border-t border-white/30 bg-white/90 rounded-b-2xl">
         {/* File upload icon */}
         <button
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
           className="text-green-500 text-xl px-2 py-1 rounded hover:bg-[#b2dfdb] transition-colors"
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
+
           title="Attach file"
         >
           📎
@@ -249,18 +231,16 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
           type="file"
           ref={fileInputRef}
           onChange={e => setFile(e.target.files[0])}
-<<<<<<< HEAD
+
           style={{ display: 'none' }}
-=======
+
           className="hidden"
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
         />
         <input
           type="text"
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="Type a message..."
-<<<<<<< HEAD
           style={{
             flex: 1,
             borderRadius: 20,
@@ -271,14 +251,13 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
             background: '#fff',
             boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
           }}
-=======
+
           className="flex-1 rounded-full border border-green-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white shadow-sm"
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
+
         />
         <button
           onClick={sendMessage}
           disabled={!text && !file}
-<<<<<<< HEAD
           style={{
             background: '#25d366',
             color: '#fff',
@@ -296,9 +275,8 @@ export default function Chat({ currentUser, otherUser, style = {}, audioRef }) {
             opacity: (!text && !file) ? 0.6 : 1,
             marginLeft: 4
           }}
-=======
           className={`w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-r from-[#b2dfdb] to-gree-700 text-white text-lg font-bold shadow-md ml-1 transition-all duration-200 ${(!text && !file) ? 'opacity-60 cursor-not-allowed' : 'hover:scale-110'}`}
->>>>>>> c725c1abc7ee1a0d41f2bb9b7ff871a079a03917
+
           title="Send"
         >
           ➤
