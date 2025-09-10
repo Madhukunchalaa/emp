@@ -335,26 +335,7 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* Debug Section - Remove this in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mx-6 mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
-          <h4 className="font-bold mb-2">Debug Info:</h4>
-          <p>User Role from localStorage: {localStorage.getItem('userRole')}</p>
-          <p>User Data: {localStorage.getItem('user')}</p>
-          <button 
-            onClick={() => {
-              console.log('Current localStorage:', {
-                token: localStorage.getItem('token'),
-                user: localStorage.getItem('user'),
-                userRole: localStorage.getItem('userRole')
-              });
-            }}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-          >
-            Log localStorage
-          </button>
-        </div>
-      )}
+
 
       {/* Main Content */}
       <div className="px-6 py-6">
