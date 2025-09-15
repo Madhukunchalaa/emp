@@ -160,16 +160,17 @@ const Navbar = ({ userRole = 'manager', children }) => {
    { path: '/admin/empid', label: 'Admin Dashboard', icon: '🛠️' },
    // Optionally add more admin links here
     ];
-  case 'manager':
-    return [
-   { path: '/dashboard', label: 'Dashboard',   },
-   { path: '/team', label: 'Team'},
-   { path: '/projects', label: 'Projects'},
-   { path: '/reports', label: 'Reports' },
-   { path: '/assign-project', label: 'Create Project' },
-   { path: '/assign-task', label: 'Assign Task', },
-   { path: '/manager-leave', label: 'Leave Requests'}
-    ];
+ case 'manager':
+  return [
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/team', label: 'Team' },
+    { path: '/projects', label: 'Projects' },
+    { path: '/reports', label: 'Reports' },
+    { path: '/assign-project', label: 'Create Project' },
+    { path: '/assign-task', label: 'Assign Task' },
+    { path: '/manager-leave', label: 'Leave Requests' },
+    { path: '/attendance-calendar', label: 'Attendance Calendar' },
+  ];
   case 'team-leader':
     return [
    { path: '/dashboard', label: 'Dashboard',   },

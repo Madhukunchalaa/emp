@@ -40,6 +40,7 @@ import EmpIdAdmin from './components/admin/EmpIdAdmin';
 import TeamManagement from './components/dashboard/TeamManagement';
 import TeamTasks from './components/dashboard/TeamTasks';
 import TeamReports from './components/dashboard/TeamReports';
+import AttendanceCalendar from './components/dashboard/AttendanceCalendar';
 
 const theme = createTheme({
   palette: {
@@ -88,6 +89,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route path="/attendance-calendar" element={<AttendanceCalendar />} />
         <Route
           path="/team"
           element={
