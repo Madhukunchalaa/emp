@@ -8,6 +8,7 @@ const roles = [
   { value: 'developer', label: 'Developer' },
   { value: 'team-leader', label: 'Team Leader' },
   { value: 'Business', label: 'Business' },
+  { value: 'Digital-marketing', label: 'digital marketing' },
 ];
 
 const EmpIdAdmin = () => {

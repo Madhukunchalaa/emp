@@ -5,6 +5,7 @@ import UserAvatar from '../common/userAvathar';
 import { Link } from 'react-router-dom';
 import Chat from '../common/Chat';
 import jwtDecode from 'jwt-decode';
+// import { Calendar, ChevronLeft, ChevronRight, User, Clock, X, Users, CalendarDays, ArrowLeft } from 'lucide-react';
 
 export default function ManagerDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -25,6 +26,41 @@ export default function ManagerDashboard() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
   const [managerUser, setManagerUser] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [attendanceData, setAttendanceData] = useState([]);
+ 
+
+
+  useEffect(() => {
+    const API_URL = "http://localhost:5000/api/manager/attendance";
+    const token = localStorage.getItem("token");
+
+    setLoading(true);
+
+    fetch(API_URL, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Network error");
+        return res.json();
+      })
+      .then((json) => {
+        setAttendanceData(json);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching attendance:", err);
+        setLoading(false);
+      });
+  }, []);
+
+
+
+
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -117,9 +153,7 @@ export default function ManagerDashboard() {
       try {
         setLoading(true);
         const res = await managerService.getEmployeeUpdates();
-        console.log('Updates response:', res);
-        console.log('Updates data type:', typeof res.data);
-        console.log('Updates data:', res.data);
+     
         const updates = extractData(res);
         setEmployeeUpdates(updates);
         setStats(prev => ({
@@ -315,11 +349,16 @@ export default function ManagerDashboard() {
     return Array.from(team.values());
   };
 
-  console.log('employeeUser:', selectedEmployee);
-  console.log('managerUser:', managerUser);
+ 
 
   return (
+
     <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #0f172a, #1e293b)'}}>
+
+
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+     
+
       {/* Error/Success Messages */}
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-900/30 border border-red-500/50 text-red-300 rounded-lg flex items-center space-x-2">
