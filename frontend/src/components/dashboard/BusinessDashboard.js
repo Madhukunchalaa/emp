@@ -485,10 +485,10 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #0f172a, #1e293b)'}}>
       {/* Error Message */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+        <div className="mx-6 mt-4 p-4 bg-red-900/30 border border-red-500/50 text-red-300 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
         </div>
@@ -497,10 +497,10 @@ isoDate ? new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2
       <div className="px-6 py-6">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent mb-2">
             Business Dashboard
           </h1>
-          <p className="text-gray-600">Overview of your business operations and analytics</p>
+          <p className="text-slate-400">Overview of your business operations and analytics</p>
         </div>
       
       <div className="d-flex min-vh-100 bg-light">

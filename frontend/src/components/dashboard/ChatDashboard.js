@@ -48,9 +48,9 @@ const ChatDashboard = () => {
     <>
       {/* Notification sound element above chat */}
       <audio ref={audioRef} src="/notification.wav" preload="auto" />
-      <div style={{ display: 'flex', height: '100vh', background: '#ece5dd' }}>
+      <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}>
         {/* Sidebar */}
-        <div style={{ width: 320, background: '#fff', borderRight: '1px solid #ddd', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: 320, background: 'rgba(30, 41, 59, 0.95)', borderRight: '1px solid #475569', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 20, background: '#075e54', color: '#fff', fontWeight: 700, fontSize: 22, letterSpacing: 1 }}>
             Chat
           </div>
@@ -64,8 +64,8 @@ const ChatDashboard = () => {
                   alignItems: 'center',
                   padding: '14px 18px',
                   cursor: 'pointer',
-                  background: selectedUser?._id === user._id ? '#e0f2f1' : '#fff',
-                  borderBottom: '1px solid #f0f0f0',
+                  background: selectedUser?._id === user._id ? 'rgba(59, 130, 246, 0.3)' : 'rgba(30, 41, 59, 0.8)',
+                  borderBottom: '1px solid #475569',
                   transition: 'background 0.2s',
                   position: 'relative'
                 }}
@@ -86,8 +86,8 @@ const ChatDashboard = () => {
                   {user.name ? user.name[0].toUpperCase() : '?'}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 16 }}>{user.name}</div>
-                  <div style={{ fontSize: 13, color: '#888' }}>{user.role}</div>
+                  <div style={{ fontWeight: 600, fontSize: 16, color: '#f1f5f9' }}>{user.name}</div>
+                  <div style={{ fontSize: 13, color: '#94a3b8' }}>{user.role}</div>
                 </div>
                 {/* Unread badge */}
                 {unreadMessages && unreadMessages[user._id] > 0 && (
@@ -115,11 +115,11 @@ const ChatDashboard = () => {
           </div>
         </div>
         {/* Main Chat Area */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ece5dd' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}>
           {selectedUser && currentUser ? (
             <Chat currentUser={currentUser} otherUser={selectedUser} audioRef={audioRef} />
           ) : (
-            <div style={{ color: '#888', fontSize: 22, textAlign: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: 22, textAlign: 'center' }}>
               Select a user to start chatting
             </div>
           )}

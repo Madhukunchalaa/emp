@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
-  --bg-gradient-start: #f4f7ff;
-  --bg-gradient-end: #e0e7ff;
-  --text-primary: #1f2937;
-  --text-secondary: #4b5563;
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-end: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
   --accent-primary: #667eea;
   --accent-secondary: #764ba2;
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --card-border: rgba(255, 255, 255, 0.9);
-  --shadow-color: rgba(102, 126, 234, 0.1);
+  --card-bg: rgba(30, 41, 59, 0.8);
+  --card-border: rgba(71, 85, 105, 0.3);
+  --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 .dashboard-container {
@@ -157,11 +157,12 @@
 }
 
 .project-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border);
   transition: all 0.3s ease;
+  color: var(--text-primary);
 }
 
 .project-card-header {
@@ -175,6 +176,7 @@
   font-weight: 600;
   font-size: 1.1rem;
   margin-right: 1rem;
+  color: var(--text-primary);
 }
 
 .status-pill {
@@ -184,9 +186,9 @@
   border-radius: 9999px;
   white-space: nowrap;
 }
-.status-in-progress { background-color: #e0f2fe; color: #0284c7; }
-.status-completed { background-color: #dcfce7; color: #16a34a; }
-.status-not-started { background-color: #f3f4f6; color: #4b5563; }
+.status-in-progress { background-color: rgba(14, 165, 233, 0.2); color: #38bdf8; }
+.status-completed { background-color: rgba(34, 197, 94, 0.2); color: #4ade80; }
+.status-not-started { background-color: rgba(156, 163, 175, 0.2); color: #d1d5db; }
 
 
 .project-description {
@@ -210,7 +212,7 @@
 .progress-bar-container {
   width: 100%;
   height: 8px;
-  background-color: #e5e7eb;
+  background-color: rgba(71, 85, 105, 0.5);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -243,18 +245,20 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 2rem;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.2);
+  border: 1px solid var(--card-border);
 }
 
 .modal-content h2 {
     font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
 .modal-content p {
@@ -266,7 +270,9 @@
     width: 100%;
     min-height: 120px;
     border-radius: 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--card-border);
+    background-color: rgba(15, 23, 42, 0.8);
+    color: var(--text-primary);
     padding: 1rem;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
@@ -299,11 +305,11 @@
 }
 
 .modal-button.cancel {
-    background-color: #f3f4f6;
+    background-color: rgba(71, 85, 105, 0.5);
     color: var(--text-primary);
 }
 .modal-button.cancel:hover {
-    background-color: #e5e7eb;
+    background-color: rgba(71, 85, 105, 0.7);
 }
 
 .modal-button.submit {

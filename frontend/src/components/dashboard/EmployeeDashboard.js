@@ -340,42 +340,42 @@ const EmployeeDashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen flex bg-gray-100">
+      <div className="min-h-screen flex" style={{background: 'linear-gradient(135deg, #0f172a, #1e293b)'}}>
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 h-screen bg-white/80 backdrop-blur-lg shadow-xl border-r border-white/30 p-6 fixed left-0 top-0 z-20">
+        <aside className="hidden md:flex flex-col w-64 h-screen bg-slate-800/90 backdrop-blur-lg shadow-xl border-r border-slate-700/50 p-6 fixed left-0 top-0 z-20">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-3 h-8 bg-gradient-to-b from-orange-400 to-pink-400 rounded-full" />
               <span className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent">Employee</span>
             </div>
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Employee Dashboard</h1>
-            <div className="text-xs text-gray-500">Your workspace overview</div>
+            <h1 className="text-2xl font-extrabold text-slate-100 mb-2">Employee Dashboard</h1>
+            <div className="text-xs text-slate-400">Your workspace overview</div>
           </div>
           <div className="mb-8">
-            <div className="text-gray-700 font-semibold mb-2">Stats</div>
+            <div className="text-slate-200 font-semibold mb-2">Stats</div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-orange-600"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
-              <div className="flex items-center gap-2 text-green-600"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
-              <div className="flex items-center gap-2 text-yellow-600"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
+              <div className="flex items-center gap-2 text-orange-400"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
+              <div className="flex items-center gap-2 text-green-400"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
+              <div className="flex items-center gap-2 text-yellow-400"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
             </div>
           </div>
           <div className="mt-auto">
-            <div className="text-xs text-gray-400">Logged in as</div>
-            <div className="font-bold text-gray-700">{user.name}</div>
+            <div className="text-xs text-slate-400">Logged in as</div>
+            <div className="font-bold text-slate-200">{user.name}</div>
           </div>
         </aside>
         {/* Main Content */}
         <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
           {/* Error/Success Messages */}
           {error && (
-            <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+            <div className="mx-6 mt-4 p-4 bg-red-900/30 border border-red-500/50 text-red-300 rounded-lg flex items-center space-x-2">
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+            <div className="mx-6 mt-4 p-4 bg-green-900/30 border border-green-500/50 text-green-300 rounded-lg flex items-center space-x-2">
               <CheckCircle className="w-5 h-5" />
               <span>{success}</span>
             </div>
@@ -387,69 +387,69 @@ const EmployeeDashboard = () => {
             <div className="mb-6">
               <h2 className="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-2
               ">{getGreeting()}, {user.name}!</h2>
-              <p className="text-gray-600">Here's your personalized workspace for today.</p>
+              <p className="text-slate-400">Here's your personalized workspace for today.</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
                     <FileText className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-2xl font-bold text-gray-800">{stats.totalTasks}</span>
+                  <span className="text-2xl font-bold text-slate-100">{stats.totalTasks}</span>
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-1">Total Tasks</h3>
-                <p className="text-sm text-gray-500">Assigned to you</p>
+                <h3 className="font-semibold text-slate-100 mb-1">Total Tasks</h3>
+                <p className="text-sm text-slate-400">Assigned to you</p>
               </div>
 
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
                     <CheckCircle className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-2xl font-bold text-gray-800">{stats.completedTasks}</span>
+                  <span className="text-2xl font-bold text-slate-100">{stats.completedTasks}</span>
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-1">Completed</h3>
-                <p className="text-sm text-gray-500">Tasks finished</p>
+                <h3 className="font-semibold text-slate-100 mb-1">Completed</h3>
+                <p className="text-sm text-slate-400">Tasks finished</p>
               </div>
 
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-yellow-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-yellow-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg">
                     <Clock className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-2xl font-bold text-gray-800">{stats.pendingTasks}</span>
+                  <span className="text-2xl font-bold text-slate-100">{stats.pendingTasks}</span>
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-1">Pending</h3>
-                <p className="text-sm text-gray-500">Tasks to complete</p>
+                <h3 className="font-semibold text-slate-100 mb-1">Pending</h3>
+                <p className="text-sm text-slate-400">Tasks to complete</p>
               </div>
             </div>
 
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12 mx-auto">
               {/* Attendance Card */}
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-blue-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-blue-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
                     <Clock className="w-5 h-5 text-white"/>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">Attendance</h3>
-                    <p className="text-sm text-gray-600">Track your work hours</p>
+                    <h3 className="text-lg font-semibold text-slate-100">Attendance</h3>
+                    <p className="text-sm text-slate-400">Track your work hours</p>
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">Today's Status</p>
+                  <p className="text-sm text-slate-400 mb-2">Today's Status</p>
                   {isPunchedIn ? (
-                    <div className="flex items-center space-x-2 text-green-600">
+                    <div className="flex items-center space-x-2 text-green-400">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <div className="flex items-center space-x-2 text-slate-400">
+                      <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                       <span className="font-medium">Ready to start your day</span>
                     </div>
                   )}
@@ -471,18 +471,18 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Daily Update Card */}
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-pink-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-pink-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
                     <CheckSquare className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">Daily Update</h3>
-                    <p className="text-sm text-gray-600">Log your progress</p>
+                    <h3 className="text-lg font-semibold text-slate-100">Daily Update</h3>
+                    <p className="text-sm text-slate-400">Log your progress</p>
                   </div>
                 </div>
                 
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-400 mb-4">
                   Share what you've accomplished today with your manager.
                 </p>
 
@@ -499,19 +499,19 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Tasks Section */}
-            <section className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 max-w-7xl mx-auto my-16 animate-fade-in">
-              <div className="flex items-center justify-between px-10 py-8 border-b border-white/30">
+            <section className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50 max-w-7xl mx-auto my-16 animate-fade-in">
+              <div className="flex items-center justify-between px-10 py-8 border-b border-slate-700/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Briefcase className="w-6 h-6 text-orange-500" />
+                  <div className="p-2 bg-orange-500/20 rounded-lg">
+                    <Briefcase className="w-6 h-6 text-orange-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">My Tasks</h2>
-                    <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
+                    <h2 className="text-xl font-bold text-slate-100">My Tasks</h2>
+                    <p className="text-sm text-slate-400">Tasks assigned by your manager</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-slate-400">
                     {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -521,24 +521,24 @@ const EmployeeDashboard = () => {
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                    <p className="text-gray-500 mt-4">Loading your tasks...</p>
+                    <p className="text-slate-400 mt-4">Loading your tasks...</p>
                   </div>
                 ) : getAllTasks().length === 0 ? (
                   <div className="text-center py-8">
-                    <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No tasks assigned yet.</p>
-                    <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
+                    <Briefcase className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                    <p className="text-slate-400">No tasks assigned yet.</p>
+                    <p className="text-sm text-slate-500 mt-2">Your manager will assign tasks here.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {getAllTasks().map((task, idx) => (
                       <div 
                         key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                        className={`relative bg-white/90 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-green-400' : task.status === 'pending' ? 'border-yellow-400' : 'border-orange-400'} p-6 hover:shadow-2xl hover:bg-white transition-all duration-300 cursor-pointer group animate-fade-in`}
+                        className={`relative bg-slate-700/80 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-green-400' : task.status === 'pending' ? 'border-yellow-400' : 'border-orange-400'} p-6 hover:shadow-2xl hover:bg-slate-700/90 transition-all duration-300 cursor-pointer group animate-fade-in`}
                         onClick={() => handleViewTask(task)}
                       >
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-gray-800 line-clamp-2">{task.title}</h4>
+                          <h4 className="font-semibold text-slate-100 line-clamp-2">{task.title}</h4>
                           <div className="flex flex-col space-y-1">
                             <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
                               {task.status}
@@ -551,10 +551,10 @@ const EmployeeDashboard = () => {
                           </div>
                         </div>
                         
-                        <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
-                        <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
+                        <p className="text-sm text-slate-300 mb-2">{task.projectTitle}</p>
+                        <p className="text-xs text-slate-400 mb-3">{task.stepName}</p>
                         
-                        <div className="space-y-2 text-xs text-gray-500">
+                        <div className="space-y-2 text-xs text-slate-400">
                           {(task.dueDate || task.deadline) && (
                             <div className="flex items-center space-x-2">
                               <Calendar className="w-3 h-3" />
@@ -584,13 +584,13 @@ const EmployeeDashboard = () => {
         <AnimatePresence>
           {dailyUpdateDialogOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Today's Update</h2>
-                <p className="text-sm text-gray-600 mb-4">What have you accomplished today?</p>
+              <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-slate-700">
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Today's Update</h2>
+                <p className="text-sm text-slate-400 mb-4">What have you accomplished today?</p>
                 
                 <textarea 
                   placeholder="Tell us about your progress, completed tasks, and any challenges..."
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4"
+                  className="w-full p-3 border border-slate-600 bg-slate-700 text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 placeholder-slate-400"
                   rows={4}
                   value={dailyUpdateText}
                   onChange={(e) => setDailyUpdateText(e.target.value)}
@@ -598,7 +598,7 @@ const EmployeeDashboard = () => {
                 
                 <div className="flex space-x-3">
                   <button 
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-slate-600 text-slate-200 py-2 rounded-xl font-medium hover:bg-slate-500 transition-colors"
                     onClick={() => setDailyUpdateDialogOpen(false)}
                   >
                     Cancel
@@ -622,12 +622,12 @@ const EmployeeDashboard = () => {
         <AnimatePresence>
           {showTaskModal && selectedTask && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto border border-slate-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-800">Task Details</h3>
+                  <h3 className="text-xl font-bold text-slate-100">Task Details</h3>
                   <button
                     onClick={() => setShowTaskModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-slate-400 hover:text-slate-300"
                   >
                     <AlertCircle className="w-6 h-6" />
                   </button>
@@ -635,8 +635,8 @@ const EmployeeDashboard = () => {
                 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-1">{selectedTask.title}</h4>
-                    <p className="text-sm text-gray-600">{selectedTask.description || selectedTask.content}</p>
+                    <h4 className="font-semibold text-slate-100 mb-1">{selectedTask.title}</h4>
+                    <p className="text-sm text-slate-300">{selectedTask.description || selectedTask.content}</p>
                     {selectedTask.taskType === 'team-leader' && (
                       <div className="mt-2">
                         <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
@@ -648,20 +648,20 @@ const EmployeeDashboard = () => {
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500">Status:</span>
+                      <span className="text-slate-400">Status:</span>
                       <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
                         {selectedTask.status}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-500">Priority:</span>
+                      <span className="text-slate-400">Priority:</span>
                       <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}>
                         {selectedTask.priority || 'medium'}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-500">Deadline:</span>
-                      <span className="ml-2 text-gray-700">
+                      <span className="text-slate-400">Deadline:</span>
+                      <span className="ml-2 text-slate-300">
                         {(selectedTask.deadline || selectedTask.dueDate) ? 
                           new Date(selectedTask.deadline || selectedTask.dueDate).toLocaleDateString() : 
                           'Not set'
@@ -670,8 +670,8 @@ const EmployeeDashboard = () => {
                     </div>
                     {selectedTask.estimatedHours && (
                       <div>
-                        <span className="text-gray-500">Hours:</span>
-                        <span className="ml-2 text-gray-700">{selectedTask.estimatedHours}h</span>
+                        <span className="text-slate-400">Hours:</span>
+                        <span className="ml-2 text-slate-300">{selectedTask.estimatedHours}h</span>
                       </div>
                     )}
                   </div>
@@ -702,11 +702,11 @@ const EmployeeDashboard = () => {
                 
                 {/* Status Update Dropdown */}
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Update Status</label>
                   <select
                     value={selectedTask.status}
                     onChange={(e) => handleUpdateTaskStatus(selectedTask._id, e.target.value, selectedTask)}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full p-2 border border-slate-600 bg-slate-700 text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     disabled={taskUpdateLoading}
                   >
                     <option value="pending">Pending</option>
@@ -729,12 +729,12 @@ const EmployeeDashboard = () => {
           position: 'fixed',
           right: 0,
           top: 0,
-          background: 'rgba(255,255,255,0.98)',
+          background: 'rgba(30, 41, 59, 0.95)',
           boxShadow: '-2px 0 16px rgba(0,0,0,0.08)',
           zIndex: 100,
           display: 'flex',
           flexDirection: 'column',
-          borderLeft: '1px solid #e0e0e0',
+          borderLeft: '1px solid #475569',
         }}>
           <Chat currentUser={employeeUser} otherUser={managerUser} />
         </div>

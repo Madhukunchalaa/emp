@@ -319,17 +319,17 @@ export default function ManagerDashboard() {
   console.log('managerUser:', managerUser);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #0f172a, #1e293b)'}}>
       {/* Error/Success Messages */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+        <div className="mx-6 mt-4 p-4 bg-red-900/30 border border-red-500/50 text-red-300 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
         </div>
       )}
       
       {success && (
-        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
+        <div className="mx-6 mt-4 p-4 bg-green-900/30 border border-green-500/50 text-green-300 rounded-lg flex items-center space-x-2">
           <CheckCircle className="w-5 h-5" />
           <span>{success}</span>
         </div>
@@ -341,77 +341,77 @@ export default function ManagerDashboard() {
       <div className="px-6 py-6">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent mb-2">
             Manager Dashboard
           </h1>
-          <p className="text-gray-600">Welcome back! Here's an overview of your team and projects</p>
+          <p className="text-slate-400">Welcome back! Here's an overview of your team and projects</p>
         </div>
 
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-700/50 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
                 <Users className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-800">{stats.totalEmployees}</span>
+              <span className="text-2xl font-bold text-slate-100">{stats.totalEmployees}</span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">Total Employees</h3>
-            <p className="text-sm text-gray-500">{stats.activeEmployees} active today</p>
+            <h3 className="font-semibold text-slate-100 mb-1">Total Employees</h3>
+            <p className="text-sm text-slate-400">{stats.activeEmployees} active today</p>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-700/50 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-800">{stats.totalProjects}</span>
+              <span className="text-2xl font-bold text-slate-100">{stats.totalProjects}</span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">Total Projects</h3>
-            <p className="text-sm text-gray-500">{stats.completedProjects} completed</p>
+            <h3 className="font-semibold text-slate-100 mb-1">Total Projects</h3>
+            <p className="text-sm text-slate-400">{stats.completedProjects} completed</p>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-700/50 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg">
                 <Clock className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-800">{stats.pendingUpdates}</span>
+              <span className="text-2xl font-bold text-slate-100">{stats.pendingUpdates}</span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">Pending Updates</h3>
-            <p className="text-sm text-gray-500">Require approval</p>
+            <h3 className="font-semibold text-slate-100 mb-1">Pending Updates</h3>
+            <p className="text-sm text-slate-400">Require approval</p>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-white/20 hover:shadow-md transition-all duration-300">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-700/50 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-800">87%</span>
+              <span className="text-2xl font-bold text-slate-100">87%</span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">Productivity</h3>
-            <p className="text-sm text-gray-500">+5% from last week</p>
+            <h3 className="font-semibold text-slate-100 mb-1">Productivity</h3>
+            <p className="text-sm text-slate-400">+5% from last week</p>
           </div>
         </div>
 
         {/* Search and Filter Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-4 mb-6">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/50 p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex items-center space-x-4 flex-1">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search employees, projects..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-600 bg-slate-700 text-slate-100 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="px-4 py-2 border border-slate-600 bg-slate-700 text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -429,9 +429,9 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Employee List Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-white/20">
-            <h2 className="text-xl font-bold text-gray-800">Employee List</h2>
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/50 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-slate-100">Employee List</h2>
             <Link to="/assign-task" className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 no-underline">
               <Plus className="w-4 h-4" />
               <span>Assign Task</span>
@@ -442,17 +442,17 @@ export default function ManagerDashboard() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading employees...</p>
+                <p className="text-slate-400 mt-4">Loading employees...</p>
               </div>
             ) : filteredEmployees.length === 0 ? (
               <div className="text-center py-8">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No employees found.</p>
+                <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                <p className="text-slate-400">No employees found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredEmployees.map((employee) => (
-                  <div key={employee._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 text-center hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 group">
+                  <div key={employee._id} className="bg-slate-700/60 backdrop-blur-sm rounded-2xl p-4 text-center hover:shadow-lg hover:bg-slate-700/80 transition-all duration-300 border border-slate-600/30 group">
                     <div className="relative mb-3">
                       <UserAvatar
                         avatar={employee.avatar}
@@ -464,13 +464,13 @@ export default function ManagerDashboard() {
                       }`}></div>
                     </div>
                     
-                    <h3 className="text-base font-semibold text-gray-800 mb-1">{employee.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{employee.position || employee.role}</p>
-                    <p className="text-xs text-gray-500 mb-3 truncate">{employee.email}</p>
-                               <p className="text-xs text-green-500 mb-3 truncate">Today working on: {employee.todayWorkingOn}</p>
+                    <h3 className="text-base font-semibold text-slate-100 mb-1">{employee.name}</h3>
+                    <p className="text-sm text-slate-300 mb-2">{employee.position || employee.role}</p>
+                    <p className="text-xs text-slate-400 mb-3 truncate">{employee.email}</p>
+                               <p className="text-xs text-green-400 mb-3 truncate">Today working on: {employee.todayWorkingOn}</p>
                     
                     <div className="mb-3">
-                      <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 bg-gray-100/70 rounded-lg px-2 py-1">
+                      <div className="flex items-center justify-center space-x-1 text-sm text-slate-300 bg-slate-600/50 rounded-lg px-2 py-1">
                         <Clock className="w-3 h-3" />
                         <span>{employee.role}</span>
                       </div>
@@ -484,7 +484,7 @@ export default function ManagerDashboard() {
                         <Eye className="w-3 h-3" />
                         <span>View</span>
                       </button>
-                      <button className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200">
+                      <button className="flex items-center space-x-1 bg-slate-600/70 text-slate-200 px-3 py-1.5 rounded-lg text-xs hover:bg-slate-500/70 transition-all duration-200">
                         <MessageSquare className="w-3 h-3" />
                         <span>Chat</span>
                       </button>
@@ -497,9 +497,9 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Projects Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-white/20">
-            <h2 className="text-xl font-bold text-gray-800">Recent Projects</h2>
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/50 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-slate-100">Recent Projects</h2>
             <div className="flex space-x-2">
               <button
                 onClick={refreshProjects}
@@ -526,12 +526,12 @@ export default function ManagerDashboard() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading projects...</p>
+                <p className="text-slate-400 mt-4">Loading projects...</p>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="text-center py-8">
-                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No projects found.</p>
+                <BarChart3 className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                <p className="text-slate-400">No projects found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -539,36 +539,36 @@ export default function ManagerDashboard() {
                   <Link 
                     key={project._id} 
                     to={`/project/${project._id}`}
-                    className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30 group block no-underline"
+                    className="bg-slate-700/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-slate-700/80 transition-all duration-300 border border-slate-600/30 group block no-underline"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">{project.title}</h3>
+                      <h3 className="font-semibold text-slate-100 group-hover:text-orange-400 transition-colors">{project.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                         {project.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <p className="text-sm text-slate-300 mb-3 line-clamp-2">{project.description}</p>
+                    <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Deadline: {new Date(project.deadline).toLocaleDateString()}</span>
                       <div className="flex items-center">
                         {getProjectTeam(project).slice(0, 3).map(member => (
                           <UserAvatar key={member._id} name={member.name} className="-ml-2" />
                         ))}
                         {getProjectTeam(project).length > 3 && (
-                          <span className="ml-1 text-xs text-gray-500">+{getProjectTeam(project).length - 3}</span>
+                          <span className="ml-1 text-xs text-slate-400">+{getProjectTeam(project).length - 3}</span>
                         )}
                         {getProjectTeam(project).length === 0 && (
-                          <span className="text-xs text-gray-500">No one assigned</span>
+                          <span className="text-xs text-slate-400">No one assigned</span>
                         )}
                       </div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="mt-3 pt-3 border-t border-slate-600/50">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Click to view details</span>
-                        <Eye className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                        <span className="text-xs text-slate-400">Click to view details</span>
+                        <Eye className="w-4 h-4 text-slate-400 group-hover:text-orange-400 transition-colors" />
                       </div>
                     </div>
-                    <div className="text-gray-600">
+                    <div className="text-slate-300">
                       <span className="font-semibold">
                         {(() => {
                           const totalTasks = project.steps 
@@ -589,9 +589,9 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Employee Updates Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-          <div className="flex items-center justify-between p-5 border-b border-white/20">
-            <h2 className="text-xl font-bold text-gray-800">Recent Employee Updates</h2>
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/50">
+          <div className="flex items-center justify-between p-5 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-slate-100">Recent Employee Updates</h2>
             <Link to="/reports" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
           </div>
           
@@ -599,17 +599,17 @@ export default function ManagerDashboard() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading updates...</p>
+                <p className="text-slate-400 mt-4">Loading updates...</p>
               </div>
             ) : employeeUpdates.length === 0 ? (
               <div className="text-center py-8">
-                <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No updates found.</p>
+                <MessageSquare className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                <p className="text-slate-400">No updates found.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {employeeUpdates.slice(0, 5).map((update) => (
-                  <div key={update._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
+                  <div key={update._id} className="bg-slate-700/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-slate-700/80 transition-all duration-300 border border-slate-600/30">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <UserAvatar
@@ -618,8 +618,8 @@ export default function ManagerDashboard() {
                           size="sm"
                         />
                         <div>
-                          <h4 className="font-semibold text-gray-800">{update.employee?.name}</h4>
-                          <p className="text-xs text-gray-500">{new Date(update.date).toLocaleDateString()}</p>
+                          <h4 className="font-semibold text-slate-100">{update.employee?.name}</h4>
+                          <p className="text-xs text-slate-400">{new Date(update.date).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -630,11 +630,11 @@ export default function ManagerDashboard() {
                         {update.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{update.tasks?.map(task => task.description).join(', ')}</p>
+                    <p className="text-sm text-slate-300 mb-3">{update.tasks?.map(task => task.description).join(', ')}</p>
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => handleViewUpdate(update)}
-                        className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                        className="flex items-center space-x-1 bg-slate-600/70 text-slate-200 px-3 py-1.5 rounded-lg text-xs hover:bg-slate-500/70 transition-all duration-200"
                       >
                         <Eye className="w-3 h-3" />
                         <span>View</span>
@@ -648,7 +648,7 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Daily Updates Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 mt-6">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/50 mt-6">
           <div className="flex items-center justify-between p-5 border-b border-white/20">
             <h2 className="text-xl font-bold text-gray-800">Daily Updates</h2>
             <Link to="/reports" className="text-orange-500 hover:text-orange-600 font-medium no-underline">View All</Link>
@@ -668,7 +668,7 @@ export default function ManagerDashboard() {
             ) : (
               <div className="space-y-4">
                 {employeeUpdates.slice(0, 5).map((update) => (
-                  <div key={update._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
+                  <div key={update._id} className="bg-slate-700/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-slate-700/80 transition-all duration-300 border border-slate-600/30">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <UserAvatar
@@ -677,8 +677,8 @@ export default function ManagerDashboard() {
                           size="sm"
                         />
                         <div>
-                          <h4 className="font-semibold text-gray-800">{update.employee?.name}</h4>
-                          <p className="text-xs text-gray-500">{new Date(update.date).toLocaleDateString()}</p>
+                          <h4 className="font-semibold text-slate-100">{update.employee?.name}</h4>
+                          <p className="text-xs text-slate-400">{new Date(update.date).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -703,7 +703,7 @@ export default function ManagerDashboard() {
                     
                     <div className="mb-3">
                       <h5 className="font-medium text-gray-800 mb-1">Project: {update.project_title}</h5>
-                      <p className="text-sm text-gray-600">{update.update}</p>
+                      <p className="text-sm text-slate-300">{update.update}</p>
                     </div>
 
                     {update.imageUrl && (
@@ -719,7 +719,7 @@ export default function ManagerDashboard() {
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => handleViewUpdate(update)}
-                        className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
+                        className="flex items-center space-x-1 bg-slate-600/70 text-slate-200 px-3 py-1.5 rounded-lg text-xs hover:bg-slate-500/70 transition-all duration-200"
                       >
                         <Eye className="w-3 h-3" />
                         <span>View</span>
@@ -736,12 +736,12 @@ export default function ManagerDashboard() {
       {/* Employee Detail Modal */}
       {showEmployeeModal && selectedEmployee && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+              <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-slate-700">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Employee Details</h3>
+              <h3 className="text-xl font-bold text-slate-100">Employee Details</h3>
               <button
                 onClick={() => setShowEmployeeModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-300"
               >
                 <XCircle className="w-6 h-6" />
               </button>
@@ -752,9 +752,9 @@ export default function ManagerDashboard() {
                 name={selectedEmployee.name}
                 className="mx-auto mb-3"
               />
-              <h4 className="font-semibold text-gray-800">{selectedEmployee.name}</h4>
-              <p className="text-sm text-gray-600">{selectedEmployee.position || selectedEmployee.role}</p>
-              <p className="text-xs text-gray-500">{selectedEmployee.email}</p>
+              <h4 className="font-semibold text-slate-100">{selectedEmployee.name}</h4>
+              <p className="text-sm text-slate-300">{selectedEmployee.position || selectedEmployee.role}</p>
+              <p className="text-xs text-slate-400">{selectedEmployee.email}</p>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -774,7 +774,7 @@ export default function ManagerDashboard() {
               <button className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200">
                 View Profile
               </button>
-              <button className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition-all duration-200">
+              <button className="flex-1 bg-slate-600 text-slate-200 py-2 rounded-xl hover:bg-slate-500 transition-all duration-200">
                 Message
               </button>
             </div>
@@ -785,12 +785,12 @@ export default function ManagerDashboard() {
       {/* Update Detail Modal */}
       {showUpdateModal && selectedUpdate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4">
+          <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 border border-slate-700">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Daily Update Details</h3>
+              <h3 className="text-xl font-bold text-slate-100">Daily Update Details</h3>
               <button
                 onClick={() => setShowUpdateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-300"
               >
                 <XCircle className="w-6 h-6" />
               </button>
@@ -803,14 +803,14 @@ export default function ManagerDashboard() {
                   size="sm"
                 />
                 <div>
-                  <h4 className="font-semibold text-gray-800">{selectedUpdate.employee?.name}</h4>
-                  <p className="text-xs text-gray-500">{new Date(selectedUpdate.date).toLocaleDateString()}</p>
+                  <h4 className="font-semibold text-slate-100">{selectedUpdate.employee?.name}</h4>
+                  <p className="text-xs text-slate-400">{new Date(selectedUpdate.date).toLocaleDateString()}</p>
                 </div>
               </div>
               
               <div>
                 <h5 className="font-medium text-gray-800 mb-2">Project:</h5>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.project_title}</p>
+                <p className="text-sm text-slate-300 bg-gray-50 p-2 rounded-lg">{selectedUpdate.project_title}</p>
               </div>
 
               <div>
@@ -828,13 +828,13 @@ export default function ManagerDashboard() {
 
               <div>
                 <h5 className="font-medium text-gray-800 mb-2">Update Details:</h5>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{selectedUpdate.update}</p>
+                <p className="text-sm text-slate-300 bg-gray-50 p-2 rounded-lg">{selectedUpdate.update}</p>
               </div>
 
               {selectedUpdate.finishBy && (
                 <div>
                   <h5 className="font-medium text-gray-800 mb-2">Finish By:</h5>
-                  <p className="text-sm text-gray-600">{new Date(selectedUpdate.finishBy).toLocaleDateString()}</p>
+                  <p className="text-sm text-slate-300">{new Date(selectedUpdate.finishBy).toLocaleDateString()}</p>
                 </div>
               )}
 
