@@ -335,45 +335,70 @@ const updateProjectStatus = async (req, res) => {
 };
 
 // Get attendance history
+// controllers/managerController.js
 const getAttendanceHistory = async (req, res) => {
   try {
-    const { employeeId } = req.params;
-    
-    // Verify employee exists
-    const employee = await User.findOne({ 
-    _id: employeeId, 
-    role: { $in: [ 'developer', 'designer'] } 
- });
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
+    // 1. Get all dev/designer employees
+    const employees = await User.find(
+      { role: { $in: ['developer', 'designer'] } },
+      '_id name email'
+    );
+    const employeeIds = employees.map(emp => emp._id);
 
-    // Get last 30 days of attendance
+    // 2. Last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // 3. Attendance
     const attendance = await Punch.find({
-      employee: employeeId,
+      employee: { $in: employeeIds },
       date: { $gte: thirtyDaysAgo }
     })
-    .sort({ date: -1, punchIn: -1 });
+      .populate('employee', 'name email')
+      .sort({ date: -1, punchIn: -1 });
 
-    // Calculate total hours for each record
-    const attendanceWithHours = attendance.map(record => ({
-      _id: record._id,
-      date: record.date,
-      status: record.status,
-      punchIn: record.punchIn,
-      punchOut: record.punchOut,
-      totalHours: record.hours || 0
-    }));
+    // 4. Group by employee and format times
+    const grouped = attendance.reduce((acc, record) => {
+      const id = record.employee._id.toString();
+      if (!acc[id]) {
+        acc[id] = {
+          employee: record.employee,
+          totalHours: 0,
+          records: []
+        };
+      }
 
-    res.json(attendanceWithHours);
+      const punchInTime = record.punchIn
+        ? new Date(record.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        : null;
+
+      const punchOutTime = record.punchOut
+        ? new Date(record.punchOut).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        : null;
+
+      const hours = record.hours || 0;
+      acc[id].totalHours += hours;
+
+      acc[id].records.push({
+        _id: record._id,
+        date: record.date.toISOString().split('T')[0], // YYYY-MM-DD
+        status: record.status,
+        punchIn: punchInTime,
+        punchOut: punchOutTime,
+        totalHours: hours
+      });
+
+      return acc;
+    }, {});
+
+    res.json(Object.values(grouped));
   } catch (error) {
     console.error('Error fetching attendance history:', error);
     res.status(500).json({ message: 'Error fetching attendance history' });
   }
 };
+
+
 
 // Get all employee daily updates
 const getEmployeeDailyUpdates = async (req, res) => {
