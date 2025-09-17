@@ -23,7 +23,7 @@ async function testAssignTask() {
     
     // Check if we have employees assigned to team leaders
     const employees = await User.find({ 
-      role: { $in: ['developer', 'designer'] },
+      role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] },
       teamLeaderId: { $exists: true, $ne: null }
     }).select('_id name email role teamLeaderId');
     

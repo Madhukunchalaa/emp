@@ -7,9 +7,9 @@ const Punch = require('../models/Punch');
 // Get available employees for task assignment
 const getAvailableEmployees = async (req, res) => {
   try {
-    // Return all employees with role developer or designer
+    // Return all employees (excluding admin and manager)
     const availableEmployees = await User.find({
-      role: { $in: ['developer', 'designer'] }
+      role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] }
     }).select('-password');
     console.log('Available employees found (all):', availableEmployees.length);
     res.json(availableEmployees);

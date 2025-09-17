@@ -23,9 +23,9 @@ async function assignEmployeesToTeamLeader() {
       return;
     }
     
-    // Get all developers and designers
+    // Get all employees (excluding admin and manager)
     const employees = await User.find({ 
-      role: { $in: ['developer', 'designer'] } 
+      role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } 
     }).select('_id name email role teamLeaderId');
     
     console.log('\nEmployees found:', employees.length);
@@ -34,7 +34,7 @@ async function assignEmployeesToTeamLeader() {
     });
     
     if (employees.length === 0) {
-      console.log('No employees found. Please create some developers/designers first.');
+      console.log('No employees found. Please create some employees first.');
       return;
     }
     
@@ -62,7 +62,7 @@ async function assignEmployeesToTeamLeader() {
     
     // Show final status
     const updatedEmployees = await User.find({ 
-      role: { $in: ['developer', 'designer'] } 
+      role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } 
     }).select('_id name email role teamLeaderId');
     
     console.log('\n=== Final Employee Status ===');

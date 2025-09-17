@@ -19,8 +19,10 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if user already punched in today but not yet punched out
-    const today = new Date();
+    // Check if user already punched in today but not yet punched out (IST)
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const today = new Date(istNow);
     today.setHours(0, 0, 0, 0); // Start of day
 
     const existingPunch = await Punch.findOne({
@@ -53,9 +55,14 @@ exports.punchIn = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
     }
 
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    // Use IST timezone for date calculations
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const today = new Date(istNow);
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(today);
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
 
     // Check if already punched in today
     const existingPunch = await Punch.findOne({
@@ -67,12 +74,15 @@ exports.punchIn = async (req, res) => {
       return res.status(400).json({ message: 'Already punched in today' });
     }
 
-    // Create new punch record
+    // Create new punch record with IST timezone
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    
     const punch = new Punch({
       employee: req.user.id,
-      punchIn: new Date(),
+      punchIn: istTime,
       date: startOfDay,
-      status: new Date().getHours() >= 9 ? 'Late' : 'Present'
+      status: istTime.getHours() >= 9 ? 'Late' : 'Present'
     });
 
     console.log('About to save punch:', punch);
@@ -99,7 +109,10 @@ exports.punchIn = async (req, res) => {
 // Punch out
 exports.punchOut = async (req, res) => {
   try {
-    const today = new Date();
+    // Use IST timezone for date calculations
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const today = new Date(istNow);
     today.setHours(0, 0, 0, 0);
 
     const punch = await Punch.findOne({
@@ -112,7 +125,9 @@ exports.punchOut = async (req, res) => {
       return res.status(400).json({ message: 'No active punch in record found for today' });
     }
 
-    const punchOutTime = new Date();
+    // Use IST timezone for punch out
+    const now = new Date();
+    const punchOutTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
     punch.punchOut = punchOutTime;
     
     // Calculate hours worked
@@ -142,7 +157,10 @@ exports.punchOut = async (req, res) => {
 // Get attendance
 exports.getAttendance = async (req, res) => {
   try {
-    const today = new Date();
+    // Use IST timezone for date calculations
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const today = new Date(istNow);
     today.setHours(0, 0, 0, 0);
 
     // Get today's punch record
@@ -151,8 +169,8 @@ exports.getAttendance = async (req, res) => {
       date: today
     });
 
-    // Get last 30 days of attendance
-    const thirtyDaysAgo = new Date();
+    // Get last 30 days of attendance (IST)
+    const thirtyDaysAgo = new Date(istNow);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const history = await Punch.find({

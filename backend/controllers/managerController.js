@@ -21,7 +21,9 @@ const getProfile = async (req, res) => {
 // Get all employees
 const getEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: { $in: ['developer', 'designer'] } }).select('-password');
+    const employees = await User.find({ 
+      role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } 
+    }).select('-password');
 
     const employeesWithAttendanceAndUpdate = await Promise.all(
       employees.map(async (employee) => {
@@ -277,7 +279,7 @@ const getEmployeeAttendance = async (req, res) => {
     const { employeeId } = req.params;
     
     // Verify employee exists
-    const employee = await User.findOne({  role: { $in: ['developer', 'designer'] } });
+    const employee = await User.findOne({  role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -342,15 +344,17 @@ const updateProjectStatus = async (req, res) => {
 // controllers/managerController.js
 const getAttendanceHistory = async (req, res) => {
   try {
-    // 1. Get all dev/designer employees
+    // 1. Get all employees (excluding admin and manager)
     const employees = await User.find(
-      { role: { $in: ['developer', 'designer'] } },
+      { role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } },
       '_id name email'
     );
     const employeeIds = employees.map(emp => emp._id);
 
-    // 2. Last 30 days
-    const thirtyDaysAgo = new Date();
+    // 2. Last 30 days (IST)
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const thirtyDaysAgo = new Date(istNow);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     // 3. Attendance
@@ -373,11 +377,21 @@ const getAttendanceHistory = async (req, res) => {
       }
 
       const punchInTime = record.punchIn
-        ? new Date(record.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        ? new Date(record.punchIn).toLocaleTimeString('en-IN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Kolkata',
+            hour12: false
+          })
         : null;
 
       const punchOutTime = record.punchOut
-        ? new Date(record.punchOut).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        ? new Date(record.punchOut).toLocaleTimeString('en-IN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Kolkata',
+            hour12: false
+          })
         : null;
 
       const hours = record.hours || 0;
@@ -797,7 +811,7 @@ const getManagerDashboard = async (req, res) => {
     ]);
 
     const totalProjects = await Project.countDocuments();
-    const totalEmployees = await User.countDocuments({ role: { $in: ['developer', 'designer'] } });
+    const totalEmployees = await User.countDocuments({ role: { $in: ['developer', 'designer', 'digital-marketing', 'employee', 'team-leader'] } });
 
     const recentProjects = await Project.find().sort({ createdAt: -1 }).limit(5);
 
