@@ -87,7 +87,7 @@ const AttendanceCalendar = () => {
     }
   };
 
-  // Helper function to format time properly
+  // Helper function to format time properly in IST
   const formatTime = (timeValue) => {
     if (!timeValue) return 'Not recorded';
     
@@ -100,12 +100,22 @@ const AttendanceCalendar = () => {
       // If it's a date string or timestamp
       const date = new Date(timeValue);
       if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString();
+        return date.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+          hour12: false
+        });
       }
       
       // If it's a number (timestamp)
       if (typeof timeValue === 'number') {
-        return new Date(timeValue).toLocaleTimeString();
+        return new Date(timeValue).toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+          hour12: false
+        });
       }
       
       // Fallback: return the original value
@@ -540,11 +550,12 @@ const AttendanceCalendar = () => {
               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-black">
-                    {selectedDate.toLocaleDateString('en-US', { 
+                    {selectedDate.toLocaleDateString('en-IN', { 
                       weekday: 'long', 
                       year: 'numeric', 
                       month: 'long', 
-                      day: 'numeric' 
+                      day: 'numeric',
+                      timeZone: 'Asia/Kolkata'
                     })}
                   </h3>
                   <button
@@ -616,7 +627,7 @@ const AttendanceCalendar = () => {
                           </p>
                           {dayData.punchIn && (
                             <p className="text-xs text-green-600 mt-1">
-                              {new Date(dayData.punchIn).toLocaleDateString()}
+                              {new Date(dayData.punchIn).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                             </p>
                           )}
                         </div>
@@ -630,7 +641,7 @@ const AttendanceCalendar = () => {
                           </p>
                           {dayData.punchOut && (
                             <p className="text-xs text-red-600 mt-1">
-                              {new Date(dayData.punchOut).toLocaleDateString()}
+                              {new Date(dayData.punchOut).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                             </p>
                           )}
                         </div>
@@ -710,7 +721,7 @@ const AttendanceCalendar = () => {
                               />
                               <div>
                                 <h6 className="font-semibold text-black">{update.employee?.name}</h6>
-                                <p className="text-xs text-gray-500">{new Date(update.date).toLocaleTimeString()}</p>
+                                <p className="text-xs text-gray-500">{new Date(update.date).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
                               </div>
                             </div>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -1003,11 +1014,12 @@ const AttendanceCalendar = () => {
             <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-black">
-                  {selectedDate.toLocaleDateString('en-US', { 
+                  {selectedDate.toLocaleDateString('en-IN', { 
                     weekday: 'long', 
-                    year: 'numeric', 
+                    year: 'numeric',
                     month: 'long', 
-                    day: 'numeric' 
+                    day: 'numeric',
+                    timeZone: 'Asia/Kolkata'
                   })}
                 </h3>
                 <button
