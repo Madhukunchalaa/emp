@@ -101,7 +101,7 @@ exports.verifyRegistrationOTP = async (req, res) => {
     empIdDoc.assignedTo = user._id;
     await empIdDoc.save();
     // Send welcome email
-    await sendWelcomeEmail(email, name);
+    await sendWelcomeEmail(email, name, empIdDoc.role);
     res.json({ message: 'Registration successful! You can now login.' });
   } catch (err) {
     console.error('Verify registration OTP error:', err);
