@@ -30,7 +30,7 @@ import ManagerLeave from './components/dashboard/manager-componenets/ManagerLeav
 // Employee Dashboard Components
 import MyTasks from './components/dashboard/MyTasks';
 import MyProjects from './components/dashboard/MyProjects';
-import DailyUpdates from './components/dashboard/DailyUpdates';
+import WorkUpdates from './components/dashboard/WorkUpdates';
 import Attendance from './components/dashboard/Attendance';
 import Leave from './components/dashboard/Leave';
 
@@ -166,10 +166,10 @@ function AppContent() {
           }
         />
         <Route
-          path="/daily-updates"
+          path="/work-updates"
           element={
             <PrivateRoute>
-              <DailyUpdates />
+              <WorkUpdates />
             </PrivateRoute>
           }
         />

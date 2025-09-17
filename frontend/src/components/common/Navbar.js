@@ -183,11 +183,12 @@ const Navbar = ({ userRole = 'manager', children }) => {
   case 'employee':
   case 'developer':
   case 'designer':
+  case 'digital-marketing':
     return [
    { path: '/dashboard', label: 'Dashboard'},
    { path: '/my-tasks', label: 'My Tasks' },
    { path: '/my-projects', label: 'My Projects'},
-   { path: '/daily-updates', label: 'Daily Updates'},
+   { path: '/work-updates', label: 'Work Updates'},
    { path: '/attendance', label: 'Attendance'},
    { path: '/Leave', label: 'Leave'}
     ];

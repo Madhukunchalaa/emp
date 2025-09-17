@@ -8,7 +8,7 @@ import {
   fetchAttendance,
   clearError,
   clearSuccess,
-  addDailyUpdate,
+  addWorkUpdate,
 } from '../../store/slices/employeeSlice';
 import { 
   Clock, 
@@ -40,8 +40,18 @@ const EmployeeDashboard = () => {
   const { projects = [], attendance = null, loading = false, error = null, success = null } = useSelector((state) => state.employee || {});
   const { user = { name: 'Employee' } } = useSelector((state) => state.auth || {});
 
-  const [dailyUpdateDialogOpen, setDailyUpdateDialogOpen] = useState(false);
-  const [dailyUpdateText, setDailyUpdateText] = useState('');
+  const [workUpdateDialogOpen, setWorkUpdateDialogOpen] = useState(false);
+  const [workUpdateForm, setWorkUpdateForm] = useState({
+    projectClient: '',
+    taskDescription: '',
+    priority: 'Medium',
+    plannedTime: '',
+    actualTime: '',
+    status: 'In Progress',
+    linkReference: '',
+    notes: '',
+    plansForNextDay: ''
+  });
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [stats, setStats] = useState({
@@ -150,7 +160,7 @@ const EmployeeDashboard = () => {
   const handlePunchIn = () => dispatch(punchIn());
   const handlePunchOut = () => dispatch(punchOut());
 
-  const handleSubmitDailyUpdate = () => {
+  const handleSubmitWorkUpdate = () => {
     // Debug logs
     console.log('Current employeeUser:', employeeUser);
     console.log('Current user ID:', employeeUser?._id);
@@ -167,21 +177,50 @@ const EmployeeDashboard = () => {
       return;
     }
 
-    if (!dailyUpdateText.trim()) {
-      dispatch({ type: 'employee/setError', payload: 'Please enter an update' });
+    // Validate required fields
+    if (!workUpdateForm.taskDescription.trim()) {
+      dispatch({ type: 'employee/setError', payload: 'Please enter task description' });
+      return;
+    }
+    if (!workUpdateForm.plannedTime) {
+      dispatch({ type: 'employee/setError', payload: 'Please enter planned time' });
+      return;
+    }
+    if (!workUpdateForm.actualTime) {
+      dispatch({ type: 'employee/setError', payload: 'Please enter actual time' });
       return;
     }
 
     const updateData = {
-      update: dailyUpdateText.trim(),
+      project_title: workUpdateForm.projectClient,
+      taskDescription: workUpdateForm.taskDescription.trim(),
+      priority: workUpdateForm.priority,
+      plannedTime: parseFloat(workUpdateForm.plannedTime),
+      actualTime: parseFloat(workUpdateForm.actualTime),
+      status: workUpdateForm.status,
+      linkReference: workUpdateForm.linkReference.trim(),
+      notes: workUpdateForm.notes.trim(),
+      plansForNextDay: workUpdateForm.plansForNextDay.trim(),
+      update: workUpdateForm.taskDescription.trim(), // Keep for backward compatibility
+      finishBy: new Date().toISOString(),
       userId: userId
     };
 
-    console.log('Sending update data:', updateData);
+    console.log('Sending work update data:', updateData);
 
-    dispatch(addDailyUpdate(updateData));
-    setDailyUpdateDialogOpen(false);
-    setDailyUpdateText('');
+    dispatch(addWorkUpdate(updateData));
+    setWorkUpdateDialogOpen(false);
+    setWorkUpdateForm({
+      projectClient: '',
+      taskDescription: '',
+      priority: 'Medium',
+      plannedTime: '',
+      actualTime: '',
+      status: 'In Progress',
+      linkReference: '',
+      notes: '',
+      plansForNextDay: ''
+    });
   };
 
   const handleViewTask = (task) => {
@@ -279,22 +318,22 @@ const EmployeeDashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-purple-100 text-purple-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'on-hold': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'completed': return 'bg-white text-black';
+      case 'active': return 'bg-gray-200 text-black';
+      case 'assigned': return 'bg-gray-300 text-black';
+      case 'pending': return 'bg-gray-400 text-black';
+      case 'on-hold': return 'bg-gray-500 text-white';
+      default: return 'bg-gray-100 text-black';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'urgent': return 'bg-black text-white';
+      case 'high': return 'bg-gray-600 text-white';
+      case 'medium': return 'bg-gray-400 text-black';
+      case 'low': return 'bg-gray-200 text-black';
+      default: return 'bg-gray-100 text-black';
     }
   };
 
@@ -340,42 +379,42 @@ const EmployeeDashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen flex" style={{background: 'linear-gradient(135deg, #0f172a, #1e293b)'}}>
+      <div className="min-h-screen flex bg-gradient-to-br from-gray-900 via-black to-gray-800">
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 h-screen bg-slate-800/90 backdrop-blur-lg shadow-xl border-r border-slate-700/50 p-6 fixed left-0 top-0 z-20">
+        <aside className="hidden md:flex flex-col w-64 h-screen bg-white/10 backdrop-blur-lg shadow-xl border-r border-gray-600/50 p-6 fixed left-0 top-0 z-20">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-8 bg-gradient-to-b from-orange-400 to-pink-400 rounded-full" />
-              <span className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent">Employee</span>
+              <div className="w-3 h-8 bg-white rounded-full" />
+              <span className="text-xl font-extrabold text-white">Employee</span>
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-100 mb-2">Employee Dashboard</h1>
-            <div className="text-xs text-slate-400">Your workspace overview</div>
+            <h1 className="text-2xl font-extrabold text-white mb-2">Employee Dashboard</h1>
+            <div className="text-xs text-gray-300">Your workspace overview</div>
           </div>
           <div className="mb-8">
-            <div className="text-slate-200 font-semibold mb-2">Stats</div>
+            <div className="text-white font-semibold mb-2">Stats</div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-orange-400"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
-              <div className="flex items-center gap-2 text-green-400"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
-              <div className="flex items-center gap-2 text-yellow-400"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
+              <div className="flex items-center gap-2 text-white"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
+              <div className="flex items-center gap-2 text-gray-300"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
+              <div className="flex items-center gap-2 text-gray-400"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
             </div>
           </div>
           <div className="mt-auto">
-            <div className="text-xs text-slate-400">Logged in as</div>
-            <div className="font-bold text-slate-200">{user.name}</div>
+            <div className="text-xs text-gray-400">Logged in as</div>
+            <div className="font-bold text-white">{user.name}</div>
           </div>
         </aside>
         {/* Main Content */}
         <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
           {/* Error/Success Messages */}
           {error && (
-            <div className="mx-6 mt-4 p-4 bg-red-900/30 border border-red-500/50 text-red-300 rounded-lg flex items-center space-x-2">
+            <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center space-x-2">
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mx-6 mt-4 p-4 bg-green-900/30 border border-green-500/50 text-green-300 rounded-lg flex items-center space-x-2">
+            <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg flex items-center space-x-2">
               <CheckCircle className="w-5 h-5" />
               <span>{success}</span>
             </div>
@@ -385,71 +424,70 @@ const EmployeeDashboard = () => {
 
           <div className="px-6 py-6">
             <div className="mb-6">
-              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-2
-              ">{getGreeting()}, {user.name}!</h2>
-              <p className="text-slate-400">Here's your personalized workspace for today.</p>
+              <h2 className="text-3xl font-extrabold text-white mb-2">{getGreeting()}, {user.name}!</h2>
+              <p className="text-gray-300">Here's your personalized workspace for today.</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
-              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-white w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                    <FileText className="w-5 h-5 text-white" />
+                  <div className="p-3 bg-white rounded-xl shadow-lg">
+                    <FileText className="w-5 h-5 text-black" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-100">{stats.totalTasks}</span>
+                  <span className="text-2xl font-bold text-white">{stats.totalTasks}</span>
                 </div>
-                <h3 className="font-semibold text-slate-100 mb-1">Total Tasks</h3>
-                <p className="text-sm text-slate-400">Assigned to you</p>
+                <h3 className="font-semibold text-white mb-1">Total Tasks</h3>
+                <p className="text-sm text-gray-300">Assigned to you</p>
               </div>
 
-              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-300 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
-                    <CheckCircle className="w-5 h-5 text-white" />
+                  <div className="p-3 bg-gray-200 rounded-xl shadow-lg">
+                    <CheckCircle className="w-5 h-5 text-black" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-100">{stats.completedTasks}</span>
+                  <span className="text-2xl font-bold text-white">{stats.completedTasks}</span>
                 </div>
-                <h3 className="font-semibold text-slate-100 mb-1">Completed</h3>
-                <p className="text-sm text-slate-400">Tasks finished</p>
+                <h3 className="font-semibold text-white mb-1">Completed</h3>
+                <p className="text-sm text-gray-300">Tasks finished</p>
               </div>
 
-              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-yellow-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg">
-                    <Clock className="w-5 h-5 text-white" />
+                  <div className="p-3 bg-gray-300 rounded-xl shadow-lg">
+                    <Clock className="w-5 h-5 text-black" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-100">{stats.pendingTasks}</span>
+                  <span className="text-2xl font-bold text-white">{stats.pendingTasks}</span>
                 </div>
-                <h3 className="font-semibold text-slate-100 mb-1">Pending</h3>
-                <p className="text-sm text-slate-400">Tasks to complete</p>
+                <h3 className="font-semibold text-white mb-1">Pending</h3>
+                <p className="text-sm text-gray-300">Tasks to complete</p>
               </div>
             </div>
 
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12 mx-auto">
               {/* Attendance Card */}
-              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-blue-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-white w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                    <Clock className="w-5 h-5 text-white"/>
+                  <div className="p-3 bg-white rounded-xl shadow-lg">
+                    <Clock className="w-5 h-5 text-black"/>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-100">Attendance</h3>
-                    <p className="text-sm text-slate-400">Track your work hours</p>
+                    <h3 className="text-lg font-semibold text-white">Attendance</h3>
+                    <p className="text-sm text-gray-300">Track your work hours</p>
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <p className="text-sm text-slate-400 mb-2">Today's Status</p>
+                  <p className="text-sm text-gray-300 mb-2">Today's Status</p>
                   {isPunchedIn ? (
-                    <div className="flex items-center space-x-2 text-green-400">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="flex items-center space-x-2 text-white">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-2 text-slate-400">
-                      <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
                       <span className="font-medium">Ready to start your day</span>
                     </div>
                   )}
@@ -458,8 +496,8 @@ const EmployeeDashboard = () => {
                 <button
                   className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
                     isPunchedIn 
-                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg' 
-                      : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg'
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
                   }`}
                   onClick={isPunchedIn ? handlePunchOut : handlePunchIn}
                 >
@@ -470,48 +508,48 @@ const EmployeeDashboard = () => {
                 </button>
               </div>
 
-              {/* Daily Update Card */}
-              <div className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-pink-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              {/* Work Update Card */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-300 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                    <CheckSquare className="w-5 h-5 text-white" />
+                  <div className="p-3 bg-gray-200 rounded-xl shadow-lg">
+                    <CheckSquare className="w-5 h-5 text-black" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-100">Daily Update</h3>
-                    <p className="text-sm text-slate-400">Log your progress</p>
+                    <h3 className="text-lg font-semibold text-white">Work Update</h3>
+                    <p className="text-sm text-gray-300">Log your daily work</p>
                   </div>
                 </div>
                 
-                <p className="text-sm text-slate-400 mb-4">
-                  Share what you've accomplished today with your manager.
+                <p className="text-sm text-gray-300 mb-4">
+                  Submit detailed work updates with time tracking and task details.
                 </p>
 
                 <button
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-                  onClick={() => setDailyUpdateDialogOpen(true)}
+                  className="w-full bg-white text-black py-3 px-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200"
+                  onClick={() => setWorkUpdateDialogOpen(true)}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <Plus className="w-4 h-4" />
-                    <span>Add Update</span>
+                    <span>Add Work Update</span>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Tasks Section */}
-            <section className="bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50 max-w-7xl mx-auto my-16 animate-fade-in">
-              <div className="flex items-center justify-between px-10 py-8 border-b border-slate-700/50">
+            <section className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-600/50 max-w-7xl mx-auto my-16 animate-fade-in">
+              <div className="flex items-center justify-between px-10 py-8 border-b border-gray-600/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/20 rounded-lg">
-                    <Briefcase className="w-6 h-6 text-orange-400" />
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Briefcase className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-100">My Tasks</h2>
-                    <p className="text-sm text-slate-400">Tasks assigned by your manager</p>
+                    <h2 className="text-xl font-bold text-white">My Tasks</h2>
+                    <p className="text-sm text-gray-300">Tasks assigned by your manager</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-slate-400">
+                  <span className="text-sm text-gray-300">
                     {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -520,41 +558,41 @@ const EmployeeDashboard = () => {
               <div className="p-10">
                 {loading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                    <p className="text-slate-400 mt-4">Loading your tasks...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                    <p className="text-gray-300 mt-4">Loading your tasks...</p>
                   </div>
                 ) : getAllTasks().length === 0 ? (
                   <div className="text-center py-8">
-                    <Briefcase className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-                    <p className="text-slate-400">No tasks assigned yet.</p>
-                    <p className="text-sm text-slate-500 mt-2">Your manager will assign tasks here.</p>
+                    <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-300">No tasks assigned yet.</p>
+                    <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {getAllTasks().map((task, idx) => (
                       <div 
                         key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                        className={`relative bg-slate-700/80 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-green-400' : task.status === 'pending' ? 'border-yellow-400' : 'border-orange-400'} p-6 hover:shadow-2xl hover:bg-slate-700/90 transition-all duration-300 cursor-pointer group animate-fade-in`}
+                        className={`relative bg-white/10 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-white' : task.status === 'pending' ? 'border-gray-400' : 'border-gray-300'} p-6 hover:shadow-2xl hover:bg-white/20 transition-all duration-300 cursor-pointer group animate-fade-in`}
                         onClick={() => handleViewTask(task)}
                       >
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-slate-100 line-clamp-2">{task.title}</h4>
+                          <h4 className="font-semibold text-white line-clamp-2">{task.title}</h4>
                           <div className="flex flex-col space-y-1">
                             <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
                               {task.status}
                             </span>
                             {task.taskType === 'team-leader' && (
-                              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
+                              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-300 text-black">
                                 Team Leader
                               </span>
                             )}
                           </div>
                         </div>
                         
-                        <p className="text-sm text-slate-300 mb-2">{task.projectTitle}</p>
-                        <p className="text-xs text-slate-400 mb-3">{task.stepName}</p>
+                        <p className="text-sm text-gray-300 mb-2">{task.projectTitle}</p>
+                        <p className="text-xs text-gray-400 mb-3">{task.stepName}</p>
                         
-                        <div className="space-y-2 text-xs text-slate-400">
+                        <div className="space-y-2 text-xs text-gray-400">
                           {(task.dueDate || task.deadline) && (
                             <div className="flex items-center space-x-2">
                               <Calendar className="w-3 h-3" />
@@ -570,7 +608,7 @@ const EmployeeDashboard = () => {
                           )}
                         </div>
                         {/* Add a subtle animated bar at the bottom on hover */}
-                        <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
+                        <div className="absolute left-0 bottom-0 h-1 w-full bg-white opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
                       </div>
                     ))}
                   </div>
@@ -580,36 +618,146 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
-        {/* Daily Update Modal */}
+        {/* Work Update Modal */}
         <AnimatePresence>
-          {dailyUpdateDialogOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-slate-700">
-                <h2 className="text-xl font-bold text-slate-100 mb-2">Today's Update</h2>
-                <p className="text-sm text-slate-400 mb-4">What have you accomplished today?</p>
+          {workUpdateDialogOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+              <div className="bg-black rounded-2xl p-6 max-w-4xl w-full mx-4 border border-gray-600 my-8">
+                <h2 className="text-2xl font-bold text-white mb-4">Work Update</h2>
+                <p className="text-sm text-gray-300 mb-6">Submit your detailed work update for today</p>
                 
-                <textarea 
-                  placeholder="Tell us about your progress, completed tasks, and any challenges..."
-                  className="w-full p-3 border border-slate-600 bg-slate-700 text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 placeholder-slate-400"
-                  rows={4}
-                  value={dailyUpdateText}
-                  onChange={(e) => setDailyUpdateText(e.target.value)}
-                ></textarea>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Project/Client */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Project/Client *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter project or client name"
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      value={workUpdateForm.projectClient}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, projectClient: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Priority */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Priority *</label>
+                    <select
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                      value={workUpdateForm.priority}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, priority: e.target.value})}
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Urgent">Urgent</option>
+                    </select>
+                  </div>
+
+                  {/* Task Description */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-white mb-2">Task Description *</label>
+                    <textarea
+                      placeholder="Describe the task you worked on..."
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      rows={3}
+                      value={workUpdateForm.taskDescription}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, taskDescription: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Planned Time */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Planned Time (hrs) *</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="0.0"
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      value={workUpdateForm.plannedTime}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, plannedTime: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Actual Time */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Actual Time (hrs) *</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="0.0"
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      value={workUpdateForm.actualTime}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, actualTime: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Status *</label>
+                    <select
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                      value={workUpdateForm.status}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, status: e.target.value})}
+                    >
+                      <option value="Not Started">Not Started</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="On Hold">On Hold</option>
+                    </select>
+                  </div>
+
+                  {/* Link/Reference */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Link/Reference</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      value={workUpdateForm.linkReference}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, linkReference: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-white mb-2">Notes</label>
+                    <textarea
+                      placeholder="Additional notes or comments..."
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      rows={2}
+                      value={workUpdateForm.notes}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, notes: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Plans for Next Day */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-white mb-2">Plans for Next Day</label>
+                    <textarea
+                      placeholder="What do you plan to work on tomorrow?"
+                      className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent placeholder-gray-400"
+                      rows={2}
+                      value={workUpdateForm.plansForNextDay}
+                      onChange={(e) => setWorkUpdateForm({...workUpdateForm, plansForNextDay: e.target.value})}
+                    />
+                  </div>
+                </div>
                 
-                <div className="flex space-x-3">
+                <div className="flex space-x-3 mt-6">
                   <button 
-                    className="flex-1 bg-slate-600 text-slate-200 py-2 rounded-xl font-medium hover:bg-slate-500 transition-colors"
-                    onClick={() => setDailyUpdateDialogOpen(false)}
+                    className="flex-1 bg-gray-600 text-white py-3 rounded-xl font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => setWorkUpdateDialogOpen(false)}
                   >
                     Cancel
                   </button>
                   <button 
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl font-medium hover:shadow-lg transition-all duration-200"
-                    onClick={handleSubmitDailyUpdate}
+                    className="flex-1 bg-white text-black py-3 rounded-xl font-medium hover:bg-gray-100 transition-all duration-200"
+                    onClick={handleSubmitWorkUpdate}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <Send className="w-4 h-4" />
-                      <span>Submit</span>
+                      <span>Submit Work Update</span>
                     </div>
                   </button>
                 </div>
@@ -622,12 +770,12 @@ const EmployeeDashboard = () => {
         <AnimatePresence>
           {showTaskModal && selectedTask && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto border border-slate-700">
+              <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto border border-gray-300">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-slate-100">Task Details</h3>
+                  <h3 className="text-xl font-bold text-black">Task Details</h3>
                   <button
                     onClick={() => setShowTaskModal(false)}
-                    className="text-slate-400 hover:text-slate-300"
+                    className="text-gray-600 hover:text-gray-800"
                   >
                     <AlertCircle className="w-6 h-6" />
                   </button>
@@ -635,11 +783,11 @@ const EmployeeDashboard = () => {
                 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-slate-100 mb-1">{selectedTask.title}</h4>
-                    <p className="text-sm text-slate-300">{selectedTask.description || selectedTask.content}</p>
+                    <h4 className="font-semibold text-black mb-1">{selectedTask.title}</h4>
+                    <p className="text-sm text-gray-600">{selectedTask.description || selectedTask.content}</p>
                     {selectedTask.taskType === 'team-leader' && (
                       <div className="mt-2">
-                        <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-300 text-black">
                           Team Leader Assignment
                         </span>
                       </div>
@@ -648,20 +796,20 @@ const EmployeeDashboard = () => {
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-slate-400">Status:</span>
+                      <span className="text-gray-600">Status:</span>
                       <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
                         {selectedTask.status}
                       </div>
                     </div>
                     <div>
-                      <span className="text-slate-400">Priority:</span>
+                      <span className="text-gray-600">Priority:</span>
                       <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}>
                         {selectedTask.priority || 'medium'}
                       </div>
                     </div>
                     <div>
-                      <span className="text-slate-400">Deadline:</span>
-                      <span className="ml-2 text-slate-300">
+                      <span className="text-gray-600">Deadline:</span>
+                      <span className="ml-2 text-black">
                         {(selectedTask.deadline || selectedTask.dueDate) ? 
                           new Date(selectedTask.deadline || selectedTask.dueDate).toLocaleDateString() : 
                           'Not set'
@@ -670,8 +818,8 @@ const EmployeeDashboard = () => {
                     </div>
                     {selectedTask.estimatedHours && (
                       <div>
-                        <span className="text-slate-400">Hours:</span>
-                        <span className="ml-2 text-slate-300">{selectedTask.estimatedHours}h</span>
+                        <span className="text-gray-600">Hours:</span>
+                        <span className="ml-2 text-black">{selectedTask.estimatedHours}h</span>
                       </div>
                     )}
                   </div>
@@ -679,7 +827,7 @@ const EmployeeDashboard = () => {
                 
                 <div className="flex space-x-2 mt-6">
                   <button 
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200 text-center disabled:opacity-50"
+                    className="flex-1 bg-black text-white py-2 rounded-xl hover:bg-gray-800 transition-all duration-200 text-center disabled:opacity-50"
                     onClick={() => handleUpdateTaskStatus(selectedTask._id, 'in-progress', selectedTask)}
                    
                   >
@@ -689,7 +837,7 @@ const EmployeeDashboard = () => {
                     </div>
                   </button>
                   <button 
-                    className="flex-1 bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition-all duration-200 disabled:opacity-50"
+                    className="flex-1 bg-gray-600 text-white py-2 rounded-xl hover:bg-gray-700 transition-all duration-200 disabled:opacity-50"
                     onClick={() => handleUpdateTaskStatus(selectedTask._id, 'completed', selectedTask)}
                     disabled={taskUpdateLoading || selectedTask.status === 'completed'}
                   >
@@ -702,11 +850,11 @@ const EmployeeDashboard = () => {
                 
                 {/* Status Update Dropdown */}
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Update Status</label>
+                  <label className="block text-sm font-medium text-black mb-2">Update Status</label>
                   <select
                     value={selectedTask.status}
                     onChange={(e) => handleUpdateTaskStatus(selectedTask._id, e.target.value, selectedTask)}
-                    className="w-full p-2 border border-slate-600 bg-slate-700 text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                     disabled={taskUpdateLoading}
                   >
                     <option value="pending">Pending</option>
@@ -729,12 +877,12 @@ const EmployeeDashboard = () => {
           position: 'fixed',
           right: 0,
           top: 0,
-          background: 'rgba(30, 41, 59, 0.95)',
+          background: 'rgba(255, 255, 255, 0.95)',
           boxShadow: '-2px 0 16px rgba(0,0,0,0.08)',
           zIndex: 100,
           display: 'flex',
           flexDirection: 'column',
-          borderLeft: '1px solid #475569',
+          borderLeft: '1px solid #d1d5db',
         }}>
           <Chat currentUser={employeeUser} otherUser={managerUser} />
         </div>

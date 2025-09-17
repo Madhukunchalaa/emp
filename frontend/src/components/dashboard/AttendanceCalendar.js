@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, User, Clock, X, Users, CalendarDays, ArrowLeft, MessageSquare, Eye } from 'lucide-react';
+import { managerService } from '../../services/api';
 
 const AttendanceCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -9,6 +10,7 @@ const AttendanceCalendar = () => {
   const [employeeUpdates, setEmployeeUpdates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updatesLoading, setUpdatesLoading] = useState(false);
+  const [dailyUpdatesCount, setDailyUpdatesCount] = useState({});
 
   // Helper function to extract data (similar to your existing implementation)
   const extractData = (res) => {
@@ -22,22 +24,16 @@ const AttendanceCalendar = () => {
   const fetchEmployeeUpdates = async (date, employeeId) => {
     try {
       setUpdatesLoading(true);
-      const token = localStorage.getItem("token");
       const formattedDate = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
       
-      // You can modify this API endpoint according to your backend
-      const API_URL = `http://localhost:5000/api/manager/employee-updates?date=${formattedDate}&employeeId=${employeeId}`;
+      // Use the correct API endpoint with proper date range
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
       
-      const res = await fetch(API_URL, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!res.ok) throw new Error("Network error");
-      const json = await res.json();
-      const updates = extractData(json);
+      const res = await managerService.getEmployeeUpdatesByDate(employeeId, startDate.toISOString(), endDate.toISOString());
+      const updates = extractData(res);
       setEmployeeUpdates(updates);
     } catch (error) {
       console.error('Failed to fetch updates:', error);
@@ -50,6 +46,7 @@ const AttendanceCalendar = () => {
   const handleDateClick = (day, employeeBlock) => {
     const clickedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     setSelectedDate(clickedDate);
+    setSelectedEmployee(employeeBlock);
     fetchEmployeeUpdates(clickedDate, employeeBlock.employee._id);
   };
 
@@ -58,32 +55,87 @@ const AttendanceCalendar = () => {
     console.log('View update:', update);
   };
 
+  // Fetch daily updates count for calendar display
+  const fetchDailyUpdatesCount = async (employeeId) => {
+    try {
+      const startDate = new Date(currentMonth);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(currentMonth);
+      endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setDate(0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      const res = await managerService.getEmployeeUpdatesByDate(employeeId, startDate.toISOString(), endDate.toISOString());
+      const updates = extractData(res);
+      
+      // Group updates by date
+      const updatesByDate = {};
+      updates.forEach(update => {
+        const date = new Date(update.date).getDate();
+        updatesByDate[date] = (updatesByDate[date] || 0) + 1;
+      });
+      
+      setDailyUpdatesCount(updatesByDate);
+    } catch (error) {
+      console.error('Failed to fetch daily updates count:', error);
+      setDailyUpdatesCount({});
+    }
+  };
+
+  // Helper function to format time properly
+  const formatTime = (timeValue) => {
+    if (!timeValue) return 'Not recorded';
+    
+    try {
+      // If it's already a string that looks like time (HH:MM:SS or HH:MM)
+      if (typeof timeValue === 'string' && timeValue.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
+        return timeValue;
+      }
+      
+      // If it's a date string or timestamp
+      const date = new Date(timeValue);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString();
+      }
+      
+      // If it's a number (timestamp)
+      if (typeof timeValue === 'number') {
+        return new Date(timeValue).toLocaleTimeString();
+      }
+      
+      // Fallback: return the original value
+      return timeValue.toString();
+    } catch (error) {
+      console.error('Error formatting time:', error, 'Value:', timeValue);
+      return timeValue.toString();
+    }
+  };
+
   // Fetch attendance data from your API
   useEffect(() => {
-    const API_URL = "http://localhost:5000/api/manager/attendance";
-    const token = localStorage.getItem("token");
-
-    setLoading(true);
-
-    fetch(API_URL, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Network error");
-        return res.json();
-      })
-      .then((json) => {
-        setAttendanceData(json);
-        setLoading(false);
-      })
-      .catch((err) => {
+    const fetchAttendanceData = async () => {
+      try {
+        setLoading(true);
+        const res = await managerService.getAttendanceHistory();
+        setAttendanceData(res);
+      } catch (err) {
         console.error("Error fetching attendance:", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchAttendanceData();
   }, [currentMonth]);
+
+  // Fetch daily updates count when employee is selected
+  useEffect(() => {
+    if (selectedEmployee) {
+      fetchDailyUpdatesCount(selectedEmployee.employee._id);
+    }
+  }, [selectedEmployee, currentMonth]);
 
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -146,11 +198,47 @@ const AttendanceCalendar = () => {
 
   const calculateMonthlyStats = (employeeBlock) => {
     const attendance = processAttendanceForCalendar(employeeBlock);
-    const stats = { present: 0, absent: 0, totalHours: 0 };
+    const stats = { 
+      present: 0, 
+      absent: 0, 
+      totalHours: 0,
+      onTime: 0,
+      late: 0,
+      tooLate: 0
+    };
+    
+    // Define time thresholds (in minutes from 9:30 AM)
+    const ON_TIME_THRESHOLD = 0; // On time: 9:30 AM or earlier
+    const LATE_THRESHOLD = 10; // Late: 9:31 AM to 9:40 AM (10 minutes after 9:30)
+    const TOO_LATE_THRESHOLD = 30; // Too late: after 10:00 AM (30 minutes after 9:30)
     
     Object.values(attendance).forEach(day => {
       if (day.status?.toLowerCase() === 'present' || day.status?.toLowerCase() === 'p') {
         stats.present++;
+        
+        // Calculate timing analytics
+        if (day.punchIn) {
+          try {
+            const punchInTime = new Date(day.punchIn);
+            const punchInMinutes = punchInTime.getHours() * 60 + punchInTime.getMinutes();
+            const expectedTimeMinutes = 9 * 60 + 30; // 9:30 AM in minutes
+            const minutesLate = punchInMinutes - expectedTimeMinutes;
+            
+            if (minutesLate <= ON_TIME_THRESHOLD) {
+              stats.onTime++;
+            } else if (minutesLate <= LATE_THRESHOLD) {
+              stats.late++;
+            } else {
+              stats.tooLate++;
+            }
+          } catch (error) {
+            console.error('Error calculating timing for day:', day, error);
+            // If we can't parse the time, count as late
+            stats.late++;
+          }
+        }
+        
+        // Calculate total hours
         if (day.totalHours && day.totalHours !== '0:00' && day.totalHours !== 0) {
           let hours = 0, minutes = 0;
           
@@ -206,12 +294,40 @@ const AttendanceCalendar = () => {
       days.push(
         <div
           key={day}
-          className={`p-2 rounded-lg text-center cursor-pointer hover:opacity-80 transition-all ${getStatusColor(dayData.status)} hover:ring-2 hover:ring-orange-300`}
-          title={`${day}: ${dayData.status?.charAt(0).toUpperCase() + dayData.status?.slice(1)} - ${dayData.totalHours} hours${dayData.punchIn ? `\nPunch In: ${dayData.punchIn}` : ''}${dayData.punchOut ? `\nPunch Out: ${dayData.punchOut}` : ''}\nClick to view work updates`}
+          className={`p-2 rounded-lg text-center cursor-pointer hover:opacity-80 transition-all ${getStatusColor(dayData.status)} hover:ring-2 hover:ring-white hover:shadow-lg`}
+          title={`${day}: ${dayData.status?.charAt(0).toUpperCase() + dayData.status?.slice(1)} - ${dayData.totalHours} hours${dayData.punchIn ? `\nPunch In: ${formatTime(dayData.punchIn)}` : ''}${dayData.punchOut ? `\nPunch Out: ${formatTime(dayData.punchOut)}` : ''}\nClick to view details`}
           onClick={() => handleDateClick(day, employeeBlock)}
         >
           <div className="text-sm font-semibold">{day}</div>
           <div className="text-xs mt-1">{dayData.totalHours}</div>
+          {/* Show punch times directly in calendar */}
+          {dayData.punchIn && (
+            <div className="text-xs mt-1 opacity-90">
+              <div className="flex items-center justify-center space-x-1">
+                <Clock className="w-3 h-3" />
+                <span>IN: {formatTime(dayData.punchIn)}</span>
+              </div>
+            </div>
+          )}
+          {dayData.punchOut && (
+            <div className="text-xs mt-1 opacity-90">
+              <div className="flex items-center justify-center space-x-1">
+                <Clock className="w-3 h-3" />
+                <span>OUT: {formatTime(dayData.punchOut)}</span>
+              </div>
+            </div>
+          )}
+          {/* Show work updates count */}
+          {dailyUpdatesCount[day] && dailyUpdatesCount[day] > 0 && (
+            <div className="text-xs mt-1">
+              <div className="flex items-center justify-center space-x-1">
+                <MessageSquare className="w-3 h-3" />
+                <span className="bg-blue-500 text-white px-1 rounded-full text-xs">
+                  {dailyUpdatesCount[day]} update{dailyUpdatesCount[day] > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -288,19 +404,33 @@ const AttendanceCalendar = () => {
             </div>
 
             {/* Monthly Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-green-100 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-green-800">{stats.present}</div>
-                <div className="text-sm text-green-600">Days Present</div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <div className="bg-white border border-gray-300 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-black">{stats.present}</div>
+                <div className="text-sm text-gray-600">Days Present</div>
               </div>
-              <div className="bg-red-100 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-red-800">{stats.absent}</div>
-                <div className="text-sm text-red-600">Days Absent</div>
+              <div className="bg-gray-100 border border-gray-300 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-black">{stats.absent}</div>
+                <div className="text-sm text-gray-600">Days Absent</div>
               </div>
-              <div className="bg-blue-100 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-blue-800">{stats.totalHours.toFixed(1)}h</div>
-                <div className="text-sm text-blue-600">Total Hours</div>
+              <div className="bg-white border border-gray-300 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-black">{stats.onTime}</div>
+                <div className="text-sm text-gray-600">On Time</div>
               </div>
+              <div className="bg-gray-100 border border-gray-300 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-black">{stats.late}</div>
+                <div className="text-sm text-gray-600">Late</div>
+              </div>
+              <div className="bg-gray-200 border border-gray-400 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-black">{stats.tooLate}</div>
+                <div className="text-sm text-gray-600">Too Late</div>
+              </div>
+            </div>
+            
+            {/* Total Hours */}
+            <div className="bg-gray-100 border border-gray-300 rounded-xl p-4 text-center mb-6">
+              <div className="text-2xl font-bold text-black">{stats.totalHours.toFixed(1)}h</div>
+              <div className="text-sm text-gray-600">Total Hours</div>
             </div>
           </div>
 
@@ -321,7 +451,7 @@ const AttendanceCalendar = () => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-center space-x-6 mt-6 pt-6 border-t border-gray-200">
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-500 rounded"></div>
                 <span className="text-sm text-gray-600">Present</span>
@@ -334,85 +464,296 @@ const AttendanceCalendar = () => {
                 <div className="w-4 h-4 bg-blue-500 rounded"></div>
                 <span className="text-sm text-gray-600">Sunday</span>
               </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-600">Punch Times</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MessageSquare className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-600">Work Updates</span>
+              </div>
               <div className="text-sm text-gray-600 italic">
-                Click on any date to view work updates
+                Click on any date to view detailed work updates
               </div>
             </div>
           </div>
 
-          {/* Work Updates Modal/Section */}
+          {/* Date Details Modal */}
           {selectedDate && (
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6 mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Work Updates - {selectedDate.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </h3>
-                <button
-                  onClick={() => {
-                    setSelectedDate(null);
-                    setEmployeeUpdates([]);
-                  }}
-                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-black">
+                    {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setSelectedDate(null);
+                      setEmployeeUpdates([]);
+                    }}
+                    className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-              {updatesLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-4">Loading work updates...</p>
+                {/* Employee Info */}
+                <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-100 rounded-xl">
+                  <UserAvatar name={selectedEmployee.employee.name} avatar={selectedEmployee.employee.avatar} />
+                  <div>
+                    <h4 className="text-xl font-bold text-black">{selectedEmployee.employee.name}</h4>
+                    <p className="text-gray-600">{selectedEmployee.employee.email}</p>
+                  </div>
                 </div>
-              ) : employeeUpdates.length === 0 ? (
-                <div className="text-center py-8">
-                  <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No work updates found for this date.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {employeeUpdates.map((update) => (
-                    <div key={update._id} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 hover:shadow-lg hover:bg-white/80 transition-all duration-300 border border-white/30">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <UserAvatar
-                            avatar={update.employee?.avatar}
-                            name={update.employee?.name}
-                            size="sm"
-                          />
-                          <div>
-                            <h4 className="font-semibold text-gray-800">{update.employee?.name}</h4>
-                            <p className="text-xs text-gray-500">{new Date(update.date).toLocaleDateString()}</p>
+
+                {/* Attendance Details */}
+                {(() => {
+                  const attendance = processAttendanceForCalendar(selectedEmployee);
+                  const dayData = attendance[selectedDate.getDate()] || { status: 'absent', totalHours: '0:00' };
+                  
+                  // Calculate timing status for this specific day
+                  let timingStatus = 'Not Available';
+                  let timingColor = 'bg-gray-100 text-black';
+                  
+                  if (dayData.punchIn) {
+                    try {
+                      const punchInTime = new Date(dayData.punchIn);
+                      const punchInMinutes = punchInTime.getHours() * 60 + punchInTime.getMinutes();
+                      const expectedTimeMinutes = 9 * 60 + 30; // 9:30 AM in minutes
+                      const minutesLate = punchInMinutes - expectedTimeMinutes;
+                      
+                      if (minutesLate <= 0) {
+                        timingStatus = 'On Time';
+                        timingColor = 'bg-white text-black border border-gray-300';
+                      } else if (minutesLate <= 10) {
+                        timingStatus = 'Late';
+                        timingColor = 'bg-gray-100 text-black';
+                      } else {
+                        timingStatus = 'Too Late';
+                        timingColor = 'bg-gray-200 text-black';
+                      }
+                    } catch (error) {
+                      timingStatus = 'Error';
+                      timingColor = 'bg-red-100 text-red-800';
+                    }
+                  }
+                  
+                  // Debug: Log the dayData to see the actual format
+                  console.log('Day data for debugging:', dayData);
+                  
+                  return (
+                    <div className="mb-6">
+                      <h5 className="text-lg font-semibold text-black mb-4">Attendance Details</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Clock className="w-5 h-5 text-green-600" />
+                            <span className="font-semibold text-green-800">Punch In</span>
                           </div>
+                          <p className="text-green-700 text-lg font-medium">
+                            {formatTime(dayData.punchIn)}
+                          </p>
+                          {dayData.punchIn && (
+                            <p className="text-xs text-green-600 mt-1">
+                              {new Date(dayData.punchIn).toLocaleDateString()}
+                            </p>
+                          )}
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          update.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          update.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {update.status}
-                        </span>
+                        <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Clock className="w-5 h-5 text-red-600" />
+                            <span className="font-semibold text-red-800">Punch Out</span>
+                          </div>
+                          <p className="text-red-700 text-lg font-medium">
+                            {formatTime(dayData.punchOut)}
+                          </p>
+                          {dayData.punchOut && (
+                            <p className="text-xs text-red-600 mt-1">
+                              {new Date(dayData.punchOut).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Clock className="w-5 h-5 text-blue-600" />
+                            <span className="font-semibold text-blue-800">Total Hours</span>
+                          </div>
+                          <p className="text-blue-700 text-lg font-medium">{dayData.totalHours}</p>
+                          {dayData.totalHours && dayData.totalHours !== '0:00' && (
+                            <p className="text-xs text-blue-600 mt-1">
+                              {typeof dayData.totalHours === 'number' ? 
+                                `${Math.floor(dayData.totalHours)}h ${Math.round((dayData.totalHours % 1) * 60)}m` : 
+                                'Work completed'
+                              }
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-gray-100 rounded-xl p-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="font-semibold text-black">Status</span>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            dayData.status === 'present' || dayData.status === 'p' ? 'bg-white text-black border border-gray-300' :
+                            dayData.status === 'absent' || dayData.status === 'a' ? 'bg-gray-200 text-black' :
+                            dayData.status === 'sunday' ? 'bg-gray-300 text-black' :
+                            'bg-gray-100 text-black'
+                          }`}>
+                            {dayData.status?.charAt(0).toUpperCase() + dayData.status?.slice(1)}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {update.tasks?.map(task => task.description).join(', ') || update.description || 'No description available'}
-                      </p>
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleViewUpdate(update)}
-                          className="flex items-center space-x-1 bg-gray-200/70 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300/70 transition-all duration-200"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>View</span>
-                        </button>
+                      
+                      {/* Timing Status */}
+                      <div className="mt-4">
+                        <div className="bg-gray-100 rounded-xl p-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Clock className="w-5 h-5 text-black" />
+                            <span className="font-semibold text-black">Timing Status</span>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${timingColor}`}>
+                            {timingStatus}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Based on 9:30 AM expected arrival time
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  );
+                })()}
+
+                {/* Work Updates Section */}
+                <div>
+                  <h5 className="text-lg font-semibold text-black mb-4">Work Updates</h5>
+                  
+                  {updatesLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+                      <p className="text-gray-600 mt-4">Loading work updates...</p>
+                    </div>
+                  ) : employeeUpdates.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No work updates found for this date.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {employeeUpdates.map((update) => (
+                        <div key={update._id} className="bg-gray-100 rounded-xl p-4 hover:bg-gray-200 transition-all duration-300 border border-gray-300">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <UserAvatar
+                                avatar={update.employee?.avatar}
+                                name={update.employee?.name}
+                                size="sm"
+                              />
+                              <div>
+                                <h6 className="font-semibold text-black">{update.employee?.name}</h6>
+                                <p className="text-xs text-gray-500">{new Date(update.date).toLocaleTimeString()}</p>
+                              </div>
+                            </div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              update.status === 'approved' ? 'bg-white text-black border border-gray-300' :
+                              update.status === 'rejected' ? 'bg-gray-200 text-black' :
+                              'bg-gray-300 text-black'
+                            }`}>
+                              {update.status}
+                            </span>
+                          </div>
+                          
+                          {update.project_title && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-black">Project: </span>
+                              <span className="text-sm text-gray-600">{update.project_title}</span>
+                            </div>
+                          )}
+                          
+                          {update.taskDescription && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-black">Task: </span>
+                              <span className="text-sm text-gray-600">{update.taskDescription}</span>
+                            </div>
+                          )}
+                          
+                          {update.priority && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-black">Priority: </span>
+                              <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
+                                update.priority === 'High' ? 'bg-red-100 text-red-800' :
+                                update.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                                update.priority === 'Low' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {update.priority}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {(update.plannedTime || update.actualTime) && (
+                            <div className="mb-2 grid grid-cols-2 gap-2">
+                              {update.plannedTime && (
+                                <div>
+                                  <span className="text-sm font-medium text-black">Planned: </span>
+                                  <span className="text-sm text-gray-600">{update.plannedTime}h</span>
+                                </div>
+                              )}
+                              {update.actualTime && (
+                                <div>
+                                  <span className="text-sm font-medium text-black">Actual: </span>
+                                  <span className="text-sm text-gray-600">{update.actualTime}h</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          <p className="text-sm text-gray-600 mb-3">
+                            {update.tasks?.map(task => task.description).join(', ') || update.update || update.description || 'No description available'}
+                          </p>
+                          
+                          {update.notes && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-black">Notes: </span>
+                              <span className="text-sm text-gray-600">{update.notes}</span>
+                            </div>
+                          )}
+                          
+                          {update.plansForNextDay && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-black">Next Day Plans: </span>
+                              <span className="text-sm text-gray-600">{update.plansForNextDay}</span>
+                            </div>
+                          )}
+                          
+                          {update.imageUrl && (
+                            <div className="mb-3">
+                              <img 
+                                src={update.imageUrl} 
+                                alt="Update attachment"
+                                className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleViewUpdate(update)}
+                              className="flex items-center space-x-1 bg-black text-white px-3 py-1.5 rounded-lg text-xs hover:bg-gray-800 transition-all duration-200"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>View Details</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -510,17 +851,17 @@ const AttendanceCalendar = () => {
 
                     {/* Timing Stats */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-1.5 text-center">
-                        <div className="text-sm font-bold text-green-600">{stats.onTime}</div>
-                        <div className="text-xs text-green-500">On Time</div>
+                      <div className="bg-white border border-gray-300 rounded-lg p-1.5 text-center">
+                        <div className="text-sm font-bold text-black">{stats.onTime}</div>
+                        <div className="text-xs text-gray-600">On Time</div>
                       </div>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 text-center">
-                        <div className="text-sm font-bold text-yellow-600">{stats.late}</div>
-                        <div className="text-xs text-yellow-500">Late</div>
+                      <div className="bg-gray-100 border border-gray-300 rounded-lg p-1.5 text-center">
+                        <div className="text-sm font-bold text-black">{stats.late}</div>
+                        <div className="text-xs text-gray-600">Late</div>
                       </div>
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-1.5 text-center">
-                        <div className="text-sm font-bold text-red-600">{stats.tooLate}</div>
-                        <div className="text-xs text-red-500">Too Late</div>
+                      <div className="bg-gray-200 border border-gray-400 rounded-lg p-1.5 text-center">
+                        <div className="text-sm font-bold text-black">{stats.tooLate}</div>
+                        <div className="text-xs text-gray-600">Too Late</div>
                       </div>
                     </div>
 
@@ -556,6 +897,38 @@ const AttendanceCalendar = () => {
             </div>
           )}
         </div>
+
+        {/* Date Details Modal for Main Calendar */}
+        {selectedDate && !selectedEmployee && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-black">
+                  {selectedDate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </h3>
+                <button
+                  onClick={() => {
+                    setSelectedDate(null);
+                    setEmployeeUpdates([]);
+                  }}
+                  className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-center py-8">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Select an employee to view their attendance details for this date.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

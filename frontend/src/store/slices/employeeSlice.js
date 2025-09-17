@@ -99,8 +99,8 @@ export const updateProjectComment = createAsyncThunk(
   }
 );
 
-export const addDailyUpdate = createAsyncThunk(
-  'employee/addDailyUpdate',
+export const addWorkUpdate = createAsyncThunk(
+  'employee/addWorkUpdate',
   async (updateData, { rejectWithValue }) => {
     try {
       console.log('Sending daily update to API:', updateData); 
@@ -119,26 +119,26 @@ export const addDailyUpdate = createAsyncThunk(
 );
 
 
-export const createDailyUpdate = createAsyncThunk(
-  'employee/createDailyUpdate',
+export const createWorkUpdate = createAsyncThunk(
+  'employee/createWorkUpdate',
   async (updateData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/employee/daily-update', updateData);
+      const response = await api.post('/employee/work-update', updateData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error creating daily update');
+      return rejectWithValue(error.response?.data?.message || 'Error creating work update');
     }
   }
 );
 
-export const fetchDailyUpdates = createAsyncThunk(
-  'employee/fetchDailyUpdates',
+export const fetchWorkUpdates = createAsyncThunk(
+  'employee/fetchWorkUpdates',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/employee/daily-updates');
+      const response = await api.get('/employee/work-updates');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error fetching daily updates');
+      return rejectWithValue(error.response?.data?.message || 'Error fetching work updates');
     }
   }
 );
@@ -151,7 +151,7 @@ const employeeSlice = createSlice({
       today: null,
       history: []
     },
-    dailyUpdates: [],
+    workUpdates: [],
     loading: false,
     error: null,
     success: null,
@@ -281,45 +281,45 @@ const employeeSlice = createSlice({
         state.error = action.payload;
       })
       // Add Daily Update
-      .addCase(addDailyUpdate.pending, (state) => {
+      .addCase(addWorkUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(addDailyUpdate.fulfilled, (state, action) => {
+      .addCase(addWorkUpdate.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = 'Daily update added successfully';
+        state.success = 'Work update added successfully';
       })
-      .addCase(addDailyUpdate.rejected, (state, action) => {
+      .addCase(addWorkUpdate.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Create Daily Update
-      .addCase(createDailyUpdate.pending, (state) => {
+      // Create Work Update
+      .addCase(createWorkUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createDailyUpdate.fulfilled, (state, action) => {
+      .addCase(createWorkUpdate.fulfilled, (state, action) => {
         state.loading = false;
-        state.dailyUpdates.unshift(action.payload);
-        state.success = 'Daily update created successfully';
+        state.workUpdates.unshift(action.payload);
+        state.success = 'Work update created successfully';
       })
-      .addCase(createDailyUpdate.rejected, (state, action) => {
+      .addCase(createWorkUpdate.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Daily Updates
-      .addCase(fetchDailyUpdates.pending, (state) => {
+      // Fetch Work Updates
+      .addCase(fetchWorkUpdates.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchDailyUpdates.fulfilled, (state, action) => {
+      .addCase(fetchWorkUpdates.fulfilled, (state, action) => {
         state.loading = false;
-        state.dailyUpdates = Array.isArray(action.payload) ? action.payload : [];
+        state.workUpdates = Array.isArray(action.payload) ? action.payload : [];
       })
-      .addCase(fetchDailyUpdates.rejected, (state, action) => {
+      .addCase(fetchWorkUpdates.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.dailyUpdates = [];
+        state.workUpdates = [];
       });
   },
 });

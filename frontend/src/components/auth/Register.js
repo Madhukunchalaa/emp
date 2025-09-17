@@ -262,6 +262,7 @@ const Register = () => {
           <MenuItem value="designer">Designer</MenuItem>
           <MenuItem value="manager">Manager</MenuItem>
           <MenuItem value="Business">Business Development</MenuItem>
+          <MenuItem value="digital-marketing">Digital Marketing</MenuItem>
         </Select>
       </FormControl>
       <Button 

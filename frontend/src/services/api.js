@@ -262,15 +262,15 @@ export const employeeService = {
     return api.get('/employee/attendance');
   },
 
-  // Add daily updates functionality
-  getDailyUpdates: () => {
+  // Add work updates functionality
+  getWorkUpdates: () => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.get('/employee/daily-updates');
+    return api.get('/employee/work-updates');
   },
 
-  addDailyUpdate: (updateData) => {
+  addWorkUpdate: (updateData) => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
@@ -279,18 +279,18 @@ export const employeeService = {
     return api.post('/employee/work-update', updateData);
   },
 
-  updateDailyUpdate: (updateId, updateData) => {
+  updateWorkUpdate: (updateId, updateData) => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.put(`/employee/daily-updates/${updateId}`, updateData);
+    return api.put(`/employee/work-updates/${updateId}`, updateData);
   },
 
-  deleteDailyUpdate: (updateId) => {
+  deleteWorkUpdate: (updateId) => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.delete(`/employee/daily-updates/${updateId}`);
+    return api.delete(`/employee/work-updates/${updateId}`);
   },
 
   updateTodayWorkingOn: (todayWorkingOn) => {
@@ -300,11 +300,11 @@ export const employeeService = {
     return api.put('/employee/today-working-on', { todayWorkingOn });
   },
 
-  getMyDailyUpdates: (page = 1, limit = 10) => {
+  getMyWorkUpdates: (page = 1, limit = 10) => {
     if (!authService.isAuthenticated()) {
       return Promise.reject(new Error('No auth token'));
     }
-    return api.get(`/employee/my-daily-updates?page=${page}&limit=${limit}`);
+    return api.get(`/employee/my-work-updates?page=${page}&limit=${limit}`);
   },
 
   updateTaskProgress: (taskId, progress) => {
@@ -358,10 +358,21 @@ export const managerService = {
   getEmployeeUpdates: () => api.get('/manager/updates'),
   getEmployeeUpdateSummary: () => api.get('/manager/employee-update-summary'),
   getAllEmployeeUpdates: () => api.get('/manager/all-updates'),
+  getEmployeeUpdatesByDate: (employeeId, startDate, endDate) => api.get(`/manager/employee-updates?employeeId=${employeeId}&startDate=${startDate}&endDate=${endDate}`),
+  getProjectUpdates: (projectId, startDate, endDate) => api.get(`/manager/project-updates?projectId=${projectId}&startDate=${startDate}&endDate=${endDate}`),
   approveRejectUpdate: (updateId, action, reason) => api.put(`/manager/updates/${updateId}/approve-reject`, { action, reason }),
   
   // Testing
   testAssign: (data) => api.post('/manager/test-assign', data),
+
+  // Todos
+  getTodos: (params) => api.get('/todos', { params }),
+  getTodosByDate: (date) => api.get(`/todos/date/${date}`),
+  getTodoStats: (params) => api.get('/todos/stats', { params }),
+  createTodo: (data) => api.post('/todos', data),
+  updateTodo: (id, data) => api.put(`/todos/${id}`, data),
+  deleteTodo: (id) => api.delete(`/todos/${id}`),
+  bulkUpdateTodos: (data) => api.put('/todos/bulk/update', data),
 
   getUserById: async (id) => {
     try {
