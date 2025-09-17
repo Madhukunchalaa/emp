@@ -1,7 +1,7 @@
 const Punch = require('../models/Punch');
 const Project = require('../models/Project');
 const User = require('../models/User');
-const DailyUpdate = require('../models/DailyUpdate');
+const WorkUpdate = require('../models/WorkUpdate');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
@@ -461,15 +461,30 @@ exports.getAllProjects = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-// Submit daily update
-exports.submitDailyUpdate = async (req, res) => {
+// Submit work update
+exports.submitWorkUpdate = async (req, res) => {
   try {
     // Log what we received
+    console.log('=== WORK UPDATE SUBMISSION ===');
     console.log('Request body:', req.body);
     console.log('Request file:', req.file);
     console.log('User ID:', req.user?.id);
+    console.log('Request headers:', req.headers);
 
-    const { project, status, update, finishBy, project_title } = req.body;
+    const { 
+      project, 
+      status, 
+      update, 
+      finishBy, 
+      project_title,
+      taskDescription,
+      priority,
+      plannedTime,
+      actualTime,
+      linkReference,
+      notes,
+      plansForNextDay
+    } = req.body;
 
     // Enhanced validation with detailed error messages
     const missingFields = [];
@@ -477,13 +492,20 @@ exports.submitDailyUpdate = async (req, res) => {
     if (!status) missingFields.push('status');  
     if (!update) missingFields.push('update');
     if (!finishBy) missingFields.push('finishBy');
+    if (!taskDescription) missingFields.push('taskDescription');
+    if (!plannedTime) missingFields.push('plannedTime');
+    if (!actualTime) missingFields.push('actualTime');
 
     if (missingFields.length > 0) {
+      console.log('❌ VALIDATION FAILED - Missing fields:', missingFields);
+      console.log('Received data:', { project_title, status, update, finishBy, project, taskDescription, plannedTime, actualTime });
       return res.status(400).json({ 
         message: `Missing required fields: ${missingFields.join(', ')}`,
-        received: { project_title, status, update, finishBy, project }
+        received: { project_title, status, update, finishBy, project, taskDescription, plannedTime, actualTime }
       });
     }
+    
+    console.log('✅ VALIDATION PASSED - All required fields present');
 
     // Handle image upload
     let imageUrl = null;
@@ -492,23 +514,31 @@ exports.submitDailyUpdate = async (req, res) => {
       console.log('Image uploaded:', imageUrl);
     }
 
-    // Create the daily update
-    const dailyUpdate = new DailyUpdate({
+    // Create the work update
+    const workUpdate = new WorkUpdate({
       employee: req.user.id,
       project: project || null,
       project_title,
       status,
       update,
       finishBy: new Date(finishBy),
-      imageUrl
+      imageUrl,
+      taskDescription,
+      priority: priority || 'Medium',
+      plannedTime: parseFloat(plannedTime),
+      actualTime: parseFloat(actualTime),
+      linkReference: linkReference || '',
+      notes: notes || '',
+      plansForNextDay: plansForNextDay || ''
     });
 
-    const savedUpdate = await dailyUpdate.save();
-    console.log('✅ Daily update saved:', savedUpdate);
+    console.log('💾 Attempting to save work update to database...');
+    const savedUpdate = await workUpdate.save();
+    console.log('✅ Work update saved successfully:', savedUpdate);
    
     res.status(201).json({ 
-      message: 'Update submitted successfully', 
-      dailyUpdate: savedUpdate 
+      message: 'Work update submitted successfully', 
+      workUpdate: savedUpdate 
     });
 
   } catch (error) {
@@ -529,9 +559,9 @@ exports.submitDailyUpdate = async (req, res) => {
   }
 };
 
-// Get employee's daily updates
+// Get employee's work updates
 
-exports.getDailyUpdates = async (req, res) => {
+exports.getWorkUpdates = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const query = { employee: req.user.id };
@@ -543,7 +573,7 @@ exports.getDailyUpdates = async (req, res) => {
       };
     }
 
-    const updates = await DailyUpdate.find(query)
+    const updates = await WorkUpdate.find(query)
       .sort({ date: -1 })
       .populate('employee', 'name email')
       .populate('approvedBy', 'name');
@@ -555,20 +585,20 @@ exports.getDailyUpdates = async (req, res) => {
   }
 };
 
-// Get employee's daily updates with approval status
-exports.getMyDailyUpdates = async (req, res) => {
+// Get employee's work updates with approval status
+exports.getMyWorkUpdates = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    const updates = await DailyUpdate.find({ employee: req.user.id })
+    const updates = await WorkUpdate.find({ employee: req.user.id })
       .sort({ date: -1 })
       .populate('project', 'title description')
       .populate('approvedBy', 'name')
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await DailyUpdate.countDocuments({ employee: req.user.id });
+    const total = await WorkUpdate.countDocuments({ employee: req.user.id });
 
     res.json({
       updates,
@@ -577,14 +607,14 @@ exports.getMyDailyUpdates = async (req, res) => {
       total
     });
   } catch (err) {
-    console.error('Error fetching my daily updates:', err);
+    console.error('Error fetching my work updates:', err);
     res.status(500).json({ message: 'Failed to fetch updates' });
   }
 };
 
-// Get today's update
+// Get today's work update
 
-exports.getTodayUpdate = async (req, res) => {
+exports.getTodayWorkUpdate = async (req, res) => {
 
   try {
 
@@ -600,7 +630,7 @@ exports.getTodayUpdate = async (req, res) => {
 
 
 
-    const update = await DailyUpdate.findOne({
+    const update = await WorkUpdate.findOne({
 
       employee: employeeId,
 
@@ -620,38 +650,38 @@ exports.getTodayUpdate = async (req, res) => {
 
 
 
-    res.json(update || { message: 'No update submitted for today' });
+    res.json(update || { message: 'No work update submitted for today' });
 
   } catch (error) {
 
-    console.error('Error fetching today\'s update:', error);
+    console.error('Error fetching today\'s work update:', error);
 
-    res.status(500).json({ message: 'Error fetching today\'s update' });
+    res.status(500).json({ message: 'Error fetching today\'s work update' });
 
   }
 
 };
 
-// Update daily update
-exports.updateDailyUpdate = async (req, res) => {
+// Update work update
+exports.updateWorkUpdate = async (req, res) => {
   try {
     const { updateId } = req.params;
     const { project, status, update, finishBy, project_title } = req.body;
 
     // Find the update and verify ownership
-    const dailyUpdate = await DailyUpdate.findById(updateId);
+    const workUpdate = await WorkUpdate.findById(updateId);
     
-    if (!dailyUpdate) {
-      return res.status(404).json({ message: 'Daily update not found' });
+    if (!workUpdate) {
+      return res.status(404).json({ message: 'Work update not found' });
     }
 
     // Check if the update belongs to the current user
-    if (dailyUpdate.employee.toString() !== req.user.id) {
+    if (workUpdate.employee.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to edit this update' });
     }
 
     // Check if the update has already been approved/rejected
-    if (dailyUpdate.approvalStatus && dailyUpdate.approvalStatus !== 'Pending') {
+    if (workUpdate.approvalStatus && workUpdate.approvalStatus !== 'Pending') {
       return res.status(400).json({ 
         message: 'Cannot edit update that has already been approved or rejected' 
       });
@@ -670,11 +700,11 @@ exports.updateDailyUpdate = async (req, res) => {
     }
 
     // Handle image upload if provided
-    let imageUrl = dailyUpdate.imageUrl; // Keep existing image if no new one
+    let imageUrl = workUpdate.imageUrl; // Keep existing image if no new one
     if (req.file) {
       // Delete old image if it exists
-      if (dailyUpdate.imageUrl) {
-        const oldImagePath = path.join(__dirname, '..', dailyUpdate.imageUrl);
+      if (workUpdate.imageUrl) {
+        const oldImagePath = path.join(__dirname, '..', workUpdate.imageUrl);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
@@ -682,8 +712,8 @@ exports.updateDailyUpdate = async (req, res) => {
       imageUrl = `/uploads/updates/${req.file.filename}`;
     }
 
-    // Update the daily update
-    const updatedUpdate = await DailyUpdate.findByIdAndUpdate(
+    // Update the work update
+    const updatedUpdate = await WorkUpdate.findByIdAndUpdate(
       updateId,
       {
         project: projectId,
@@ -699,14 +729,14 @@ exports.updateDailyUpdate = async (req, res) => {
      .populate('project', 'title description');
 
     res.json({
-      message: 'Daily update updated successfully',
+      message: 'Work update updated successfully',
       update: updatedUpdate
     });
 
   } catch (error) {
-    console.error('Error updating daily update:', error);
+    console.error('Error updating work update:', error);
     res.status(500).json({ 
-      message: 'Failed to update daily update',
+      message: 'Failed to update work update',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
     });
   }

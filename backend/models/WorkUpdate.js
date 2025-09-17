@@ -27,7 +27,7 @@ const workUpdateSchema = new mongoose.Schema({
   finishBy: {
     type: Date,
   },
-  // New work update fields
+  // Work update fields
   taskDescription: {
     type: String,
     required: true

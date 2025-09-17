@@ -33,6 +33,7 @@ const managerRoutes = require('./routes/managerRoutes');
 const teamLeaderRoutes = require('./routes/teamLeaderRoutes');
 const designRoutes = require('./routes/designRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const todoRoutes = require('./routes/todoRoutes');
 const empIdRoutes = require('./controllers/empIdController');
 
 app.use('/api/auth', authRoutes);
@@ -41,6 +42,7 @@ app.use('/api/manager', managerRoutes);
 app.use('/api/team-leader', teamLeaderRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/todos', todoRoutes);
 app.use('/api/empid', empIdRoutes);
 
 // Socket.IO chat logic

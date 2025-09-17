@@ -10,12 +10,12 @@ const {
   punchIn,
   punchOut,
   getAttendance,
-  submitDailyUpdate,
-  getDailyUpdates,
-  getTodayUpdate,
+  submitWorkUpdate,
+  getWorkUpdates,
+  getTodayWorkUpdate,
   updateTodayWorkingOn,
-  getMyDailyUpdates,
-  updateDailyUpdate,
+  getMyWorkUpdates,
+  updateWorkUpdate,
   updateTaskStatus,
   updateProjectAsTaskStatus,
   testDatabaseState,
@@ -62,13 +62,12 @@ router.post('/attendance/punch-out', auth, punchOut);
 router.get('/attendance', auth, getAttendance);
 
 // Daily update routes
-router.post('/daily-update', auth, upload.single('image'), submitDailyUpdate);
-router.put('/daily-updates/:updateId', auth, upload.single('image'), updateDailyUpdate);
+router.post('/work-update', auth, upload.single('image'), submitWorkUpdate);
+router.put('/work-updates/:updateId', auth, upload.single('image'), updateWorkUpdate);
 
-router.get('/daily-updates', auth, getDailyUpdates);
-router.get('/my-daily-updates', auth, getMyDailyUpdates);
-router.get('/today-update', auth, getTodayUpdate);
-router.post("/work-update", workUpdate);
+router.get('/work-updates', auth, getWorkUpdates);
+router.get('/my-work-updates', auth, getMyWorkUpdates);
+router.get('/today-work-update', auth, getTodayWorkUpdate);
 
 
 // Today's working on route

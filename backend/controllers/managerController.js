@@ -38,18 +38,22 @@ const getEmployees = async (req, res) => {
   .sort({ createdAt: -1 })
   .select('update'); // Fix here
 
-return {
-  ...employee.toObject(),
-  attendance: {
-    today: attendance ? {
-      status: attendance.status,
-      punchIn: attendance.punchIn,
-      punchOut: attendance.punchOut,
-      hours: attendance.hours
-    } : null
-  },
-  latestUpdateTitle: latestUpdate ? latestUpdate.update : null // Fix here
-};
+        return {
+          ...employee.toObject(),
+          attendance: {
+            today: attendance ? {
+              status: attendance.status,
+              punchIn: attendance.punchIn,
+              punchOut: attendance.punchOut,
+              hours: attendance.hours
+            } : null
+          },
+          latestUpdateTitle: latestUpdate ? latestUpdate.update : null,
+          // Add punch data at root level for easier frontend access
+          todayPunchIn: attendance ? attendance.punchIn : null,
+          todayPunchOut: attendance ? attendance.punchOut : null,
+          isPunchedIn: attendance && attendance.punchIn && !attendance.punchOut
+        };
       })
     );
 

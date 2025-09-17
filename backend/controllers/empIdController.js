@@ -16,7 +16,7 @@ router.post('/', auth, checkRole(['admin', 'manager']), async (req, res) => {
         if (!employeeId || !role) {
             return res.status(400).json({ msg: 'employeeId and role are required' });
         }
-        const validRoles = ['developer','designer', 'team-leader', 'manager', 'Business'];
+        const validRoles = ['developer','designer', 'team-leader', 'manager', 'Business', 'digital-marketing'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ msg: 'Invalid role specified' });
         }
@@ -66,7 +66,7 @@ router.post('/batch', auth, checkRole(['admin']), async (req, res) => {
   try {
     const { count = 1, role, prefix = 'EMP', random = true } = req.body;
     if (!role) return res.status(400).json({ msg: 'Role is required' });
-    const validRoles = ['developer','designer', 'team-leader', 'manager', 'Business', 'employee'];
+    const validRoles = ['developer','designer', 'team-leader', 'manager', 'Business', 'employee', 'digital-marketing'];
     if (!validRoles.includes(role)) return res.status(400).json({ msg: 'Invalid role specified' });
     let empIds = [];
     for (let i = 0; i < count; i++) {

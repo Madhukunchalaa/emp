@@ -32,6 +32,7 @@ router.get('/employees/:employeeId/attendance', auth, checkRole(['manager']), ma
 router.get('/employee-updates', auth, checkRole(['manager']), managerController.getEmployeeDailyUpdates);
 router.get('/employee-update-summary', auth, checkRole(['manager']), managerController.getEmployeeUpdateSummary);
 router.get('/all-updates', auth, checkRole(['manager']), managerController.getAllEmployeeUpdates);
+router.get('/project-updates', auth, checkRole(['manager']), managerController.getProjectUpdates);
 router.put('/updates/:updateId/approve-reject', auth, checkRole(['manager']), managerController.approveRejectUpdate);
 
 // Add this route to support GET /api/manager/updates
