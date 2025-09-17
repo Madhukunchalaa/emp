@@ -14,8 +14,13 @@ let isLoggingOut = false;
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('API Request Interceptor - Token exists:', !!token);
+    console.log('API Request Interceptor - URL:', config.url);
     if (token && !isLoggingOut) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Request Interceptor - Added Bearer token');
+    } else {
+      console.log('API Request Interceptor - No token or logging out');
     }
     return config;
   },
@@ -26,8 +31,14 @@ api.interceptors.request.use(
 
 // Add response interceptor to handle token expiration
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response Interceptor - Success:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.log('API Response Interceptor - Error:', error.response?.status, error.config?.url);
+    console.log('API Response Interceptor - Error details:', error.response?.data);
+    
     // Only handle 401 if we're not already logging out or redirecting
     if (error.response?.status === 401 && !isRedirecting && !isLoggingOut) {
       isRedirecting = true;

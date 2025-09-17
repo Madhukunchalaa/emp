@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, User, Clock, X, Users, CalendarDays, ArrowLeft, MessageSquare, Eye } from 'lucide-react';
 import { managerService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const AttendanceCalendar = () => {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -11,6 +13,7 @@ const AttendanceCalendar = () => {
   const [loading, setLoading] = useState(false);
   const [updatesLoading, setUpdatesLoading] = useState(false);
   const [dailyUpdatesCount, setDailyUpdatesCount] = useState({});
+  const [error, setError] = useState(null);
 
   // Helper function to extract data (similar to your existing implementation)
   const extractData = (res) => {
@@ -113,15 +116,68 @@ const AttendanceCalendar = () => {
     }
   };
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('No token found, redirecting to login...');
+      navigate('/login');
+      return;
+    }
+  }, [navigate]);
+
   // Fetch attendance data from your API
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching attendance data...');
+        
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        console.log('Token value:', token ? token.substring(0, 20) + '...' : 'No token');
+        
+        // Check if user is logged in
+        const user = localStorage.getItem('user');
+        console.log('User data:', user ? JSON.parse(user) : 'No user data');
+        
+        // Check if user role is manager
+        if (user) {
+          const userData = JSON.parse(user);
+          console.log('User role:', userData.role);
+          if (userData.role !== 'manager') {
+            console.warn('User is not a manager, redirecting...');
+            navigate('/login');
+            return;
+          }
+        }
+        
         const res = await managerService.getAttendanceHistory();
-        setAttendanceData(res);
+        console.log('Attendance data response:', res);
+        
+        // Handle different response formats
+        if (res && res.data) {
+          setAttendanceData(res.data);
+        } else if (Array.isArray(res)) {
+          setAttendanceData(res);
+        } else {
+          console.warn('Unexpected response format:', res);
+          setAttendanceData([]);
+        }
       } catch (err) {
         console.error("Error fetching attendance:", err);
+        
+        // Check if it's an authentication error
+        if (err.response?.status === 401) {
+          console.log('Authentication failed, redirecting to login...');
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
+        }
+        
+        setError(err.message || 'Failed to fetch attendance data');
+        setAttendanceData([]);
       } finally {
         setLoading(false);
       }
@@ -761,7 +817,11 @@ const AttendanceCalendar = () => {
     );
   }
 
-  return (
+  // Add error boundary and debugging
+  console.log('AttendanceCalendar render - loading:', loading, 'attendanceData:', attendanceData);
+
+  try {
+    return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="p-6">
         {/* Header */}
@@ -772,6 +832,10 @@ const AttendanceCalendar = () => {
                 Attendance Calendar
               </h1>
               <p className="text-gray-600 mt-2">Click on any employee to view their attendance calendar</p>
+              {/* Debug info */}
+              <p className="text-xs text-gray-400 mt-1">
+                Debug: Loading: {loading ? 'Yes' : 'No'}, Data count: {attendanceData?.length || 0}
+              </p>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -796,7 +860,42 @@ const AttendanceCalendar = () => {
 
         {/* Employee Grid */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-          {loading ? (
+          {error ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Data</h3>
+              <p className="text-red-500 mb-4">{error}</p>
+              <button 
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  // Retry fetching
+                  const fetchAttendanceData = async () => {
+                    try {
+                      const res = await managerService.getAttendanceHistory();
+                      if (res && res.data) {
+                        setAttendanceData(res.data);
+                      } else if (Array.isArray(res)) {
+                        setAttendanceData(res);
+                      } else {
+                        setAttendanceData([]);
+                      }
+                    } catch (err) {
+                      setError(err.message || 'Failed to fetch attendance data');
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  fetchAttendanceData();
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
               <p className="text-gray-500">Loading attendance data...</p>
@@ -931,7 +1030,27 @@ const AttendanceCalendar = () => {
         )}
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('AttendanceCalendar render error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">Component Error</h3>
+          <p className="text-red-500 mb-4">Something went wrong rendering the attendance calendar.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default AttendanceCalendar;
