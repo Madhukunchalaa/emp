@@ -75,7 +75,6 @@ exports.punchIn = async (req, res) => {
     }
 
     // Create new punch record with IST timezone
-    const now = new Date();
     const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
     
     const punch = new Punch({
@@ -126,7 +125,6 @@ exports.punchOut = async (req, res) => {
     }
 
     // Use IST timezone for punch out
-    const now = new Date();
     const punchOutTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
     punch.punchOut = punchOutTime;
     
