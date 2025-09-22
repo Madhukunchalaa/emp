@@ -659,6 +659,53 @@ export const chatService = {
   }
 };
 
+// Website monitoring service
+export const websiteService = {
+  // Add a new website to monitor
+  addWebsite: async (domain) => {
+    try {
+      const response = await api.post('/websites', { domain });
+      return response;
+    } catch (error) {
+      console.error('Add website API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get all monitored websites
+  getWebsites: async () => {
+    try {
+      const response = await api.get('/websites');
+      return response;
+    } catch (error) {
+      console.error('Get websites API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Delete a website
+  deleteWebsite: async (websiteId) => {
+    try {
+      const response = await api.delete(`/websites/${websiteId}`);
+      return response;
+    } catch (error) {
+      console.error('Delete website API error:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Manual health check for a specific website
+  checkWebsiteHealth: async (websiteId) => {
+    try {
+      const response = await api.post(`/websites/${websiteId}/check`);
+      return response;
+    } catch (error) {
+      console.error('Check website health API error:', error);
+      throw error.response?.data || error;
+    }
+  }
+};
+
 // Team Leader API functions
 export const teamLeaderService = {
   // Get team members

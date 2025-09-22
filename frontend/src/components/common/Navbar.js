@@ -157,20 +157,22 @@ const Navbar = ({ userRole = 'manager', children }) => {
    switch (role || userRole) {
   case 'admin':
     return [
-   { path: '/admin/empid', label: 'Admin Dashboard', icon: '🛠️' },
-   // Optionally add more admin links here
+      { path: '/admin/empid', label: 'Admin Dashboard', icon: '🛠️' },
+      { path: '/website-health-monitor', label: 'Website Monitor', icon: '🌐' },
+      // Optionally add more admin links here
     ];
- case 'manager':
-  return [
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/team', label: 'Team' },
-    { path: '/projects', label: 'Projects' },
-    { path: '/reports', label: 'Reports' },
-    { path: '/assign-project', label: 'Create Project' },
-    { path: '/assign-task', label: 'Assign Task' },
-    { path: '/manager-leave', label: 'Leave Requests' },
-    { path: '/attendance-calendar', label: 'Attendance Calendar' },
-  ];
+  case 'manager':
+    return [
+      { path: '/dashboard', label: 'Dashboard' },
+      { path: '/team', label: 'Team' },
+      { path: '/projects', label: 'Projects' },
+      { path: '/reports', label: 'Reports' },
+      { path: '/assign-project', label: 'Create Project' },
+      { path: '/assign-task', label: 'Assign Task' },
+      { path: '/manager-leave', label: 'Leave Requests' },
+      { path: '/attendance-calendar', label: 'Attendance Calendar' },
+      { path: '/website-health-monitor', label: 'Website Monitor', icon: '🌐' },
+    ];
   case 'team-leader':
     return [
    { path: '/dashboard', label: 'Dashboard',   },

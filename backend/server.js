@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
+const cron = require('node-cron');
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +36,7 @@ const designRoutes = require('./routes/designRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const todoRoutes = require('./routes/todoRoutes');
 const empIdRoutes = require('./controllers/empIdController');
+const websiteRoutes = require('./routes/websiteRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employee', employeeRoutes);
@@ -44,6 +46,7 @@ app.use('/api/designs', designRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/todos', todoRoutes);
 app.use('/api/empid', empIdRoutes);
+app.use('/api/websites', websiteRoutes);
 
 // Socket.IO chat logic
 const ChatMessage = require('./models/ChatMessage');
@@ -68,6 +71,18 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
   console.log('MongoDB connected');
+  
+  // Setup cron job for website health monitoring
+  const { bulkHealthCheck } = require('./controllers/websiteController');
+  
+  // Run every 5 minutes
+  cron.schedule('*/5 * * * *', () => {
+    console.log('Running scheduled website health check...');
+    bulkHealthCheck();
+  });
+  
+  console.log('Website health monitoring cron job scheduled (every 5 minutes)');
+  
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
