@@ -606,20 +606,7 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Todo Calendar Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                <Calendar className="w-6 h-6 text-blue-400" />
-                <span>Todo Calendar</span>
-              </h2>
-            </div>
-            <div className="min-h-[500px] overflow-visible">
-              <TodoCalendar isCompact={true} />
-            </div>
-          </div>
-        </div>
+        
 
         {/* Employee List Section */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
@@ -1326,6 +1313,21 @@ export default function ManagerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Todo Calendar Section */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                <Calendar className="w-6 h-6 text-blue-400" />
+                <span>Todo Calendar</span>
+              </h2>
+            </div>
+            <div className="min-h-[500px] overflow-visible">
+              <TodoCalendar isCompact={true} />
+            </div>
+          </div>
+        </div>
 
 
 

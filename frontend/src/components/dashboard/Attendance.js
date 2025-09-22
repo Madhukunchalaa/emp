@@ -86,6 +86,7 @@ const Attendance = () => {
         return 'Invalid Date';
       }
       return dateObj.toLocaleDateString('en-US', { 
+        timeZone: 'Asia/Kolkata',
         weekday: 'short',
         year: 'numeric',
         month: 'short',
