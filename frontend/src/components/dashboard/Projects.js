@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { managerService } from '../../services/api';
+import KanbanBoard from './KanbanBoard';
 import { 
   Search, 
   Filter, 
@@ -58,6 +59,7 @@ const Projects = () => {
     completedProjects: 0,
     overdueProjects: 0
   });
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'kanban'
 
   useEffect(() => {
     fetchProjects();
@@ -188,10 +190,35 @@ const Projects = () => {
           </div>
         </div>
 
-        {/* Projects Table Section */}
+        {/* Projects Section */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
           <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
-            <h2 className="text-xl font-bold text-white">Projects</h2>
+            <div className="flex items-center space-x-4">
+              <h2 className="text-xl font-bold text-white">Projects</h2>
+              {/* View Toggle */}
+              <div className="flex items-center bg-gray-800/50 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'table' 
+                      ? 'bg-white text-gray-900' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  Table
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'kanban' 
+                      ? 'bg-white text-gray-900' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  Board
+                </button>
+              </div>
+            </div>
             <div className="flex space-x-2">
               <button
                 onClick={fetchProjects}
@@ -213,54 +240,58 @@ const Projects = () => {
           </div>
           
           <div className="p-5">
-            {/* Table Controls */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Show</span>
-                <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-                <span className="text-sm text-gray-300">entries</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Search:</span>
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                  className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+            {viewMode === 'table' && (
+              <>
+                {/* Table Controls */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-300">Show</span>
+                    <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                    <span className="text-sm text-gray-300">entries</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-300">Search:</span>
+                      <input
+                        type="text"
+                        placeholder="Search projects..."
+                      className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
                 </div>
-            </div>
 
-            {/* Filter Controls */}
-            <div className="flex items-center space-x-4 mb-4">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="on-hold">On Hold</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <select
-                  value={filterPriority}
-                  onChange={(e) => setFilterPriority(e.target.value)}
-                className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-                >
-                  <option value="all">All Priority</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
+                {/* Filter Controls */}
+                <div className="flex items-center space-x-4 mb-4">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                    className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="on-hold">On Hold</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value)}
+                    className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
+                    >
+                      <option value="all">All Priority</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+              </>
+            )}
 
             {loading ? (
               <div className="text-center py-8">
@@ -271,6 +302,20 @@ const Projects = () => {
                 <div className="text-center py-8">
                 <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-300">No projects found.</p>
+                </div>
+              ) : viewMode === 'kanban' ? (
+                <div className="bg-gray-900 rounded-xl -m-5">
+                  <KanbanBoard 
+                    tasks={filteredProjects.map(project => ({
+                      _id: project._id,
+                      title: project.title,
+                      description: project.description,
+                      status: project.status,
+                      priority: project.priority,
+                      deadline: project.deadline,
+                      assignedTo: project.assignedEmployees?.[0]
+                    }))}
+                  />
                 </div>
               ) : (
               <div className="overflow-x-auto">
