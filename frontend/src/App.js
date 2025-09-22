@@ -36,6 +36,7 @@ import Leave from './components/dashboard/Leave';
 
 import ChatDashboard from './components/dashboard/ChatDashboard';
 import EmpIdAdmin from './components/admin/EmpIdAdmin';
+import WebsiteHealthMonitor from './components/dashboard/WebsiteHealthMonitor';
 
 import TeamManagement from './components/dashboard/TeamManagement';
 import TeamTasks from './components/dashboard/TeamTasks';
@@ -209,6 +210,14 @@ function AppContent() {
         <Route path="/team-management" element={<PrivateRoute><TeamManagement /></PrivateRoute>} />
         <Route path="/team-tasks" element={<PrivateRoute><TeamTasks /></PrivateRoute>} />
         <Route path="/team-reports" element={<PrivateRoute><TeamReports /></PrivateRoute>} />
+        <Route
+          path="/website-health-monitor"
+          element={
+            <PrivateRoute>
+              <WebsiteHealthMonitor />
+            </PrivateRoute>
+          }
+        />
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
