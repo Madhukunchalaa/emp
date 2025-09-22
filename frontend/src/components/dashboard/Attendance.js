@@ -67,11 +67,12 @@ const Attendance = () => {
       if (isNaN(dateObj.getTime())) {
         return 'Invalid Time';
       }
-      return dateObj.toLocaleTimeString('en-US', { 
-        hour12: false,
+      // Convert UTC to IST and format with AM/PM
+      return dateObj.toLocaleTimeString('en-IN', { 
+        hour12: true,
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        timeZone: 'Asia/Kolkata'
       });
     } catch (error) {
       console.error('Time formatting error:', error);

@@ -367,17 +367,17 @@ const ProjectDetails = () => {
   const budgetStats = getBudgetStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Error/Success Messages */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center space-x-2">
+        <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center space-x-2 shadow-sm">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="mx-6 mt-4 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl flex items-center space-x-2">
+        <div className="mx-6 mt-4 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl flex items-center space-x-2 shadow-sm">
           <CheckCircle className="w-5 h-5" />
           <span>{success}</span>
         </div>
@@ -388,40 +388,61 @@ const ProjectDetails = () => {
         <div className="mb-8">
           <Link 
             to="/projects" 
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors mb-6"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors mb-6 group"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to Projects</span>
           </Link>
 
-          {/* Project Header Card */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white">
-              <div className="flex items-start justify-between">
+          {/* Enhanced Project Header Card */}
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden hover:shadow-3xl transition-shadow duration-300">
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 text-white relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+              </div>
+              
+              <div className="relative flex items-start justify-between">
                 <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <FileText className="w-8 h-8" />
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-lg">
+                    <FileText className="w-10 h-10" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
-                    <p className="text-blue-100 text-lg mb-4 max-w-2xl">{project.description}</p>
-                    <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <h1 className="text-4xl font-bold">{project.title}</h1>
+                      <div className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium">
+                        ID: #{project._id?.slice(-6)}
+                      </div>
+                    </div>
+                    <p className="text-indigo-100 text-lg mb-4 max-w-3xl leading-relaxed">{project.description}</p>
+                    <div className="flex items-center gap-6">
                       <StatusBadge status={getProjectStatus()} size="lg" />
-                      <div className="flex items-center gap-2 text-blue-100">
+                      <div className="flex items-center gap-2 text-indigo-100">
                         <Calendar className="w-4 h-4" />
-                        <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
+                        <span>Created {new Date(project.createdAt).toLocaleDateString('en-IN', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-indigo-100">
+                        <Users className="w-4 h-4" />
+                        <span>{teamMembers.length} Team Members</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="p-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-colors">
+                  <button className="p-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-200 hover:scale-105">
                     <Share2 className="w-5 h-5" />
                   </button>
-                  <button className="p-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-colors">
+                  <button className="p-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-200 hover:scale-105">
+                    <Bell className="w-5 h-5" />
+                  </button>
+                  <button className="p-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-200 hover:scale-105">
                     <Settings className="w-5 h-5" />
                   </button>
-                  <button className="px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors font-medium">
+                  <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
                     <Edit className="w-4 h-4 inline mr-2" />
                     Edit Project
                   </button>
@@ -429,33 +450,96 @@ const ProjectDetails = () => {
               </div>
             </div>
 
-            {/* Progress Section */}
-            <div className="p-8 bg-black/5">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Project Progress</h2>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+            {/* Enhanced Progress Section */}
+            <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">Project Progress</h2>
+                  <p className="text-gray-600">Track completion and milestones</p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-xl shadow-sm">
                   <Activity className="w-4 h-4" />
-                  <span>Last updated {new Date().toLocaleDateString()}</span>
+                  <span>Last updated {new Date().toLocaleDateString('en-IN')}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-8">
-                <ProgressRing progress={calculateProgress()} size={120} color="text-blue-500" />
-                <div className="flex-1">
-                  <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${calculateProgress()}%` }}
-                    ></div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Progress Ring */}
+                <div className="flex flex-col items-center justify-center bg-white rounded-2xl p-6 shadow-lg">
+                  <ProgressRing progress={calculateProgress()} size={140} color="text-indigo-500" />
+                  <div className="mt-4 text-center">
+                    <h3 className="text-lg font-semibold text-gray-900">Overall Progress</h3>
+                    <p className="text-gray-600 text-sm">Project completion rate</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Completed Tasks:</span>
-                      <span className="font-semibold text-gray-900 ml-2">{taskStats.completed}/{taskStats.total}</span>
+                </div>
+
+                {/* Progress Details */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="bg-white rounded-2xl p-6 shadow-lg">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Task Breakdown</h3>
+                      <span className="text-2xl font-bold text-indigo-600">{taskStats.completed}/{taskStats.total}</span>
                     </div>
-                    <div>
-                      <span className="text-gray-600">In Progress:</span>
-                      <span className="font-semibold text-gray-900 ml-2">{taskStats.inProgress}</span>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-4 rounded-full transition-all duration-500 shadow-sm"
+                        style={{ width: `${calculateProgress()}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-green-50 rounded-xl">
+                        <div className="text-xl font-bold text-green-600">{taskStats.completed}</div>
+                        <div className="text-xs text-green-700">Completed</div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-xl">
+                        <div className="text-xl font-bold text-blue-600">{taskStats.inProgress}</div>
+                        <div className="text-xs text-blue-700">In Progress</div>
+                      </div>
+                      <div className="text-center p-3 bg-yellow-50 rounded-xl">
+                        <div className="text-xl font-bold text-yellow-600">{taskStats.pending}</div>
+                        <div className="text-xs text-yellow-700">Pending</div>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 rounded-xl">
+                        <div className="text-xl font-bold text-red-600">{taskStats.overdue}</div>
+                        <div className="text-xs text-red-700">Overdue</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-xl p-4 shadow-lg border-l-4 border-indigo-500">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                          <Users className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">{teamMembers.length}</div>
+                          <div className="text-sm text-gray-600">Team Members</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-lg border-l-4 border-green-500">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <DollarSign className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">${budgetStats.used.toLocaleString()}</div>
+                          <div className="text-sm text-gray-600">Budget Used</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-lg border-l-4 border-purple-500">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Activity className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">{projectUpdates.length}</div>
+                          <div className="text-sm text-gray-600">Recent Updates</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -464,29 +548,33 @@ const ProjectDetails = () => {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Enhanced Navigation Tabs */}
         <div className="mb-8">
-          <div className="bg-black/5 rounded-xl p-2 shadow-sm border border-gray-200 inline-flex">
+          <div className="bg-white rounded-2xl p-2 shadow-lg border border-gray-100 inline-flex gap-1">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'tasks', label: 'Tasks', icon: CheckCircle },
-              { id: 'team', label: 'Team', icon: Users },
-              { id: 'updates', label: 'Updates', icon: Activity },
-              { id: 'budget', label: 'Budget', icon: DollarSign }
+              { id: 'overview', label: 'Overview', icon: BarChart3, color: 'indigo' },
+              { id: 'tasks', label: 'Tasks', icon: CheckCircle, color: 'green' },
+              { id: 'team', label: 'Team', icon: Users, color: 'purple' },
+              { id: 'updates', label: 'Updates', icon: Activity, color: 'blue' },
+              { id: 'budget', label: 'Budget', icon: DollarSign, color: 'emerald' }
             ].map(tab => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-lg'
+                  className={`flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    isActive
+                      ? `bg-gradient-to-r from-${tab.color}-500 to-${tab.color}-600 text-white shadow-lg shadow-${tab.color}-500/25`
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <span>{tab.label}</span>
+                  {isActive && (
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  )}
                 </button>
               );
             })}
@@ -497,44 +585,111 @@ const ProjectDetails = () => {
         <div className="space-y-8">
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Metrics Cards */}
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/5 rounded-2xl p-6">
-                <MetricCard
-                  title="Total Tasks"
-                  value={taskStats.total}
-                  subtitle={`${taskStats.completed} completed`}
-                  icon={CheckCircle}
-                  color="blue"
-                />
-                <MetricCard
-                  title="Team Members"
-                  value={teamMembers.length}
-                  subtitle="Active contributors"
-                  icon={Users}
-                  color="purple"
-                />
-                <MetricCard
-                  title="Budget Used"
-                  value={`$${budgetStats.used.toLocaleString()}`}
-                  subtitle={`of $${budgetStats.budget.toLocaleString()}`}
-                  icon={DollarSign}
-                  color="green"
-                />
-                <MetricCard
-                  title="Project Updates"
-                  value={projectUpdates.length}
-                  subtitle="This month"
-                  icon={Activity}
-                  color="orange"
-                />
+              {/* Enhanced Metrics Cards */}
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                      <CheckCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-gray-900">{taskStats.total}</div>
+                      <div className="text-sm text-blue-600 font-medium">+{taskStats.completed} completed</div>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">Total Tasks</h3>
+                  <p className="text-sm text-gray-600">Project task breakdown</p>
+                  <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${taskStats.total > 0 ? (taskStats.completed / taskStats.total) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-gray-900">{teamMembers.length}</div>
+                      <div className="text-sm text-purple-600 font-medium">Active contributors</div>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">Team Members</h3>
+                  <p className="text-sm text-gray-600">Project contributors</p>
+                  <div className="mt-3 flex -space-x-2">
+                    {teamMembers.slice(0, 4).map((member, index) => (
+                      <UserAvatar 
+                        key={member._id}
+                        name={member.name} 
+                        avatar={member.avatar}
+                        size="sm"
+                        className="ring-2 ring-white"
+                      />
+                    ))}
+                    {teamMembers.length > 4 && (
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 ring-2 ring-white">
+                        +{teamMembers.length - 4}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg">
+                      <DollarSign className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-gray-900">${budgetStats.used.toLocaleString()}</div>
+                      <div className="text-sm text-green-600 font-medium">of ${budgetStats.budget.toLocaleString()}</div>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">Budget Used</h3>
+                  <p className="text-sm text-gray-600">Financial progress</p>
+                  <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(budgetStats.used / budgetStats.budget) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-gray-900">{projectUpdates.length}</div>
+                      <div className="text-sm text-orange-600 font-medium">Recent activity</div>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">Project Updates</h3>
+                  <p className="text-sm text-gray-600">This month's progress</p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full w-3/4"></div>
+                    </div>
+                    <span className="text-xs text-gray-500">75%</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Team Overview */}
-              <div className="bg-black/10 rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Overview</h3>
+              {/* Enhanced Team Overview */}
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Team Overview</h3>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span>{teamMembers.filter((_, i) => i % 2 === 0).length} online</span>
+                  </div>
+                </div>
                 <div className="space-y-4">
-                  {teamMembers.slice(0, 4).map((member, index) => (
-                    <div key={member._id} className="flex items-center gap-3">
+                  {teamMembers.slice(0, 5).map((member, index) => (
+                    <div key={member._id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                       <UserAvatar 
                         name={member.name} 
                         avatar={member.avatar}
@@ -542,22 +697,25 @@ const ProjectDetails = () => {
                         status={index % 2 === 0 ? "online" : "offline"}
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{member.name}</p>
+                        <p className="font-semibold text-gray-900">{member.name}</p>
                         <p className="text-sm text-gray-600">{member.email}</p>
+                        <p className="text-xs text-gray-500 mt-1">{member.role || 'Team Member'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">
-                          {tasks.filter(t => t.assignedTo?._id === member._id).length}
-                        </p>
-                        <p className="text-xs text-gray-600">tasks</p>
+                        <div className="bg-indigo-50 rounded-lg px-3 py-1">
+                          <p className="text-lg font-bold text-indigo-600">
+                            {tasks.filter(t => t.assignedTo?._id === member._id).length}
+                          </p>
+                          <p className="text-xs text-indigo-500">tasks</p>
+                        </div>
                       </div>
                     </div>
                   ))}
-                  {teamMembers.length > 4 && (
-                    <div className="text-center pt-2">
-                      <span className="text-sm text-gray-600">
-                        +{teamMembers.length - 4} more members
-                      </span>
+                  {teamMembers.length > 5 && (
+                    <div className="text-center pt-4 border-t border-gray-100">
+                      <button className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                        View all {teamMembers.length} team members →
+                      </button>
                     </div>
                   )}
                 </div>
@@ -566,19 +724,46 @@ const ProjectDetails = () => {
           )}
 
           {activeTab === 'tasks' && (
-            <div className="bg-black/5 rounded-2xl shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Project Tasks</h3>
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+              <div className="p-8 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Project Tasks</h3>
+                    <p className="text-gray-600 mt-1">Manage and track all project tasks</p>
+                  </div>
                   <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 rounded-xl hover:bg-gray-100">
                       <Filter className="w-4 h-4" />
                       Filter
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 rounded-xl hover:bg-gray-100">
+                      <Search className="w-4 h-4" />
+                      Search
+                    </button>
+                    <button className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 font-medium">
                       <Plus className="w-4 h-4" />
                       Add Task
                     </button>
+                  </div>
+                </div>
+                
+                {/* Task Statistics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-green-50 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
+                    <div className="text-sm text-green-700">Completed</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
+                    <div className="text-sm text-blue-700">In Progress</div>
+                  </div>
+                  <div className="bg-yellow-50 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-600">{taskStats.pending}</div>
+                    <div className="text-sm text-yellow-700">Pending</div>
+                  </div>
+                  <div className="bg-red-50 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
+                    <div className="text-sm text-red-700">Overdue</div>
                   </div>
                 </div>
               </div>

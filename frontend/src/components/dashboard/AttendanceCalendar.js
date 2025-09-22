@@ -87,14 +87,23 @@ const AttendanceCalendar = () => {
     }
   };
 
-  // Helper function to format time properly in IST
+  // Helper function to format time properly in IST with AM/PM
   const formatTime = (timeValue) => {
     if (!timeValue) return 'Not recorded';
     
     try {
       // If it's already a string that looks like time (HH:MM:SS or HH:MM)
       if (typeof timeValue === 'string' && timeValue.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
-        return timeValue;
+        // Parse the time string and create a date object for proper formatting
+        const [hours, minutes] = timeValue.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+          hour12: true
+        });
       }
       
       // If it's a date string or timestamp
@@ -104,7 +113,7 @@ const AttendanceCalendar = () => {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'Asia/Kolkata',
-          hour12: false
+          hour12: true
         });
       }
       
@@ -114,7 +123,7 @@ const AttendanceCalendar = () => {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'Asia/Kolkata',
-          hour12: false
+          hour12: true
         });
       }
       
