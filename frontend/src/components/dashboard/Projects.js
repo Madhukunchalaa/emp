@@ -139,54 +139,10 @@ const Projects = () => {
         )}
 
           {/* Page Header */}
-          <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Project Management</h1>
-          <p className="text-gray-300">Track and manage all your projects</p>
-          </div>
+          
 
           {/* Project Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 p-6">
-              <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white text-black rounded-xl">
-                <FileText className="w-5 h-5" />
-              </div>
-              <span className="text-2xl font-bold text-white">{stats.totalProjects}</span>
-            </div>
-            <h3 className="font-semibold text-white mb-1">Total Projects</h3>
-            <p className="text-sm text-gray-300">All projects</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 p-6">
-              <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white text-black rounded-xl">
-                <Play className="w-5 h-5" />
-              </div>
-              <span className="text-2xl font-bold text-white">{stats.activeProjects}</span>
-            </div>
-            <h3 className="font-semibold text-white mb-1">Active</h3>
-            <p className="text-sm text-gray-300">In progress</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 p-6">
-              <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white text-black rounded-xl">
-                <CheckSquare className="w-5 h-5" />
-              </div>
-              <span className="text-2xl font-bold text-white">{stats.completedProjects}</span>
-            </div>
-            <h3 className="font-semibold text-white mb-1">Completed</h3>
-            <p className="text-sm text-gray-300">Finished projects</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 p-6">
-              <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white text-black rounded-xl">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <span className="text-2xl font-bold text-white">{stats.overdueProjects}</span>
-            </div>
-            <h3 className="font-semibold text-white mb-1">Overdue</h3>
-            <p className="text-sm text-gray-300">Past deadline</p>
-          </div>
-        </div>
+        
 
         {/* Projects Table Section */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
@@ -238,29 +194,7 @@ const Projects = () => {
             </div>
 
             {/* Filter Controls */}
-            <div className="flex items-center space-x-4 mb-4">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="on-hold">On Hold</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <select
-                  value={filterPriority}
-                  onChange={(e) => setFilterPriority(e.target.value)}
-                className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-                >
-                  <option value="all">All Priority</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
+          
 
             {loading ? (
               <div className="text-center py-8">
@@ -277,9 +211,7 @@ const Projects = () => {
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs text-gray-300 uppercase bg-gray-800/50">
                     <tr>
-                      <th scope="col" className="px-6 py-3">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
-                      </th>
+                      
                       <th scope="col" className="px-6 py-3">
                         <div className="flex items-center">
                           PROJECT NAME
@@ -330,6 +262,14 @@ const Projects = () => {
                       </th>
                       <th scope="col" className="px-6 py-3">
                         <div className="flex items-center">
+                          CLIENT
+                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
+                          </svg>
+                        </div>
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        <div className="flex items-center">
                           TEAM
                           <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
@@ -361,9 +301,7 @@ const Projects = () => {
                           className="bg-gray-800/30 border-b border-gray-700 hover:bg-gray-800/50 transition-colors cursor-pointer"
                           onClick={() => handleProjectClick(project)}
                         >
-                          <td className="px-6 py-4">
-                            <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
-                          </td>
+                         
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
                               <div>
@@ -373,7 +311,7 @@ const Projects = () => {
                       </div>
                           </td>
                           <td className="px-6 py-4 text-gray-300">
-                            {project.startDate ? new Date(project.startDate).toLocaleDateString('en-GB', { 
+                            {project.startDate ? new Date(project.createdAt).toLocaleDateString('en-GB', { 
                               day: '2-digit', 
                               month: 'short', 
                               year: '2-digit' 
@@ -402,11 +340,23 @@ const Projects = () => {
                               <span className="text-xs text-gray-300">{progressPercentage}%</span>
                     </div>
                           </td>
+                          
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
                               {project.priority || 'Medium'}
                             </span>
                           </td>
+
+
+                           <td className="px-6 py-4">
+                            <div className="flex items-center space-x-2">
+                              
+                              <span className="text-xs text-gray-300">{project.client}</span>
+                    </div>
+                          </td>
+
+
+
                           <td className="px-6 py-4">
                             <div className="flex items-center -space-x-2">
                               {projectTeam.slice(0, 3).map((member, index) => (

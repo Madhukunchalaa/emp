@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, BarChart3, MessageSquare, Eye, Plus, Bell, TrendingUp, AlertCircle, CheckCircle, XCircle, Filter, Search, Download, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, Users, BarChart3, MessageSquare, Eye, Plus, Bell, TrendingUp, AlertCircle, CheckCircle, XCircle, Filter, Search, Download, RefreshCw, Settings, ClipboardList, FolderOpen } from 'lucide-react';
 import { managerService } from '../../services/api';
 import UserAvatar from '../common/userAvathar';
 import { Link } from 'react-router-dom';
@@ -82,6 +82,14 @@ export default function ManagerDashboard() {
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: true,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Set random quote on component mount
@@ -229,11 +237,6 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     fetchEmployees();
-    
-    // Set up automatic refresh every 30 seconds to update status
-    const interval = setInterval(fetchEmployees, 30000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   // Fetch projects
@@ -330,15 +333,6 @@ export default function ManagerDashboard() {
     }
   }, []);
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', { 
       weekday: 'short',
@@ -348,12 +342,6 @@ export default function ManagerDashboard() {
     });
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
 
   // Helper function to safely extract data from API responses
   const extractData = (response) => {
@@ -489,129 +477,65 @@ export default function ManagerDashboard() {
  
 
   return (
-
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
+    <div className="min-h-screen bg-gray-50">
      
 
       {/* Error/Success Messages */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center space-x-2">
+        <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center space-x-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
         </div>
       )}
       
       {success && (
-        <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg flex items-center space-x-2">
+        <div className="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg flex items-center space-x-2">
           <CheckCircle className="w-5 h-5" />
           <span>{success}</span>
         </div>
       )}
 
-
+      {/* Header Section */}
+      
 
       {/* Main Content */}
-      <div className="px-6 py-6">
+      <div className="p-6">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-2xl p-8 border border-gray-600/30 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold text-white">
-                      {managerName ? managerName.charAt(0).toUpperCase() : 'M'}
-                    </span>
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                      {getTimeOfDay()}, {managerName || 'Manager'}!
-                    </h1>
-                    <p className="text-gray-300 text-lg">Ready to lead your team to success today?</p>
-                  </div>
-                </div>
-                
-                {/* Daily Quote */}
-                {dailyQuote && (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                    <div className="flex items-start space-x-3">
-                      <div className="text-2xl text-yellow-400">💡</div>
-                      <div>
-                        <p className="text-white text-lg italic leading-relaxed">
-                          "{dailyQuote.split(' - ')[0]}"
-                        </p>
-                        {dailyQuote.includes(' - ') && (
-                          <p className="text-gray-300 text-sm mt-2 font-medium">
-                            — {dailyQuote.split(' - ')[1]}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Welcome {managerName || 'Manager'}</h2>
+          
+          {/* User Profile Card */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-gray-600">
+                  {managerName ? managerName.charAt(0).toUpperCase() : 'M'}
+                </span>
               </div>
-              
-              <div className="flex items-center space-x-3 ml-8">
-                <button
-                  onClick={getNewQuote}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Team Chat</span>
-                </button>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{managerName || 'Manager'}</h3>
+                <p className="text-gray-600">Manager</p>
+                
               </div>
             </div>
+          
           </div>
+          
+          {/* Information Cards Grid */}
+        
         </div>
 
-        {/* Dashboard Stats */}
        
 
         {/* Search and Filter Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search employees, projects..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-600 bg-white/20 text-white placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
-                />
-              </div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-600 bg-white/20 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <button
-              onClick={() => {
-                fetchEmployees();
-                refreshProjects();
-              }}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-black rounded-xl shadow-md hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-          </div>
-        </div>
+      
 
         
 
         {/* Employee List Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
-            <h2 className="text-xl font-bold text-white">Employee List</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-800">Employee List</h2>
             <Link to="/assign-task" className="flex items-center space-x-2 px-4 py-2 bg-white text-black rounded-xl shadow-md hover:bg-gray-100 transition-all duration-200 no-underline">
               <Plus className="w-4 h-4" />
               <span>Assign Task</span>
@@ -622,21 +546,21 @@ export default function ManagerDashboard() {
             {/* Table Controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Show</span>
-                <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
+                <span className="text-sm text-gray-600">Show</span>
+                <select className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 text-sm">
                   <option value="10">10</option>
                   <option value="25">25</option>
                   <option value="50">50</option>
                   <option value="100">100</option>
                 </select>
-                <span className="text-sm text-gray-300">entries</span>
+                <span className="text-sm text-gray-600">entries</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Search:</span>
+                <span className="text-sm text-gray-600">Search:</span>
                 <input
                   type="text"
                   placeholder="Search employees..."
-                  className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
+                  className="bg-white text-gray-800 border border-gray-300 rounded px-3 py-1 text-sm w-64"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -644,22 +568,22 @@ export default function ManagerDashboard() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8">
+              <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                <p className="text-gray-300 mt-4">Loading employees...</p>
+                <p className="text-gray-600 mt-4">Loading employees...</p>
               </div>
             ) : filteredEmployees.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-300">No employees found.</p>
+                <p className="text-gray-600">No employees found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-300 uppercase bg-gray-800/50">
+                  <thead className="text-xs text-gray-600 uppercase bg-gray-100">
                     <tr>
                       <th scope="col" className="px-6 py-3">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                        {/* <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" /> */}
                       </th>
                       <th scope="col" className="px-6 py-3">
                         <div className="flex items-center">
@@ -707,27 +631,27 @@ export default function ManagerDashboard() {
                       const statusDotColor = isOnline ? 'bg-green-400' : 'bg-gray-400';
                       
                       return (
-                        <tr key={employee._id} className="bg-gray-800/30 border-b border-gray-700 hover:bg-gray-800/50 transition-colors">
+                        <tr key={employee._id} className="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition-colors">
                           <td className="px-6 py-4">
-                            <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                            {/* <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" /> */}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
                              
                               <div>
-                                <div className="text-sm font-medium text-white">{employee.name}</div>
+                                <div className="text-sm font-medium text-gray-800">{employee.name}</div>
                                 <div className="text-xs text-gray-400">{employee.position || employee.role}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-gray-300">
+                          <td className="px-6 py-4 text-gray-600">
                             {employee.email}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-sm text-gray-300 capitalize">{employee.role}</span>
+                            <span className="text-sm text-gray-600 capitalize">{employee.role}</span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${statusColor}`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-gray-800 ${statusColor}`}>
                               <span className={`w-2 h-2 rounded-full mr-2 ${statusDotColor}`}></span>
                               {statusText}
                             </span>
@@ -736,20 +660,20 @@ export default function ManagerDashboard() {
                             <div className="flex items-center space-x-2">
                               <button 
                                 onClick={() => handleViewEmployee(employee)}
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="View Details"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button 
                                 onClick={() => handleChatWithEmployee(employee)}
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="Chat"
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </button>
                               <button 
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="More Actions"
                               >
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -766,17 +690,17 @@ export default function ManagerDashboard() {
                 
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-300">
+                  <div className="text-sm text-gray-600">
                     Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredEmployees.length}</span> of <span className="font-medium">{filteredEmployees.length}</span> results
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button className="px-3 py-1 text-sm text-gray-600 bg-gray-800 border border-gray-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                       Previous
                     </button>
-                    <button className="px-3 py-1 text-sm text-white bg-gray-700 border border-gray-600 rounded">
+                    <button className="px-3 py-1 text-sm text-gray-800 bg-blue-600 border border-blue-600 rounded">
                       1
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button className="px-3 py-1 text-sm text-gray-600 bg-gray-800 border border-gray-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                       Next
                     </button>
                   </div>
@@ -787,28 +711,28 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Projects Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
-            <h2 className="text-xl font-bold text-white">Projects</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-800">Projects</h2>
             <div className="flex space-x-2">
               <button
                 onClick={refreshProjects}
                 disabled={loading}
-                className="flex items-center space-x-1 text-white hover:text-gray-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 text-gray-800 hover:text-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </button>
               <span className="text-gray-400">|</span>
-              <Link to="/assign-project" className="text-white hover:text-gray-300 font-medium no-underline">
+              <Link to="/assign-project" className="text-gray-800 hover:text-gray-600 font-medium no-underline">
                 Create Project
               </Link>
               <span className="text-gray-400">|</span>
-              <Link to="/assign-project-to-team-leader" className="text-gray-300 hover:text-white font-medium no-underline">
+              <Link to="/assign-project-to-team-leader" className="text-gray-600 hover:text-gray-800 font-medium no-underline">
                 Assign to Team Leader
               </Link>
               <span className="text-gray-400">|</span>
-              <Link to="/projects" className="text-white hover:text-gray-300 font-medium no-underline">View All</Link>
+              <Link to="/projects" className="text-gray-800 hover:text-gray-600 font-medium no-underline">View All</Link>
             </div>
           </div>
           
@@ -816,21 +740,21 @@ export default function ManagerDashboard() {
             {/* Table Controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Show</span>
-                <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
+                <span className="text-sm text-gray-600">Show</span>
+                <select className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 text-sm">
                   <option value="10">10</option>
                   <option value="25">25</option>
                   <option value="50">50</option>
                   <option value="100">100</option>
                 </select>
-                <span className="text-sm text-gray-300">entries</span>
+                <span className="text-sm text-gray-600">entries</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Search:</span>
+                <span className="text-sm text-gray-600">Search:</span>
                 <input
                   type="text"
                   placeholder="Search projects..."
-                  className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
+                  className="bg-white text-gray-800 border border-gray-300 rounded px-3 py-1 text-sm w-64"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -840,20 +764,20 @@ export default function ManagerDashboard() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                <p className="text-gray-300 mt-4">Loading projects...</p>
+                <p className="text-gray-600 mt-4">Loading projects...</p>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="text-center py-8">
                 <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-300">No projects found.</p>
+                <p className="text-gray-600">No projects found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-300 uppercase bg-gray-800/50">
+                  <thead className="text-xs text-gray-600 uppercase bg-gray-100">
                     <tr>
                       <th scope="col" className="px-6 py-3">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                        {/* <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" /> */}
                       </th>
                       <th scope="col" className="px-6 py-3">
                         <div className="flex items-center">
@@ -934,37 +858,37 @@ export default function ManagerDashboard() {
                       const getPriorityColor = (priority) => {
                         switch (priority?.toLowerCase()) {
                           case 'high':
-                            return 'bg-red-500 text-white';
+                            return 'bg-red-500 text-gray-800';
                           case 'medium':
-                            return 'bg-yellow-500 text-white';
+                            return 'bg-yellow-500 text-gray-800';
                           case 'low':
-                            return 'bg-green-500 text-white';
+                            return 'bg-green-500 text-gray-800';
                           default:
-                            return 'bg-gray-500 text-white';
+                            return 'bg-gray-500 text-gray-800';
                         }
                       };
                       
                       return (
-                        <tr key={project._id} className="bg-gray-800/30 border-b border-gray-700 hover:bg-gray-800/50 transition-colors">
+                        <tr key={project._id} className="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition-colors">
                           <td className="px-6 py-4">
-                            <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                            {/* <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" /> */}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
                               <div>
-                                <div className="text-sm font-medium text-white">{project.title}</div>
+                                <div className="text-sm font-medium text-gray-800">{project.title}</div>
                                 <div className="text-xs text-gray-400 line-clamp-1">{project.description}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-gray-300">
+                          <td className="px-6 py-4 text-gray-600">
                             {project.startDate ? new Date(project.startDate).toLocaleDateString('en-GB', { 
                               day: '2-digit', 
                               month: 'short', 
                               year: '2-digit' 
                             }) : 'N/A'}
                           </td>
-                          <td className="px-6 py-4 text-gray-300">
+                          <td className="px-6 py-4 text-gray-600">
                             {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { 
                               day: '2-digit', 
                               month: 'short', 
@@ -972,7 +896,7 @@ export default function ManagerDashboard() {
                             }) : 'N/A'}
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(project.status)}`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-gray-800 ${getStatusColor(project.status)}`}>
                               {project.status}
                             </span>
                           </td>
@@ -984,7 +908,7 @@ export default function ManagerDashboard() {
                                   style={{ width: `${progressPercentage}%` }}
                                 ></div>
                               </div>
-                              <span className="text-xs text-gray-300">{progressPercentage}%</span>
+                              <span className="text-xs text-gray-600">{progressPercentage}%</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -1003,7 +927,7 @@ export default function ManagerDashboard() {
                               ))}
                               {projectTeam.length > 3 && (
                                 <div className="w-6 h-6 bg-gray-600 rounded-full border-2 border-gray-800 flex items-center justify-center">
-                                  <span className="text-xs text-white">+{projectTeam.length - 3}</span>
+                                  <span className="text-xs text-gray-800">+{projectTeam.length - 3}</span>
                                 </div>
                               )}
                               {projectTeam.length === 0 && (
@@ -1015,13 +939,13 @@ export default function ManagerDashboard() {
                             <div className="flex items-center space-x-2">
                               <Link 
                                 to={`/project/${project._id}`}
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="View Project"
                               >
                                 <Eye className="w-4 h-4" />
                               </Link>
                               <button 
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="Edit Project"
                               >
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1029,7 +953,7 @@ export default function ManagerDashboard() {
                                 </svg>
                               </button>
                               <button 
-                                className="text-gray-400 hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="More Actions"
                               >
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1046,17 +970,17 @@ export default function ManagerDashboard() {
                 
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-300">
+                  <div className="text-sm text-gray-600">
                     Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredProjects.length}</span> of <span className="font-medium">{filteredProjects.length}</span> results
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button className="px-3 py-1 text-sm text-gray-600 bg-gray-800 border border-gray-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                       Previous
                     </button>
-                    <button className="px-3 py-1 text-sm text-white bg-gray-700 border border-gray-600 rounded">
+                    <button className="px-3 py-1 text-sm text-gray-800 bg-blue-600 border border-blue-600 rounded">
                       1
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button className="px-3 py-1 text-sm text-gray-600 bg-gray-800 border border-gray-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                       Next
                     </button>
                   </div>
@@ -1067,9 +991,9 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Productivity Graph Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
-            <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center space-x-2">
               <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -1080,12 +1004,12 @@ export default function ManagerDashboard() {
                 <div className="text-3xl font-bold text-green-400">
                   {productivityData.overallProductivity}%
                 </div>
-                <div className="text-sm text-gray-300">Overall Productivity</div>
+                <div className="text-sm text-gray-600">Overall Productivity</div>
               </div>
               <button
                 onClick={refreshProjects}
                 disabled={loading}
-                className="flex items-center space-x-1 text-white hover:text-gray-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 text-gray-800 hover:text-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
@@ -1097,7 +1021,7 @@ export default function ManagerDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Project Status Distribution */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Project Status Distribution</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Project Status Distribution</h3>
                 
                 {/* Status Cards */}
                 <div className="grid grid-cols-2 gap-4">
@@ -1105,7 +1029,7 @@ export default function ManagerDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-2xl font-bold text-green-400">{productivityData.projectStatuses.completed}</div>
-                        <div className="text-sm text-gray-300">Completed</div>
+                        <div className="text-sm text-gray-600">Completed</div>
                       </div>
                       <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
                         <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -1119,7 +1043,7 @@ export default function ManagerDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-2xl font-bold text-blue-400">{productivityData.projectStatuses.inProgress}</div>
-                        <div className="text-sm text-gray-300">In Progress</div>
+                        <div className="text-sm text-gray-600">In Progress</div>
                       </div>
                       <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
                         <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1133,7 +1057,7 @@ export default function ManagerDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-2xl font-bold text-yellow-400">{productivityData.projectStatuses.pending}</div>
-                        <div className="text-sm text-gray-300">Pending</div>
+                        <div className="text-sm text-gray-600">Pending</div>
                       </div>
                       <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
                         <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1147,7 +1071,7 @@ export default function ManagerDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-2xl font-bold text-red-400">{productivityData.projectStatuses.onHold}</div>
-                        <div className="text-sm text-gray-300">On Hold</div>
+                        <div className="text-sm text-gray-600">On Hold</div>
                       </div>
                       <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
                         <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1186,7 +1110,7 @@ export default function ManagerDashboard() {
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-white">{productivityData.overallProductivity}%</div>
+                        <div className="text-2xl font-bold text-gray-800">{productivityData.overallProductivity}%</div>
                         <div className="text-xs text-gray-400">Complete</div>
                       </div>
                     </div>
@@ -1196,14 +1120,14 @@ export default function ManagerDashboard() {
 
               {/* Project Progress Chart */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Project Progress Overview</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Project Progress Overview</h3>
                 
                 <div className="space-y-4 max-h-80 overflow-y-auto">
                   {productivityData.projectProgress.length > 0 ? (
                     productivityData.projectProgress.map((project, index) => (
                       <div key={index} className="bg-white/5 rounded-lg p-4 border border-gray-600/30">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-white font-medium truncate">{project.name}</h4>
+                          <h4 className="text-gray-800 font-medium truncate">{project.name}</h4>
                           <div className="flex items-center space-x-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               project.priority === 'high' ? 'bg-red-500/20 text-red-400' :
@@ -1228,7 +1152,7 @@ export default function ManagerDashboard() {
                               style={{ width: `${project.progress}%` }}
                             />
                           </div>
-                          <span className="text-sm font-medium text-white min-w-[3rem] text-right">
+                          <span className="text-sm font-medium text-gray-800 min-w-[3rem] text-right">
                             {project.progress}%
                           </span>
                         </div>
@@ -1260,7 +1184,7 @@ export default function ManagerDashboard() {
 
       {/* Employee Detail Modal */}
       {showEmployeeModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-800/50 flex items-center justify-center z-50">
               <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 border border-gray-300">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-black">Employee Details</h3>
@@ -1296,7 +1220,7 @@ export default function ManagerDashboard() {
               </div>
             </div>
             <div className="flex space-x-2 mt-6">
-              <button className="flex-1 bg-black text-white py-2 rounded-xl hover:bg-gray-800 transition-all duration-200">
+              <button className="flex-1 bg-gray-800 text-gray-800 py-2 rounded-xl hover:bg-gray-700 transition-all duration-200">
                 View Profile
               </button>
               <button 
@@ -1315,10 +1239,10 @@ export default function ManagerDashboard() {
       )}
 
       {/* Todo Calendar Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center space-x-2">
                 <Calendar className="w-6 h-6 text-blue-400" />
                 <span>Todo Calendar</span>
               </h2>
@@ -1333,12 +1257,12 @@ export default function ManagerDashboard() {
 
       {/* Chat Panel */}
       {showChat && chatEmployee && managerUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-5/6 flex flex-col">
             {/* Chat Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-gray-800 font-semibold">
                   {chatEmployee.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
