@@ -609,11 +609,35 @@ const EmployeeDashboard = () => {
                         </div>
                         {Array.isArray(task.comments) && task.comments.length > 0 && (
                           <div className="mt-4 bg-black/30 rounded-lg p-3">
-                            <div className="text-sm text-gray-200 mb-2">Manager Comments</div>
+                            <div className="text-sm text-gray-200 mb-2">Comments ({task.comments.length})</div>
                             <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                               {task.comments.map((c, i) => (
                                 <div key={i} className="text-xs text-gray-300">
-                                  <span className="text-gray-100">•</span> {c.text}
+                                  <div className="flex items-center space-x-1 mb-1">
+                                    <span className="text-gray-100 font-medium">
+                                      {c.author?.name || 'Unknown'}:
+                                    </span>
+                                    <span className="text-gray-400 text-xs">
+                                      {new Date(c.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-300">{c.text}</div>
+                                  {c.attachments && c.attachments.length > 0 && (
+                                    <div className="mt-1 space-y-1">
+                                      {c.attachments.map((attachment, idx) => (
+                                        <a 
+                                          key={idx}
+                                          href={`http://localhost:5000${attachment.url}`}
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="flex items-center space-x-1 text-orange-400 hover:text-orange-300 text-xs"
+                                        >
+                                          <span>📎</span>
+                                          <span>{attachment.originalName}</span>
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
