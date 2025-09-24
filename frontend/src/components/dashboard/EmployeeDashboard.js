@@ -27,9 +27,7 @@ import {
   Plus,
   Eye,
   Play,
-  Square,
-  MessageSquare,
-  ExternalLink
+  Square
 } from 'lucide-react';
 import './Dashboard.css';
 import { employeeService } from '../../services/api';
@@ -610,52 +608,12 @@ const EmployeeDashboard = () => {
                           )}
                         </div>
                         {Array.isArray(task.comments) && task.comments.length > 0 && (
-                          <div className="mt-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 backdrop-blur-sm rounded-xl p-4 border border-blue-500/30">
-                            <div className="flex items-center space-x-2 mb-3">
-                              <MessageSquare className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-semibold text-blue-200">
-                                Comments ({task.comments.length})
-                              </span>
-                            </div>
-                            <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
+                          <div className="mt-4 bg-black/30 rounded-lg p-3">
+                            <div className="text-sm text-gray-200 mb-2">Manager Comments</div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                               {task.comments.map((c, i) => (
-                                <div key={i} className="bg-white/10 rounded-lg p-3 border-l-4 border-blue-400">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <span className="text-xs font-bold text-white">
-                                          {(c.author?.name || 'U')[0].toUpperCase()}
-                                        </span>
-                                      </div>
-                                      <span className="text-sm font-medium text-white">
-                                        {c.author?.name || 'Unknown User'}
-                                      </span>
-                                    </div>
-                                    <span className="text-xs text-gray-400">
-                                      {new Date(c.createdAt).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                  <div className="text-sm text-gray-200 mb-2 leading-relaxed">
-                                    {c.text}
-                                  </div>
-                                  {c.attachments && c.attachments.length > 0 && (
-                                    <div className="space-y-1">
-                                      <div className="text-xs text-gray-400 mb-1">Attachments:</div>
-                                      {c.attachments.map((attachment, idx) => (
-                                        <a 
-                                          key={idx}
-                                          href={`http://localhost:5000${attachment.url}`}
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-md p-2 text-orange-300 hover:text-orange-200 transition-colors text-xs"
-                                        >
-                                          <FileText className="w-3 h-3" />
-                                          <span>{attachment.originalName}</span>
-                                          <ExternalLink className="w-3 h-3 ml-auto" />
-                                        </a>
-                                      ))}
-                                    </div>
-                                  )}
+                                <div key={i} className="text-xs text-gray-300">
+                                  <span className="text-gray-100">•</span> {c.text}
                                 </div>
                               ))}
                             </div>

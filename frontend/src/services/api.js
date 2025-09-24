@@ -358,35 +358,7 @@ export const managerService = {
   assignTask: (taskData) => api.post('/manager/tasks/assign', taskData),
   updateTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
   updateProjectTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
-  addTaskComment: (taskId, text, attachments = null) => {
-    if (!authService.isAuthenticated()) {
-      return Promise.reject(new Error('No auth token'));
-    }
-    
-    const formData = new FormData();
-    formData.append('text', text);
-    
-    if (attachments && attachments.length > 0) {
-      // Validate file sizes (10MB limit per file)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      for (let i = 0; i < attachments.length; i++) {
-        if (attachments[i].size > maxSize) {
-          return Promise.reject(new Error(`File "${attachments[i].name}" is too large. Maximum size is 10MB.`));
-        }
-        formData.append('attachments', attachments[i]);
-      }
-      
-      if (attachments.length > 5) {
-        return Promise.reject(new Error('Maximum 5 files allowed per comment.'));
-      }
-    }
-    
-    return api.post(`/manager/project-tasks/${taskId}/comments`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
+  addTaskComment: (taskId, text) => api.post(`/manager/project-tasks/${taskId}/comments`, { text }),
   approveRejectTask: (taskId, status) => api.put(`/manager/tasks/${taskId}/approve`, { status }),
   getManagerDashboard: () => api.get('/manager/dashboard'),
   getDesignerTasks: (designerId) => api.get(`/manager/designers/${designerId}/tasks`),
