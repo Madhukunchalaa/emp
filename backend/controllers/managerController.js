@@ -117,6 +117,10 @@ const getProjectById = async (req, res) => {
       .populate({
         path: 'steps.tasks.assignedTo',
         select: 'name email avatar'
+      })
+      .populate({
+        path: 'steps.tasks.comments.author',
+        select: 'name email avatar'
       });
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
@@ -812,7 +816,27 @@ const addTaskComment = async (req, res) => {
       const task = step.tasks.id(taskId);
       if (task) {
         task.comments = task.comments || [];
-        task.comments.push({ text, author: req.user._id, createdAt: new Date() });
+        
+        // Prepare comment object
+        const comment = { 
+          text: text.trim(), 
+          author: req.user._id, 
+          attachments: [],
+          createdAt: new Date() 
+        };
+
+        // Handle file attachments if any
+        if (req.files && req.files.length > 0) {
+          comment.attachments = req.files.map(file => ({
+            filename: file.filename,
+            originalName: file.originalname,
+            url: `/uploads/comments/${file.filename}`,
+            size: file.size,
+            mimetype: file.mimetype
+          }));
+        }
+
+        task.comments.push(comment);
         taskFound = task;
         break;
       }
@@ -824,6 +848,9 @@ const addTaskComment = async (req, res) => {
 
     await project.save();
 
+    // Populate the author information for the response
+    await project.populate('steps.tasks.comments.author', 'name email avatar');
+
     // Optionally notify assigned employee
     const io = req.app.get('io');
     if (io && taskFound.assignedTo) {
@@ -833,7 +860,8 @@ const addTaskComment = async (req, res) => {
       });
     }
 
-    res.status(201).json({ message: 'Comment added', taskId, comment: taskFound.comments[taskFound.comments.length - 1] });
+    const latestComment = taskFound.comments[taskFound.comments.length - 1];
+    res.status(201).json({ message: 'Comment added', taskId, comment: latestComment });
   } catch (error) {
     console.error('Error adding task comment:', error);
     res.status(500).json({ message: 'Error adding comment' });

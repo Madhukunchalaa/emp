@@ -220,6 +220,10 @@ exports.getProjects = async (req, res) => {
       .populate({
         path: 'steps.tasks.assignedTo',
         select: 'name email avatar'
+      })
+      .populate({
+        path: 'steps.tasks.comments.author',
+        select: 'name email avatar'
       });
     
     console.log('Found projects before filtering:', projects.length);
