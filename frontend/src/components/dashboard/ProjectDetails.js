@@ -562,6 +562,7 @@ const ProjectDetails = () => {
                               <th className="text-left py-3 px-4 text-gray-300">Priority</th>
                               <th className="text-left py-3 px-4 text-gray-300">Status</th>
                               <th className="text-left py-3 px-4 text-gray-300">Assigned To</th>
+                              <th className="text-left py-3 px-4 text-gray-300">Comments</th>
                               <th className="text-left py-3 px-4 text-gray-300">Actions</th>
                             </tr>
                           </thead>
@@ -599,6 +600,25 @@ const ProjectDetails = () => {
                                     )}
                                   </td>
                                   <td className="py-3 px-4">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedTask(task);
+                                        setShowCommentsModal(true);
+                                      }}
+                                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                                        task.comments && task.comments.length > 0 
+                                          ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' 
+                                          : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600'
+                                      }`}
+                                      title="View Comments"
+                                    >
+                                      <MessageSquare className="w-4 h-4" />
+                                      <span className="text-sm font-medium">
+                                        {task.comments?.length || 0}
+                                      </span>
+                                    </button>
+                                  </td>
+                                  <td className="py-3 px-4">
                                     <div className="flex items-center space-x-2">
                                       <select
                                         value={task.status}
@@ -610,23 +630,13 @@ const ProjectDetails = () => {
                                         <option value="completed">Completed</option>
                                         <option value="overdue">Overdue</option>
                                       </select>
-                                      <button
-                                        onClick={() => {
-                                          setSelectedTask(task);
-                                          setShowCommentsModal(true);
-                                        }}
-                                        className="p-1 text-gray-400 hover:text-white transition-colors"
-                                        title="Add Comment"
-                                      >
-                                        <MessageSquare className="w-4 h-4" />
-                                      </button>
                                     </div>
                                   </td>
                                 </tr>
                               ))
                             ) : (
                               <tr>
-                                <td colSpan="5" className="py-8 text-center text-gray-400">
+                                <td colSpan="6" className="py-8 text-center text-gray-400">
                                   No tasks in this phase
                                 </td>
                               </tr>
@@ -1186,76 +1196,112 @@ const ProjectDetails = () => {
             
             
             <div className="p-6">
-              <div className="space-y-4 mb-6">
-                {selectedTask.comments && selectedTask.comments.length > 0 ? (
-                  selectedTask.comments.map((comment, index) => (
-                    <div key={comment._id || index} className="border-b border-gray-700 pb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
+              {/* Comments Section */}
+              <div className="mb-8">
+                <div className="flex items-center space-x-2 mb-4">
+                  <MessageSquare className="w-5 h-5 text-orange-400" />
+                  <h4 className="text-lg font-semibold text-white">
+                    Comments {selectedTask.comments?.length > 0 && `(${selectedTask.comments.length})`}
+                  </h4>
+                </div>
+                
+                <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
+                  {selectedTask.comments && selectedTask.comments.length > 0 ? (
+                    selectedTask.comments.map((comment, index) => (
+                      <div key={comment._id || index} className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg p-4 border border-gray-600/50 hover:border-orange-500/50 transition-colors">
+                        <div className="flex items-start space-x-3">
                           <UserAvatar 
                             name={comment.author?.name || 'Unknown'} 
                             avatar={comment.author?.avatar} 
                           />
-                          <span className="text-white font-medium">
-                            {comment.author?.name || 'Unknown User'}
-                          </span>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-white font-semibold">
+                                {comment.author?.name || 'Unknown User'}
+                              </span>
+                              <span className="text-gray-400 text-sm">
+                                {formatDate(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-gray-200 leading-relaxed mb-3">{comment.text}</p>
+                            {comment.attachments && comment.attachments.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="text-xs text-gray-400 font-medium">Attachments:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {comment.attachments.map((attachment, attachIndex) => (
+                                    <a 
+                                      key={attachIndex}
+                                      href={`http://localhost:5000${attachment.url}`}
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-md px-3 py-2 text-orange-300 hover:text-orange-200 transition-colors text-sm border border-orange-500/30"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      <span>{attachment.originalName}</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-gray-400 text-sm">{formatDate(comment.createdAt)}</span>
                       </div>
-                      <p className="text-gray-300">{comment.text}</p>
-                      {comment.attachments && comment.attachments.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {comment.attachments.map((attachment, attachIndex) => (
-                            <a 
-                              key={attachIndex}
-                              href={`http://localhost:5000${attachment.url}`}
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center space-x-2 text-orange-400 hover:text-orange-300"
-                            >
-                              <Download className="w-4 h-4" />
-                              <span className="text-sm">{attachment.originalName}</span>
-                            </a>
-                          ))}
-                        </div>
-                      )}
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                      <p className="text-gray-400">No comments yet.</p>
+                      <p className="text-gray-500 text-sm">Be the first to add a comment!</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-gray-400 text-center py-4">
-                    No comments yet. Be the first to add a comment!
-                  </div>
-                )}
-                
-                {/* Timeline events */}
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
-                  <div className="flex-1">
-                    <div className="text-white font-medium">Task Created</div>
-                    <div className="text-gray-400 text-sm">{formatDate(selectedTask.createdAt)}</div>
-                  </div>
+                  )}
                 </div>
-                
-                {selectedTask.status === 'completed' && (
+              </div>
+
+              {/* Timeline Section */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <History className="w-5 h-5 text-blue-400" />
+                  <h4 className="text-lg font-semibold text-white">Timeline</h4>
+                </div>
+                <div className="space-y-3">
                   <div className="flex items-start space-x-4">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
                     <div className="flex-1">
-                      <div className="text-white font-medium">Task Completed</div>
-                      <div className="text-gray-400 text-sm">{formatDate(selectedTask.updatedAt)}</div>
+                      <div className="text-white font-medium">Task Created</div>
+                      <div className="text-gray-400 text-sm">{formatDate(selectedTask.createdAt)}</div>
                     </div>
                   </div>
-                )}
+                  
+                  {selectedTask.status === 'completed' && (
+                    <div className="flex items-start space-x-4">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium">Task Completed</div>
+                        <div className="text-gray-400 text-sm">{formatDate(selectedTask.updatedAt)}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div className="space-y-4">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                  rows="3"
-                />
-                  <div className="space-y-2">
+              {/* Add Comment Section */}
+              <div className="bg-gradient-to-r from-gray-800/30 to-gray-700/30 rounded-lg p-4 border border-gray-600/50">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Plus className="w-5 h-5 text-orange-400" />
+                  <h4 className="text-lg font-semibold text-white">Add Comment</h4>
+                </div>
+                
+                <div className="space-y-4">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Share your thoughts, updates, or feedback..."
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
+                    rows="4"
+                  />
+                  
+                  <div className="space-y-3">
                     <input
                       type="file"
                       onChange={handleFileUpload}
@@ -1268,7 +1314,7 @@ const ProjectDetails = () => {
                     <div className="flex items-center justify-between">
                       <label
                         htmlFor="file-upload-comment"
-                        className="flex items-center space-x-2 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white cursor-pointer hover:bg-gray-600 transition-colors"
+                        className="flex items-center space-x-2 px-4 py-2 bg-gray-600/50 hover:bg-gray-600 border border-gray-500 rounded-lg text-gray-200 cursor-pointer transition-colors"
                       >
                         <Upload className="w-4 h-4" />
                         <span>Attach Files</span>
@@ -1277,17 +1323,22 @@ const ProjectDetails = () => {
                     </div>
                     
                     {attachedFiles.length > 0 && (
-                      <div className="space-y-1">
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-300 font-medium">Attached Files:</div>
                         {attachedFiles.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between bg-gray-700 rounded p-2">
-                            <div className="flex items-center space-x-2 text-gray-300">
-                              <FileText className="w-4 h-4" />
-                              <span className="text-sm">{file.name}</span>
-                              <span className="text-xs text-gray-400">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
+                          <div key={index} className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+                            <div className="flex items-center space-x-3 text-gray-300">
+                              <FileText className="w-4 h-4 text-blue-400" />
+                              <div>
+                                <span className="text-sm font-medium">{file.name}</span>
+                                <span className="text-xs text-gray-400 ml-2">
+                                  ({(file.size / 1024 / 1024).toFixed(1)}MB)
+                                </span>
+                              </div>
                             </div>
                             <button
                               onClick={() => removeAttachedFile(index)}
-                              className="text-red-400 hover:text-red-300"
+                              className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1296,12 +1347,16 @@ const ProjectDetails = () => {
                       </div>
                     )}
                   </div>
-                <button
-                  onClick={handleAddComment}
-                  className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                >
-                  Add Comment
-                </button>
+                  
+                  <button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Add Comment</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
