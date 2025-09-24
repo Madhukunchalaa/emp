@@ -9,7 +9,12 @@ const taskSchema = new mongoose.Schema({
     type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
-  }
+  },
+  comments: [{
+    text: { type: String, required: true, trim: true },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdAt: { type: Date, default: Date.now }
+  }]
 });
 
 const stepSchema = new mongoose.Schema({

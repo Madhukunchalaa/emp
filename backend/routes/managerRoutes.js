@@ -21,6 +21,7 @@ router.get('/projects/:id', auth, checkRole(['manager']), managerController.getP
 router.post('/projects/assign', auth, checkRole(['manager']), managerController.assignProjectToEmployee);
 router.post('/tasks/assign', auth, checkRole(['manager']), managerController.assignTaskToEmployee);
 router.put('/project-tasks/:taskId/status', auth, checkRole(['manager']), managerController.updateProjectTaskStatus);
+router.post('/project-tasks/:taskId/comments', auth, checkRole(['manager']), managerController.addTaskComment);
 router.put('/tasks/:taskId/approve', auth, checkRole(['manager']), managerController.approveRejectTask);
 router.get('/dashboard', auth, checkRole(['manager']), managerController.getManagerDashboard);
 

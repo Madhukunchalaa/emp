@@ -790,6 +790,56 @@ const updateProjectTaskStatus = async (req, res) => {
   }
 };
 
+// Add a manager comment to a specific task within a project
+const addTaskComment = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { text } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    // Find the project containing this task
+    const project = await Project.findOne({ "steps.tasks._id": taskId });
+    if (!project) {
+      return res.status(404).json({ message: 'Task not found in any project' });
+    }
+
+    // Locate the task and push the new comment
+    let taskFound = null;
+    for (const step of project.steps) {
+      const task = step.tasks.id(taskId);
+      if (task) {
+        task.comments = task.comments || [];
+        task.comments.push({ text, author: req.user._id, createdAt: new Date() });
+        taskFound = task;
+        break;
+      }
+    }
+
+    if (!taskFound) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    await project.save();
+
+    // Optionally notify assigned employee
+    const io = req.app.get('io');
+    if (io && taskFound.assignedTo) {
+      io.to(taskFound.assignedTo.toString()).emit('notification', {
+        message: `New comment on your task "${taskFound.title}"`,
+        type: 'info'
+      });
+    }
+
+    res.status(201).json({ message: 'Comment added', taskId, comment: taskFound.comments[taskFound.comments.length - 1] });
+  } catch (error) {
+    console.error('Error adding task comment:', error);
+    res.status(500).json({ message: 'Error adding comment' });
+  }
+};
+
 // Get all employee updates (for /api/manager/updates)
 const getEmployeeUpdates = async (req, res) => {
   try {
@@ -977,6 +1027,7 @@ module.exports = {
   approveRejectUpdate,
   approveRejectTask,
   updateProjectTaskStatus,
+  addTaskComment,
   getEmployeeUpdates,
   getManagerDashboard,
   getTeamLeaders,
