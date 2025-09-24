@@ -7,12 +7,15 @@ import store from './store';
 import { ChatNotificationContext } from './components/common/Navbar';
 import Navbar from './components/common/Navbar';
 import ManagerSidebar from './components/common/ManagerSidebar';
+import EmployeeSidebar from './components/common/EmployeeSidebar';
 
 // Auth and Dashboard Components
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
 import PrivateRoute from './components/auth/PrivateRoute';
+import ManagerOrAdminRoute from './components/auth/ManagerOrAdminRoute';
+import RoleBasedRoute from './components/auth/RoleBasedRoute';
 
 // Dynamic Dashboard
 import DynamicDashboard from './components/dashboard/DynamicDashboard';
@@ -61,101 +64,23 @@ function AppContent() {
   const [chatOpenWith, setChatOpenWith] = useState(null);
   const location = useLocation();
   const hideNavbarRoutes = ['/login', '/register', '/forgot-password'];
-  const hideNavbar = hideNavbarRoutes.includes(location.pathname);
-  
-  // Manager routes that should use sidebar
-  const managerRoutes = [
-    '/dashboard', '/team', '/projects', '/reports', '/assign-project', 
-    '/assign-task', '/manager-leave', '/attendance-calendar', '/website-health-monitor', '/chat'
+  // Hide Navbar on all manager and employee dashboard pages
+  const managerRoutesNoNavbar = [
+    '/manager-dashboard', '/team', '/projects', '/project', '/reports', '/assign-project',
+    '/assign-task', '/manager-leave', '/attendance-calendar', '/website-health-monitor', '/chat',
+    '/team-management', '/team-tasks', '/team-reports', '/assign-team-task'
   ];
-  const isManagerRoute = managerRoutes.includes(location.pathname);
-
+  const employeeRoutesNoNavbar = [
+    '/my-tasks', '/my-projects', '/work-updates', '/attendance', '/Leave'
+  ];
+  const dashboardRoutesNoNavbar = ['/dashboard'];
+  const noNavbarMatch = [...managerRoutesNoNavbar, ...employeeRoutesNoNavbar, ...dashboardRoutesNoNavbar]
+    .some(route => location.pathname.startsWith(route));
+  const hideNavbar = hideNavbarRoutes.includes(location.pathname) || noNavbarMatch;
+  
   return (
     <ChatNotificationContext.Provider value={{ unreadMessages, setUnreadMessages, chatOpenWith, setChatOpenWith }}>
-      {!hideNavbar && !isManagerRoute && <Navbar />}
-      {!hideNavbar && isManagerRoute ? (
-        <ManagerSidebar>
-          <Routes>
-            {/* Manager Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <ManagerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/team"
-              element={
-                <PrivateRoute>
-                  <Team />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/projects"
-              element={
-                <PrivateRoute>
-                  <Projects />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <PrivateRoute>
-                  <Reports />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/assign-project"
-              element={
-                <PrivateRoute>
-                  <AssignProject />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/assign-task"
-              element={
-                <PrivateRoute>
-                  <AssignTask />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/manager-leave"
-              element={
-                <PrivateRoute>
-                  <ManagerLeave />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <PrivateRoute>
-                  <ChatDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/website-health-monitor"
-              element={
-                <PrivateRoute>
-                  <WebsiteHealthMonitor />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/attendance-calendar" element={<PrivateRoute><AttendanceCalendar /></PrivateRoute>} />
-            
-            {/* Redirect root to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </ManagerSidebar>
-      ) : (
+      {!hideNavbar && <Navbar />}
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -172,12 +97,14 @@ function AppContent() {
             }
           />
 
-          {/* Manager Routes */}
+          {/* Manager Routes wrapped with ManagerSidebar */}
           <Route
             path="/manager-dashboard"
             element={
               <PrivateRoute>
-                <ManagerDashboard />
+                <ManagerSidebar>
+                  <ManagerDashboard />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -185,7 +112,9 @@ function AppContent() {
             path="/team"
             element={
               <PrivateRoute>
-                <Team />
+                <ManagerSidebar>
+                  <Team />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -193,7 +122,19 @@ function AppContent() {
             path="/projects"
             element={
               <PrivateRoute>
-                <Projects />
+                <ManagerSidebar>
+                  <Projects />
+                </ManagerSidebar>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/project/:id"
+            element={
+              <PrivateRoute>
+                <ManagerSidebar>
+                  <ProjectDetails />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -201,7 +142,9 @@ function AppContent() {
             path="/reports"
             element={
               <PrivateRoute>
-                <Reports />
+                <ManagerSidebar>
+                  <Reports />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -210,7 +153,9 @@ function AppContent() {
             path="/assign-project"
             element={
               <PrivateRoute>
-                <AssignProject />
+                <ManagerSidebar>
+                  <AssignProject />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -218,7 +163,9 @@ function AppContent() {
             path="/assign-task"
             element={
               <PrivateRoute>
-                <AssignTask />
+                <ManagerSidebar>
+                  <AssignTask />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
@@ -226,18 +173,13 @@ function AppContent() {
             path="/manager-leave"
             element={
               <PrivateRoute>
-                <ManagerLeave />
+                <ManagerSidebar>
+                  <ManagerLeave />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
-  <Route
-  path="/project/:id"
-  element={
-    <PrivateRoute>
-      <ProjectDetails />
-    </PrivateRoute>
-  }
-/>
+
           
 
 
@@ -247,31 +189,35 @@ function AppContent() {
             path="/chat"
             element={
               <PrivateRoute>
-                <ChatDashboard />
+                <ManagerSidebar>
+                  <ChatDashboard />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
           <Route path="/admin/empid" element={<EmpIdAdmin />} />
-          <Route path="/team-management" element={<PrivateRoute><TeamManagement /></PrivateRoute>} />
-          <Route path="/team-tasks" element={<PrivateRoute><TeamTasks /></PrivateRoute>} />
-          <Route path="/team-reports" element={<PrivateRoute><TeamReports /></PrivateRoute>} />
+          <Route path="/team-management" element={<PrivateRoute><ManagerSidebar><TeamManagement /></ManagerSidebar></PrivateRoute>} />
+          <Route path="/team-tasks" element={<PrivateRoute><ManagerSidebar><TeamTasks /></ManagerSidebar></PrivateRoute>} />
+          <Route path="/team-reports" element={<PrivateRoute><ManagerSidebar><TeamReports /></ManagerSidebar></PrivateRoute>} />
           <Route
             path="/website-health-monitor"
             element={
               <PrivateRoute>
-                <WebsiteHealthMonitor />
+                <ManagerSidebar>
+                  <WebsiteHealthMonitor />
+                </ManagerSidebar>
               </PrivateRoute>
             }
           />
-          <Route path="/attendance-calendar" element={<PrivateRoute><AttendanceCalendar /></PrivateRoute>} />
-          <Route path="/assign-team-task" element={<PrivateRoute><AssignProjectToTeamLeader /></PrivateRoute>} />
+          <Route path="/attendance-calendar" element={<PrivateRoute><ManagerSidebar><AttendanceCalendar /></ManagerSidebar></PrivateRoute>} />
+          <Route path="/assign-team-task" element={<PrivateRoute><ManagerSidebar><AssignProjectToTeamLeader /></ManagerSidebar></PrivateRoute>} />
 
           {/* Employee Routes */}
-          <Route path="/my-tasks" element={<PrivateRoute><MyTasks /></PrivateRoute>} />
-          <Route path="/my-projects" element={<PrivateRoute><MyProjects /></PrivateRoute>} />
-          <Route path="/work-updates" element={<PrivateRoute><WorkUpdates /></PrivateRoute>} />
-          <Route path="/attendance" element={<PrivateRoute><Attendance /></PrivateRoute>} />
-          <Route path="/Leave" element={<PrivateRoute><Leave /></PrivateRoute>} />
+          <Route path="/my-tasks" element={<PrivateRoute><EmployeeSidebar><MyTasks /></EmployeeSidebar></PrivateRoute>} />
+          <Route path="/my-projects" element={<PrivateRoute><EmployeeSidebar><MyProjects /></EmployeeSidebar></PrivateRoute>} />
+          <Route path="/work-updates" element={<PrivateRoute><EmployeeSidebar><WorkUpdates /></EmployeeSidebar></PrivateRoute>} />
+          <Route path="/attendance" element={<PrivateRoute><EmployeeSidebar><Attendance /></EmployeeSidebar></PrivateRoute>} />
+          <Route path="/Leave" element={<PrivateRoute><EmployeeSidebar><Leave /></EmployeeSidebar></PrivateRoute>} />
 
           {/* Business Routes */}
           <Route path="/opportunities" element={<PrivateRoute><DynamicDashboard /></PrivateRoute>} />
@@ -282,7 +228,6 @@ function AppContent() {
           {/* Redirect root to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-      )}
     </ChatNotificationContext.Provider>
   );
 }

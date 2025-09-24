@@ -3,20 +3,28 @@ import ManagerDashboard from './ManagerDashboard';
 import EmployeeDashboard from './EmployeeDashboard';
 import BusinessDashboard from './BusinessDashboard';
 import TeamLeaderDashboard from './TeamLeaderDashboard';
+import ManagerSidebar from '../common/ManagerSidebar';
+import EmployeeSidebar from '../common/EmployeeSidebar';
 
 const DynamicDashboard = () => {
   const userRole = localStorage.getItem('userRole'); // should be lowercase
 
   switch (userRole) {
     case 'manager':
-      return <ManagerDashboard />;
+      return (
+        <ManagerSidebar>
+          <ManagerDashboard />
+        </ManagerSidebar>
+      );
     case 'employee':
     case 'developer':
-      return <EmployeeDashboard />;
     case 'designer':
-      return <EmployeeDashboard />;
     case 'digital-marketing':
-      return <EmployeeDashboard />;
+      return (
+        <EmployeeSidebar>
+          <EmployeeDashboard />
+        </EmployeeSidebar>
+      );
     case 'business':
       return <BusinessDashboard />;
     case 'team-leader':

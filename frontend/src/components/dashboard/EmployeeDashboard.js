@@ -607,6 +607,18 @@ const EmployeeDashboard = () => {
                             </div>
                           )}
                         </div>
+                        {Array.isArray(task.comments) && task.comments.length > 0 && (
+                          <div className="mt-4 bg-black/30 rounded-lg p-3">
+                            <div className="text-sm text-gray-200 mb-2">Manager Comments</div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                              {task.comments.map((c, i) => (
+                                <div key={i} className="text-xs text-gray-300">
+                                  <span className="text-gray-100">•</span> {c.text}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         {/* Add a subtle animated bar at the bottom on hover */}
                         <div className="absolute left-0 bottom-0 h-1 w-full bg-white opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
                       </div>
