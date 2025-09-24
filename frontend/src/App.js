@@ -33,6 +33,7 @@ import ManagerLeave from './components/dashboard/manager-componenets/ManagerLeav
 
 // Employee Dashboard Components
 import MyTasks from './components/dashboard/MyTasks';
+import TaskDetails from './components/dashboard/TaskDetails';
 import MyProjects from './components/dashboard/MyProjects';
 import WorkUpdates from './components/dashboard/WorkUpdates';
 import Attendance from './components/dashboard/Attendance';
@@ -71,7 +72,7 @@ function AppContent() {
     '/team-management', '/team-tasks', '/team-reports', '/assign-team-task'
   ];
   const employeeRoutesNoNavbar = [
-    '/my-tasks', '/my-projects', '/work-updates', '/attendance', '/Leave'
+    '/my-tasks', '/task', '/my-projects', '/work-updates', '/attendance', '/Leave'
   ];
   const dashboardRoutesNoNavbar = ['/dashboard'];
   const noNavbarMatch = [...managerRoutesNoNavbar, ...employeeRoutesNoNavbar, ...dashboardRoutesNoNavbar]
@@ -214,6 +215,7 @@ function AppContent() {
 
           {/* Employee Routes */}
           <Route path="/my-tasks" element={<PrivateRoute><EmployeeSidebar><MyTasks /></EmployeeSidebar></PrivateRoute>} />
+          <Route path="/task/:taskId" element={<PrivateRoute><EmployeeSidebar><TaskDetails /></EmployeeSidebar></PrivateRoute>} />
           <Route path="/my-projects" element={<PrivateRoute><EmployeeSidebar><MyProjects /></EmployeeSidebar></PrivateRoute>} />
           <Route path="/work-updates" element={<PrivateRoute><EmployeeSidebar><WorkUpdates /></EmployeeSidebar></PrivateRoute>} />
           <Route path="/attendance" element={<PrivateRoute><EmployeeSidebar><Attendance /></EmployeeSidebar></PrivateRoute>} />
