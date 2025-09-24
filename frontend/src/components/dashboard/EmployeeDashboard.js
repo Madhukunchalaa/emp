@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   fetchEmployeeProjects,
@@ -39,6 +40,7 @@ import { userService } from '../../services/api';
 
 const EmployeeDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { projects = [], attendance = null, loading = false, error = null, success = null } = useSelector((state) => state.employee || {});
   const { user = { name: 'Employee' } } = useSelector((state) => state.auth || {});
 
@@ -226,8 +228,8 @@ const EmployeeDashboard = () => {
   };
 
   const handleViewTask = (task) => {
-    setSelectedTask(task);
-    setShowTaskModal(true);
+    // Navigate to task details page
+    navigate(`/task/${task._id}`);
   };
 
   const handleUpdateTaskStatus = async (taskId, newStatus, task) => {
@@ -570,99 +572,99 @@ const EmployeeDashboard = () => {
                     <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="space-y-4">
                     {getAllTasks().map((task, idx) => (
                       <div 
                         key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                        className={`relative bg-white/10 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-white' : task.status === 'pending' ? 'border-gray-400' : 'border-gray-300'} p-6 hover:shadow-2xl hover:bg-white/20 transition-all duration-300 cursor-pointer group animate-fade-in`}
+                        className="bg-white/10 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 p-6 hover:shadow-xl hover:bg-white/15 transition-all duration-300 cursor-pointer group"
                         onClick={() => handleViewTask(task)}
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-white line-clamp-2">{task.title}</h4>
-                          <div className="flex flex-col space-y-1">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>
-                              {task.status}
-                            </span>
-                            {task.taskType === 'team-leader' && (
-                              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-300 text-black">
-                                Team Leader
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm text-gray-300 mb-2">{task.projectTitle}</p>
-                        <p className="text-xs text-gray-400 mb-3">{task.stepName}</p>
-                        
-                        <div className="space-y-2 text-xs text-gray-400">
-                          {(task.dueDate || task.deadline) && (
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="w-3 h-3" />
-                              <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
-                            </div>
-                          )}
-                          {task.priority && (
-                            <div className="flex items-center space-x-2">
-                              <span className={`px-1 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}>
-                                {task.priority}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {Array.isArray(task.comments) && task.comments.length > 0 && (
-                          <div className="mt-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 backdrop-blur-sm rounded-xl p-4 border border-blue-500/30">
-                            <div className="flex items-center space-x-2 mb-3">
-                              <MessageSquare className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-semibold text-blue-200">
-                                Comments ({task.comments.length})
-                              </span>
-                            </div>
-                            <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
-                              {task.comments.map((c, i) => (
-                                <div key={i} className="bg-white/10 rounded-lg p-3 border-l-4 border-blue-400">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <span className="text-xs font-bold text-white">
-                                          {(c.author?.name || 'U')[0].toUpperCase()}
-                                        </span>
-                                      </div>
-                                      <span className="text-sm font-medium text-white">
-                                        {c.author?.name || 'Unknown User'}
-                                      </span>
-                                    </div>
-                                    <span className="text-xs text-gray-400">
-                                      {new Date(c.createdAt).toLocaleDateString()}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-start space-x-4">
+                              {/* Task Icon */}
+                              <div className={`p-3 rounded-lg ${
+                                task.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                                task.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-orange-500/20 text-orange-400'
+                              }`}>
+                                {task.status === 'completed' ? (
+                                  <CheckCircle className="w-5 h-5" />
+                                ) : task.status === 'in-progress' ? (
+                                  <Play className="w-5 h-5" />
+                                ) : (
+                                  <Clock className="w-5 h-5" />
+                                )}
+                              </div>
+                              
+                              {/* Task Content */}
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-orange-300 transition-colors">
+                                      {task.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-300 mb-2">
+                                      {task.description || 'No description available'}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-end space-y-2">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                      {task.status}
                                     </span>
+                                    {task.priority && (
+                                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                        {task.priority}
+                                      </span>
+                                    )}
                                   </div>
-                                  <div className="text-sm text-gray-200 mb-2 leading-relaxed">
-                                    {c.text}
+                                </div>
+                                
+                                {/* Task Meta Info */}
+                                <div className="flex items-center space-x-6 text-sm text-gray-400 mb-3">
+                                  <div className="flex items-center space-x-1">
+                                    <Briefcase className="w-4 h-4" />
+                                    <span>{task.projectTitle}</span>
                                   </div>
-                                  {c.attachments && c.attachments.length > 0 && (
-                                    <div className="space-y-1">
-                                      <div className="text-xs text-gray-400 mb-1">Attachments:</div>
-                                      {c.attachments.map((attachment, idx) => (
-                                        <a 
-                                          key={idx}
-                                          href={`http://localhost:5000${attachment.url}`}
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-md p-2 text-orange-300 hover:text-orange-200 transition-colors text-xs"
-                                        >
-                                          <FileText className="w-3 h-3" />
-                                          <span>{attachment.originalName}</span>
-                                          <ExternalLink className="w-3 h-3 ml-auto" />
-                                        </a>
-                                      ))}
+                                  <div className="flex items-center space-x-1">
+                                    <Target className="w-4 h-4" />
+                                    <span>{task.stepName}</span>
+                                  </div>
+                                  {(task.dueDate || task.deadline) && (
+                                    <div className="flex items-center space-x-1">
+                                      <Calendar className="w-4 h-4" />
+                                      <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
                                     </div>
                                   )}
                                 </div>
-                              ))}
+                                
+                                {/* Comments Preview */}
+                                {Array.isArray(task.comments) && task.comments.length > 0 && (
+                                  <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-500/30">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <MessageSquare className="w-4 h-4 text-blue-400" />
+                                      <span className="text-sm font-medium text-blue-200">
+                                        {task.comments.length} Comment{task.comments.length !== 1 ? 's' : ''}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-300">
+                                      Latest: "{task.comments[task.comments.length - 1]?.text?.substring(0, 50)}..."
+                                      <span className="text-blue-400 ml-2">Click to view all</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        )}
-                        {/* Add a subtle animated bar at the bottom on hover */}
-                        <div className="absolute left-0 bottom-0 h-1 w-full bg-white opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
+                          
+                          {/* Action Arrow */}
+                          <div className="ml-4 text-gray-400 group-hover:text-white transition-colors">
+                            <Eye className="w-5 h-5" />
+                          </div>
+                        </div>
+                        
+                        {/* Hover Effect Bar */}
+                        <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-xl" />
                       </div>
                     ))}
                   </div>
