@@ -12,7 +12,8 @@ const AssignProject = () => {
     priority: 'medium',
     category: '',
     estimatedHours: '',
-    steps: []
+    steps: [],
+    projectLink:''
   });
   const [newStep, setNewStep] = useState('');
   const [message, setMessage] = useState('');
@@ -84,7 +85,8 @@ const AssignProject = () => {
         priority: 'medium',
         category: '',
         estimatedHours: '',
-        steps: []
+        steps: [],
+        projectLink:''
       });
 
       // Redirect to projects list after 2 seconds
@@ -228,13 +230,13 @@ const AssignProject = () => {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-2">Estimated Hours</label>
+                  <label className="block font-semibold text-gray-700 mb-2">Project URL</label>
                   <input
-                    type="number"
+                    type="string"
                     name="estimatedHours"
-                    value={formData.estimatedHours}
+                    value={formData.projectLink}
                     onChange={handleChange}
-                    placeholder="e.g., 40"
+                    placeholder="e.g. abc.com"
                     min="1"
                     className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />

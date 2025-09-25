@@ -146,295 +146,220 @@ const Projects = () => {
 
         {/* Projects Table Section */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-600/50 mb-6">
-          <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
-            <h2 className="text-xl font-bold text-white">Projects</h2>
-            <div className="flex space-x-2">
-              <button
-                onClick={fetchProjects}
-                disabled={loading}
-                className="flex items-center space-x-1 text-white hover:text-gray-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
-              <span className="text-gray-400">|</span>
-              <Link to="/assign-project" className="text-white hover:text-gray-300 font-medium no-underline">
-                Create Project
-              </Link>
-              <span className="text-gray-400">|</span>
-              <Link to="/assign-project-to-team-leader" className="text-gray-300 hover:text-white font-medium no-underline">
-                Assign to Team Leader
-              </Link>
-            </div>
-          </div>
-          
-          <div className="p-5">
-            {/* Table Controls */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Show</span>
-                <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-                <span className="text-sm text-gray-300">entries</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-300">Search:</span>
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                  className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-            </div>
+  <div className="flex items-center justify-between p-5 border-b border-gray-600/50">
+    <h2 className="text-xl font-bold text-white">Projects</h2>
+    <div className="flex space-x-2">
+      <button
+        onClick={fetchProjects}
+        disabled={loading}
+        className="flex items-center space-x-1 text-white hover:text-gray-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        <span>Refresh</span>
+      </button>
+      <span className="text-gray-400">|</span>
+      <Link to="/assign-project" className="text-white hover:text-gray-300 font-medium no-underline">
+        Create Project
+      </Link>
+      <span className="text-gray-400">|</span>
+      <Link to="/assign-project-to-team-leader" className="text-gray-300 hover:text-white font-medium no-underline">
+        Assign to Team Leader
+      </Link>
+    </div>
+  </div>
+  
+  <div className="p-5">
+    {/* Table Controls */}
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-300">Show</span>
+        <select className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <span className="text-sm text-gray-300">entries</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-300">Search:</span>
+        <input
+          type="text"
+          placeholder="Search projects..."
+          className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm w-64"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+    </div>
 
-            {/* Filter Controls */}
-          
-
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                <p className="text-gray-300 mt-4">Loading projects...</p>
+    {loading ? (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+        <p className="text-gray-300 mt-4">Loading projects...</p>
+      </div>
+    ) : filteredProjects.length === 0 ? (
+      <div className="text-center py-8">
+        <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-300">No projects found.</p>
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left table-fixed">
+          <thead className="text-xs text-gray-300 uppercase bg-gray-800/50">
+            <tr>
+              <th scope="col" className="w-1/4 px-4 py-3 text-left">
+                <div className="flex items-center">
+                  PROJECT NAME
                 </div>
-              ) : filteredProjects.length === 0 ? (
-                <div className="text-center py-8">
-                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-300">No projects found.</p>
+              </th>
+              <th scope="col" className="w-20 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  START DATE
                 </div>
-              ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-300 uppercase bg-gray-800/50">
-                    <tr>
-                      
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          PROJECT NAME
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          START DATE
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          END DATE
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          STATUS
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          PROGRESS
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          PRIORITY
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          CLIENT
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        <div className="flex items-center">
-                          TEAM
-                          <svg className="w-3 h-3 ml-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.574 11.024h6.852a2.075 2.075 0 0 0 1.847-1.086 1.9 1.9 0 0 0-.11-1.986L13.736 2.9a2.122 2.122 0 0 0-3.472 0L6.837 7.952a1.9 1.9 0 0 0-.11 1.986 2.075 2.075 0 0 0 1.847 1.086Zm6.852 1.952H8.574a2.072 2.072 0 0 0-1.847 1.087 1.9 1.9 0 0 0 .11 1.985l3.426 5.05a2.123 2.123 0 0 0 3.472 0l3.427-5.05a1.9 1.9 0 0 0 .11-1.985 2.072 2.072 0 0 0-1.846-1.087Z"/>
-                          </svg>
-                        </div>
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        ACTION
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProjects.map((project) => {
-                      // Calculate project progress
-                      const totalTasks = project.steps 
-                        ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.length : 0), 0) 
-                        : 0;
-                      const completedTasks = project.steps 
-                        ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.filter(t => t.status === 'completed').length : 0), 0) 
-                        : 0;
-                      const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : (project.progress || 0);
-                      
-                      // Get project team
-                      const projectTeam = getProjectTeam(project);
-                      
-                      return (
-                        <tr 
-                          key={project._id} 
-                          className="bg-gray-800/30 border-b border-gray-700 hover:bg-gray-800/50 transition-colors cursor-pointer"
-                          onClick={() => handleProjectClick(project)}
-                        >
-                         
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-3">
-                              <div>
-                                <div className="text-sm font-medium text-white">{project.title}</div>
-                                <div className="text-xs text-gray-400 line-clamp-1">{project.description}</div>
-                        </div>
+              </th>
+              <th scope="col" className="w-20 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  DEAD LINE
+                </div>
+              </th>
+              <th scope="col" className="w-20 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  STATUS
+                </div>
+              </th>
+              <th scope="col" className="w-24 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  PROGRESS
+                </div>
+              </th>
+              <th scope="col" className="w-20 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  PRIORITY
+                </div>
+              </th>
+              <th scope="col" className="w-20 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  CLIENT
+                </div>
+              </th>
+              <th scope="col" className="w-32 px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  LINK
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProjects.map((project) => {
+              // Calculate project progress
+              const totalTasks = project.steps 
+                ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.length : 0), 0) 
+                : 0;
+              const completedTasks = project.steps 
+                ? project.steps.reduce((acc, step) => acc + (step.tasks ? step.tasks.filter(t => t.status === 'completed').length : 0), 0) 
+                : 0;
+              const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : (project.progress || 0);
+              
+              // Get project team
+              const projectTeam = getProjectTeam(project);
+              
+              return (
+                <tr 
+                  key={project._id} 
+                  className="bg-gray-800/30 border-b border-gray-700 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  onClick={() => handleProjectClick(project)}
+                >
+                  <td className="px-4 py-4 text-left">
+                    <div className="flex flex-col">
+                      <div className="text-sm font-medium text-white truncate">{project.title}</div>
+                      <div className="text-xs text-gray-400 truncate mt-1">{project.description}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-center text-gray-300 text-xs">
+                    {project.startDate ? new Date(project.createdAt).toLocaleDateString('en-GB', { 
+                      day: '2-digit', 
+                      month: 'short', 
+                      year: '2-digit' 
+                    }) : 'N/A'}
+                  </td>
+                  <td className="px-4 py-4 text-center text-gray-300 text-xs">
+                    {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { 
+                      day: '2-digit', 
+                      month: 'short', 
+                      year: '2-digit' 
+                    }) : 'N/A'}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex justify-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-12 bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
                       </div>
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            {project.startDate ? new Date(project.createdAt).toLocaleDateString('en-GB', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              year: '2-digit' 
-                            }) : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              year: '2-digit' 
-                            }) : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(project.status)}`}>
-                              {project.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-16 bg-gray-700 rounded-full h-2">
-                                <div 
-                                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${progressPercentage}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-xs text-gray-300">{progressPercentage}%</span>
+                      <span className="text-xs text-gray-300 min-w-max">{progressPercentage}%</span>
                     </div>
-                          </td>
-                          
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
-                              {project.priority || 'Medium'}
-                            </span>
-                          </td>
-
-
-                           <td className="px-6 py-4">
-                            <div className="flex items-center space-x-2">
-                              
-                              <span className="text-xs text-gray-300">{project.client}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex justify-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                        {project.priority || 'Medium'}
+                      </span>
                     </div>
-                          </td>
-
-
-
-                          <td className="px-6 py-4">
-                            <div className="flex items-center -space-x-2">
-                              {projectTeam.slice(0, 3).map((member, index) => (
-                                <UserAvatar 
-                                  key={member._id} 
-                                  name={member.name}
-                                  className="w-6 h-6 border-2 border-gray-800"
-                                />
-                              ))}
-                              {projectTeam.length > 3 && (
-                                <div className="w-6 h-6 bg-gray-600 rounded-full border-2 border-gray-800 flex items-center justify-center">
-                                  <span className="text-xs text-white">+{projectTeam.length - 3}</span>
-                </div>
-              )}
-                              {projectTeam.length === 0 && (
-                                <span className="text-xs text-gray-400">No team</span>
-                              )}
-            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-2">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleProjectClick(project);
-                                }}
-                                className="text-gray-400 hover:text-white transition-colors"
-                                title="View Project"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-gray-400 hover:text-white transition-colors"
-                                title="Edit Project"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </button>
-                  <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-gray-400 hover:text-white transition-colors"
-                                title="More Actions"
-                  >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                  </button>
-                </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-300">
-                    Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredProjects.length}</span> of <span className="font-medium">{filteredProjects.length}</span> results
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                      Previous
-                    </button>
-                    <button className="px-3 py-1 text-sm text-white bg-gray-700 border border-gray-600 rounded">
-                      1
-                    </button>
-                    <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                      Next
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            </div>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="text-xs text-gray-300 truncate block">{project.client}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {project.project_link ? (
+                      <a
+                        href={project.project_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-500 hover:text-blue-400 hover:underline truncate block max-w-full"
+                        title={project.projectLink}
+                      >
+                        View Link
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-500">No Link</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-300">
+            Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredProjects.length}</span> of <span className="font-medium">{filteredProjects.length}</span> results
+          </div>
+          <div className="flex items-center space-x-2">
+            <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              Previous
+            </button>
+            <button className="px-3 py-1 text-sm text-white bg-gray-700 border border-gray-600 rounded">
+              1
+            </button>
+            <button className="px-3 py-1 text-sm text-gray-300 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              Next
+            </button>
+          </div>
         </div>
+      </div>
+    )}
+  </div>
+</div>
       </div>
     </div>
   );
