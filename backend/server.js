@@ -14,7 +14,7 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server, {
   cors: {
-    origin: '*', // You can restrict this to your frontend URL
+    origin: 'https://emp-4-4pbd.onrender.com', // You can restrict this to your frontend URL
     methods: ['GET', 'POST']
   }
 });
