@@ -8,8 +8,8 @@ import {
   XCircle,
   Play,
   Square,
-  TrendingUp,
-  Calendar as CalendarIcon
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { punchIn, punchOut, fetchAttendance } from '../../store/slices/employeeSlice';
 
@@ -21,6 +21,7 @@ const Attendance = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [currentSession, setCurrentSession] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     dispatch(fetchAttendance());
@@ -67,7 +68,6 @@ const Attendance = () => {
       if (isNaN(dateObj.getTime())) {
         return 'Invalid Time';
       }
-      // Convert UTC to IST and format with AM/PM
       return dateObj.toLocaleTimeString('en-IN', { 
         hour12: true,
         hour: '2-digit',
@@ -141,7 +141,53 @@ const Attendance = () => {
     };
   };
 
+  const getAttendanceForDate = (date) => {
+    const dateStr = date.toDateString();
+    const history = attendance?.history || [];
+    const dayRecords = history.filter(record => 
+      new Date(record.punchIn).toDateString() === dateStr
+    );
+    return dayRecords.length > 0;
+  };
+
+  const renderCalendar = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+    const days = [];
+    const current = new Date(startDate);
+
+    while (current <= lastDay || current.getDay() !== 0) {
+      const isCurrentMonth = current.getMonth() === month;
+      const isToday = current.toDateString() === new Date().toDateString();
+      const isPresent = getAttendanceForDate(current);
+      
+      days.push({
+        date: new Date(current),
+        isCurrentMonth,
+        isToday,
+        isPresent
+      });
+
+      current.setDate(current.getDate() + 1);
+      if (days.length >= 42) break; // 6 weeks max
+    }
+
+    return days;
+  };
+
+  const navigateMonth = (direction) => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setSelectedDate(newDate);
+  };
+
   const todayStats = getTodayStats();
+  const calendarDays = renderCalendar();
 
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -158,7 +204,7 @@ const Attendance = () => {
         <div className="mb-8">
           <div className="text-gray-700 font-semibold mb-2">Stats</div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-orange-600"><CalendarIcon className="w-4 h-4" /> {todayStats.records} Sessions</div>
+            <div className="flex items-center gap-2 text-orange-600"><Calendar className="w-4 h-4" /> {todayStats.records} Sessions</div>
             <div className="flex items-center gap-2 text-green-600"><Clock className="w-4 h-4" /> {todayStats.totalHours}h</div>
             <div className={`flex items-center gap-2 ${todayStats.isPresent ? 'text-green-600' : 'text-red-600'}`}>
               {todayStats.isPresent ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -171,8 +217,9 @@ const Attendance = () => {
           <div className="font-bold text-gray-700">{user.name}</div>
         </div>
       </aside>
+
       {/* Main Content */}
-      <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
+      <div className="flex-1 ml-0  min-h-screen flex flex-col">
         {error && (
           <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
             <AlertCircle className="w-5 h-5" />
@@ -186,6 +233,7 @@ const Attendance = () => {
             </h1>
             <p className="text-gray-600">Track your work hours and attendance</p>
           </div>
+
           {/* Current Time and Punch Card */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Current Time */}
@@ -203,6 +251,7 @@ const Attendance = () => {
                 </div>
               </div>
             </div>
+
             {/* Punch Card */}
             <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
               <div className="text-center">
@@ -252,12 +301,13 @@ const Attendance = () => {
               </div>
             </div>
           </div>
+
           {/* Today's Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
             <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <CalendarIcon className="w-5 h-5 text-white" />
+                  <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-2xl font-bold text-gray-800">{todayStats.records}</span>
               </div>
@@ -291,7 +341,8 @@ const Attendance = () => {
               <p className="text-sm text-gray-500">Today's attendance</p>
             </div>
           </div>
-          {/* Attendance History */}
+
+          {/* Attendance Calendar */}
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30">
             <div className="flex items-center justify-between px-10 py-8 border-b border-white/30">
               <div className="flex items-center gap-3">
@@ -299,71 +350,92 @@ const Attendance = () => {
                   <Calendar className="w-6 h-6 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Attendance History</h2>
-                  <p className="text-sm text-gray-600">Your punch in/out records</p>
+                  <h2 className="text-xl font-bold text-gray-800">Attendance Calendar</h2>
+                  <p className="text-sm text-gray-600">Monthly attendance overview</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600">Present</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-gray-600">Absent</span>
+                  </div>
                 </div>
               </div>
             </div>
+            
             <div className="p-10">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-4">Loading attendance records...</p>
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => navigateMonth(-1)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <h3 className="text-xl font-bold text-gray-800">
+                  {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <button
+                  onClick={() => navigateMonth(1)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-2">
+                {/* Day Headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar Days */}
+                {calendarDays.map((day, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      h-12 w-12 mx-auto flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+                      ${!day.isCurrentMonth 
+                        ? 'text-gray-300' 
+                        : day.isToday
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : day.isPresent
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : 'bg-red-500 text-white hover:bg-red-600'
+                      }
+                      ${day.isCurrentMonth && !day.isToday ? 'cursor-pointer' : ''}
+                    `}
+                  >
+                    {day.date.getDate()}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Legend */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex flex-wrap gap-4 justify-center text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span className="text-gray-600">Today</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500 rounded"></div>
+                    <span className="text-gray-600">Present</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-500 rounded"></div>
+                    <span className="text-gray-600">Absent</span>
+                  </div>
                 </div>
-              ) : (attendance?.history || []).length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No attendance records found.</p>
-                  <p className="text-sm text-gray-400 mt-2">Start by punching in for your first day.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {(attendance?.history || []).map((record) => (
-                    <div 
-                      key={record._id} 
-                      className="relative bg-white/90 backdrop-blur rounded-2xl shadow-xl border-l-8 border-orange-400 p-6 hover:shadow-2xl hover:bg-white transition-all duration-300 cursor-pointer group animate-fade-in"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-800">{formatDate(record.punchIn)}</h3>
-                          <p className="text-sm text-gray-500">Session #{record._id.slice(-6)}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {record.punchOut ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-medium">
-                              Completed
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">Punch In:</span>
-                          <p className="text-gray-700 font-medium">{formatTime(new Date(record.punchIn))}</p>
-                        </div>
-                        {record.punchOut && (
-                          <div>
-                            <span className="text-gray-500">Punch Out:</span>
-                            <p className="text-gray-700 font-medium">{formatTime(new Date(record.punchOut))}</p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-gray-500">Duration:</span>
-                          <p className="text-gray-700 font-medium">
-                            {calculateDuration(record.punchIn, record.punchOut)}
-                          </p>
-                        </div>
-                      </div>
-                      {/* Add a subtle animated bar at the bottom on hover */}
-                      <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -372,4 +444,4 @@ const Attendance = () => {
   );
 };
 
-export default Attendance; 
+export default Attendance;

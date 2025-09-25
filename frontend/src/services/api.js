@@ -358,7 +358,11 @@ export const managerService = {
   assignTask: (taskData) => api.post('/manager/tasks/assign', taskData),
   updateTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
   updateProjectTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
-  addTaskComment: (taskId, text) => api.post(`/manager/project-tasks/${taskId}/comments`, { text }),
+  addTaskComment: (taskId, formData) => api.post(`/manager/project-tasks/${taskId}/comments`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   approveRejectTask: (taskId, status) => api.put(`/manager/tasks/${taskId}/approve`, { status }),
   getManagerDashboard: () => api.get('/manager/dashboard'),
   getDesignerTasks: (designerId) => api.get(`/manager/designers/${designerId}/tasks`),

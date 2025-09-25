@@ -10,7 +10,11 @@ import {
   FileText,
   Target,
   Play,
-  Eye
+  Eye,
+  MessageSquare,
+  X,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { fetchEmployeeProjects } from '../../store/slices/employeeSlice';
 import { employeeService } from '../../services/api';
@@ -24,6 +28,7 @@ const MyTasks = () => {
   const [taskUpdateLoading, setTaskUpdateLoading] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
 
   useEffect(() => {
     dispatch(fetchEmployeeProjects());
@@ -109,6 +114,17 @@ const MyTasks = () => {
   };
 
   const allTasks = getAllTasks();
+  // Collect all attachments from a task's comments
+  const getTaskAttachments = (task) => {
+    if (!Array.isArray(task?.comments)) return [];
+    const files = [];
+    task.comments.forEach(c => {
+      if (Array.isArray(c.attachments)) {
+        c.attachments.forEach(a => files.push(a));
+      }
+    });
+    return files;
+  };
   const stats = {
     total: allTasks.length,
     completed: allTasks.filter(task => task.status === 'completed').length,
@@ -121,238 +137,261 @@ const MyTasks = () => {
     setShowTaskModal(true);
   };
 
+  // Comments modal handler
+  const handleViewComments = (task) => {
+    setSelectedTask(task);
+    setShowCommentsModal(true);
+  };
+
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 h-screen bg-white/80 backdrop-blur-lg shadow-xl border-r border-white/30 p-6 fixed left-0 top-0 z-20">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-8 bg-gradient-to-b from-orange-400 to-pink-400 rounded-full" />
-            <span className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent">Employee</span>
-          </div>
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">My Tasks</h1>
-          <div className="text-xs text-gray-500">Your task overview</div>
-        </div>
-        <div className="mb-8">
-          <div className="text-gray-700 font-semibold mb-2">Stats</div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-orange-600"><FileText className="w-4 h-4" /> {stats.total} Tasks</div>
-            <div className="flex items-center gap-2 text-green-600"><CheckCircle className="w-4 h-4" /> {stats.completed} Completed</div>
-            <div className="flex items-center gap-2 text-yellow-600"><Clock className="w-4 h-4" /> {stats.pending} Pending</div>
-          </div>
-        </div>
-        <div className="mt-auto">
-          <div className="text-xs text-gray-400">Logged in as</div>
-          <div className="font-bold text-gray-700">{user.name}</div>
-        </div>
-      </aside>
-      {/* Main Content */}
-      <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
-        {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5" />
-            <span>{error}</span>
-          </div>
-        )}
-        {success && (
-          <div className="mx-6 mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5" />
-            <span>{success}</span>
-          </div>
-        )}
-        <div className="px-6 py-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-2">
-              My Tasks
-            </h1>
-            <p className="text-gray-600">View and manage your assigned tasks</p>
-          </div>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
-            <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-orange-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.total}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Total Tasks</h3>
-              <p className="text-sm text-gray-500">Assigned to you</p>
-            </div>
-            <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-green-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.completed}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Completed</h3>
-              <p className="text-sm text-gray-500">Tasks finished</p>
-            </div>
-            <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-yellow-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-800">{stats.pending}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Pending</h3>
-              <p className="text-sm text-gray-500">Tasks to complete</p>
-            </div>
-          </div>
-          {/* Tasks Section */}
-          <section className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 max-w-7xl mx-auto my-16 animate-fade-in">
-            <div className="flex items-center justify-between px-10 py-8 border-b border-white/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Briefcase className="w-6 h-6 text-orange-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800">My Tasks</h2>
-                  <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">
-                  {allTasks.length} task{allTasks.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-            <div className="p-10">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-4">Loading your tasks...</p>
-                </div>
-              ) : allTasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No tasks assigned yet.</p>
-                  <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {allTasks.map((task, idx) => (
-                    <div 
-                      key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                      className={`relative bg-white/90 backdrop-blur rounded-2xl shadow-xl border-l-8 ${task.status === 'completed' ? 'border-green-400' : task.status === 'pending' ? 'border-yellow-400' : 'border-orange-400'} p-6 hover:shadow-2xl hover:bg-white transition-all duration-300 cursor-pointer group animate-fade-in`}
-                      onClick={() => handleViewTask(task)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-semibold text-gray-800 line-clamp-2">{task.title}</h4>
-                        <div className="flex flex-col space-y-1">
-                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(task.status)}`}>{task.status}</span>
-                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(task.priority)}`}>{task.priority}</span>
+
+      <section className="bg-white w-full min-h-screen rounded-none shadow-none border border-gray-200 mx-0 my-0 animate-fade-in">
+                    <div className="flex items-center justify-between px-10 py-8 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-50 rounded-lg border border-orange-200">
+                          <Briefcase className="w-6 h-6 text-orange-500" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-gray-900">My Tasks</h2>
+                          <p className="text-sm text-gray-500">Tasks assigned by your manager</p>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{task.projectTitle}</p>
-                      <p className="text-xs text-gray-500 mb-3">{task.stepName}</p>
-                      <div className="space-y-2 text-xs text-gray-500">
-                        {task.deadline && (
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-3 h-3" />
-                            <span>Due: {new Date(task.deadline).toLocaleDateString()}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500">
+                          {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-10">
+                      {loading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                          <p className="text-gray-600 mt-4">Loading your tasks...</p>
+                        </div>
+                      ) : getAllTasks().length === 0 ? (
+                        <div className="text-center py-8">
+                          <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                          <p className="text-gray-700">No tasks assigned yet.</p>
+                          <p className="text-sm text-gray-500 mt-2">Your manager will assign tasks here.</p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left">
+                            <thead>
+                              <tr className="border-b border-gray-200 text-gray-500 uppercase text-xs tracking-wider">
+                                <th className="py-3 pr-4 font-semibold">Task#</th>
+                                <th className="py-3 pr-4 font-semibold">Task</th>
+                                <th className="py-3 pr-4 font-semibold">Status</th>
+                                <th className="py-3 pr-4 font-semibold">Files</th>
+                                <th className="py-3 pr-4 font-semibold">Due Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {getAllTasks().map((task, idx) => {
+                                const files = getTaskAttachments(task);
+                                return (
+                                  <tr key={task._id || `${task.projectId}-${idx}`} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => handleViewTask(task)}>
+                                    <td className="py-3 pr-4 text-blue-600">
+                                      <span className="hover:underline">#{(task.code || task._id || '').toString().slice(-5)}</span>
+                                    </td>
+                                    <td className="py-3 pr-4 text-gray-900">{task.title}</td>
+                                    <td className="py-3 pr-4">
+                                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>{task.status?.replace('_','-')}</span>
+                                    </td>
+                                    <td className="py-3 pr-4">
+                                      {files.length === 0 ? (
+                                        <span className="text-gray-400 text-sm">—</span>
+                                      ) : (
+                                        <div className="flex flex-wrap gap-2">
+                                          {files.map((f, i) => (
+                                            <a key={i} href={`http://localhost:5000${f.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 text-sm underline">
+                                              {f.originalName || f.name || `File ${i+1}`}
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="py-3 pr-4 text-red-500">{(task.dueDate || task.deadline) ? new Date(task.dueDate || task.deadline).toLocaleDateString('en-GB') : '-'}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+      {/* Task Details Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white">Task Details</h3>
+                <button
+                  onClick={() => setShowTaskModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-orange-400 mb-2">{selectedTask.title}</h4>
+                  <p className="text-gray-300">{selectedTask.description || 'No description available'}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Briefcase className="w-4 h-4 text-blue-400" />
+                    <span className="text-gray-400">Project:</span>
+                    <span className="text-white">{selectedTask.projectTitle}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Target className="w-4 h-4 text-green-400" />
+                    <span className="text-gray-400">Phase:</span>
+                    <span className="text-white">{selectedTask.stepName}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-red-400" />
+                    <span className="text-gray-400">Due:</span>
+                    <span className="text-white">
+                      {selectedTask.dueDate || selectedTask.deadline 
+                        ? new Date(selectedTask.dueDate || selectedTask.deadline).toLocaleDateString()
+                        : 'No deadline'
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CheckSquare className="w-4 h-4 text-purple-400" />
+                    <span className="text-gray-400">Status:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
+                      {selectedTask.status}
+                    </span>
+                  </div>
+                </div>
+                
+                {selectedTask.comments && selectedTask.comments.length > 0 && (
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-lg font-semibold text-white">Comments ({selectedTask.comments.length})</h5>
+                      <button
+                        onClick={() => {
+                          setShowTaskModal(false);
+                          handleViewComments(selectedTask);
+                        }}
+                        className="text-orange-400 hover:text-orange-300 text-sm"
+                      >
+                        View All Comments
+                      </button>
+                    </div>
+                    <div className="space-y-3 max-h-40 overflow-y-auto">
+                      {selectedTask.comments.slice(-3).map((comment, index) => (
+                        <div key={comment._id || index} className="bg-gray-700/50 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-medium text-sm">
+                              {comment.author?.name || 'Unknown User'}
+                            </span>
+                            <span className="text-gray-400 text-xs">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                      {/* Add a subtle animated bar at the bottom on hover */}
-                      <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-2xl" />
+                          <p className="text-gray-300 text-sm">{comment.text}</p>
+                          {comment.attachments && comment.attachments.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {comment.attachments.map((attachment, idx) => (
+                                <span key={idx} className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">
+                                  📎 {attachment.originalName || attachment.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
-          </section>
+          </div>
         </div>
-        {/* Task Detail Modal */}
-        <AnimatePresence>
-          {showTaskModal && selectedTask && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.95 }} 
-                transition={{ duration: 0.2 }}
-                className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-800">Task Details</h3>
-                  <button
-                    onClick={() => setShowTaskModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <Eye className="w-6 h-6" />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-1">{selectedTask.title}</h4>
-                    <p className="text-sm text-gray-600">{selectedTask.description}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Status:</span>
-                      <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(selectedTask.status)}`}>{selectedTask.status}</div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Priority:</span>
-                      <div className={`inline-block ml-2 px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}>{selectedTask.priority || 'medium'}</div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Deadline:</span>
-                      <span className="ml-2 text-gray-700">{selectedTask.deadline ? new Date(selectedTask.deadline).toLocaleDateString() : 'Not set'}</span>
-                    </div>
-                    {selectedTask.estimatedHours && (
-                      <div>
-                        <span className="text-gray-500">Hours:</span>
-                        <span className="ml-2 text-gray-700">{selectedTask.estimatedHours}h</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex space-x-2 mt-6">
-                  <button 
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-xl hover:shadow-md transition-all duration-200 text-center disabled:opacity-50"
-                    onClick={() => handleUpdateTaskStatus(selectedTask._id, 'in-progress', selectedTask)}
-                    disabled={taskUpdateLoading || selectedTask.status === 'in-progress'}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Play className="w-4 h-4" />
-                      <span>Start Task</span>
-                    </div>
-                  </button>
-                  <button 
-                    className="flex-1 bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition-all duration-200 disabled:opacity-50"
-                    onClick={() => handleUpdateTaskStatus(selectedTask._id, 'completed', selectedTask)}
-                    disabled={taskUpdateLoading || selectedTask.status === 'completed'}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Mark Complete</span>
-                    </div>
-                  </button>
-                </div>
-                {/* Status Update Dropdown */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
-                  <select
-                    value={selectedTask.status}
-                    onChange={(e) => handleUpdateTaskStatus(selectedTask._id, e.target.value, selectedTask)}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    disabled={taskUpdateLoading}
-                  >
-                    <option value="assigned">Assigned</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-              </motion.div>
+      )}
+
+      {/* Comments Modal */}
+      {showCommentsModal && selectedTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white">Task Comments</h3>
+                <button
+                  onClick={() => setShowCommentsModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="mt-2">
+                <h4 className="text-lg text-orange-400">{selectedTask.title}</h4>
+              </div>
             </div>
-          )}
-        </AnimatePresence>
-      </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {selectedTask.comments && selectedTask.comments.length > 0 ? (
+                  selectedTask.comments.map((comment, index) => (
+                    <div key={comment._id || index} className="bg-gray-700/50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-medium">
+                          {comment.author?.name || 'Unknown User'}
+                        </span>
+                        <span className="text-gray-400 text-sm">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-300 mb-3">{comment.text}</p>
+                      {comment.attachments && comment.attachments.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-xs text-gray-400 font-medium">Attachments:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {comment.attachments.map((attachment, attachIndex) => (
+                              <a 
+                                key={attachIndex}
+                                href={`http://localhost:5000${attachment.url}`}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-md px-3 py-2 text-orange-300 hover:text-orange-200 transition-colors text-sm border border-orange-500/30"
+                              >
+                                <Download className="w-4 h-4" />
+                                <span>{attachment.originalName || attachment.name}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                    <p className="text-gray-400">No comments yet.</p>
+                    <p className="text-gray-500 text-sm">Comments from your manager will appear here.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    
   );
 };
 

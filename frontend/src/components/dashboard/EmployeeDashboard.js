@@ -381,32 +381,32 @@ const EmployeeDashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen flex bg-gradient-to-br from-gray-900 via-black to-gray-800">
+      <div className="min-h-screen flex bg-gray-50">
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 h-screen bg-white/10 backdrop-blur-lg shadow-xl border-r border-gray-600/50 p-6 fixed left-0 top-0 z-20">
+        <aside className="hidden md:flex flex-col w-64 h-screen bg-white shadow-sm border-r border-gray-200 p-6 fixed left-0 top-0 z-20">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-3 h-8 bg-white rounded-full" />
-              <span className="text-xl font-extrabold text-white">Employee</span>
+              <span className="text-xl font-extrabold text-gray-900">Employee</span>
             </div>
-            <h1 className="text-2xl font-extrabold text-white mb-2">Employee Dashboard</h1>
-            <div className="text-xs text-gray-300">Your workspace overview</div>
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Employee Dashboard</h1>
+            <div className="text-xs text-gray-500">Your workspace overview</div>
           </div>
           <div className="mb-8">
-            <div className="text-white font-semibold mb-2">Stats</div>
+            <div className="text-gray-900 font-semibold mb-2">Stats</div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-white"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
-              <div className="flex items-center gap-2 text-gray-300"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
-              <div className="flex items-center gap-2 text-gray-400"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
+              <div className="flex items-center gap-2 text-gray-800"><FileText className="w-4 h-4" /> {stats.totalTasks} Tasks</div>
+              <div className="flex items-center gap-2 text-gray-600"><CheckCircle className="w-4 h-4" /> {stats.completedTasks} Completed</div>
+              <div className="flex items-center gap-2 text-gray-500"><Clock className="w-4 h-4" /> {stats.pendingTasks} Pending</div>
             </div>
           </div>
           <div className="mt-auto">
-            <div className="text-xs text-gray-400">Logged in as</div>
-            <div className="font-bold text-white">{user.name}</div>
+            <div className="text-xs text-gray-500">Logged in as</div>
+            <div className="font-bold text-gray-900">{user.name}</div>
           </div>
         </aside>
         {/* Main Content */}
-        <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
+        <div className="flex-1 ml-0  min-h-screen flex flex-col">
           {/* Error/Success Messages */}
           {error && (
             <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center space-x-2">
@@ -424,72 +424,72 @@ const EmployeeDashboard = () => {
 
       
 
-          <div className="px-6 py-6">
+          <div className="py-6 pr-6 pl-2 md:pl-4">
             <div className="mb-6">
-              <h2 className="text-3xl font-extrabold text-white mb-2">{getGreeting()}, {user.name}!</h2>
-              <p className="text-gray-300">Here's your personalized workspace for today.</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 mb-2">{getGreeting()}, {user.name}!</h2>
+              <p className="text-gray-600">Here's your personalized workspace for today.</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-8 mx-auto">
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-white w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 w-full flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-white rounded-xl shadow-lg">
-                    <FileText className="w-5 h-5 text-black" />
+                  <div className="p-3 bg-blue-50 rounded-xl">
+                    <FileText className="w-5 h-5 text-blue-600" />
                   </div>
-                  <span className="text-2xl font-bold text-white">{stats.totalTasks}</span>
+                  <span className="text-2xl font-bold text-gray-900">{stats.totalTasks}</span>
                 </div>
-                <h3 className="font-semibold text-white mb-1">Total Tasks</h3>
-                <p className="text-sm text-gray-300">Assigned to you</p>
+                <h3 className="font-semibold text-gray-900 mb-1">Total Tasks</h3>
+                <p className="text-sm text-gray-500">Assigned to you</p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-300 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 w-full flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-gray-200 rounded-xl shadow-lg">
-                    <CheckCircle className="w-5 h-5 text-black" />
+                  <div className="p-3 bg-green-50 rounded-xl">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
-                  <span className="text-2xl font-bold text-white">{stats.completedTasks}</span>
+                  <span className="text-2xl font-bold text-gray-900">{stats.completedTasks}</span>
                 </div>
-                <h3 className="font-semibold text-white mb-1">Completed</h3>
-                <p className="text-sm text-gray-300">Tasks finished</p>
+                <h3 className="font-semibold text-gray-900 mb-1">Completed</h3>
+                <p className="text-sm text-gray-500">Tasks finished</p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-400 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 w-full flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-gray-300 rounded-xl shadow-lg">
-                    <Clock className="w-5 h-5 text-black" />
+                    <div className="p-3 bg-yellow-50 rounded-xl">
+                    <Clock className="w-5 h-5 text-yellow-600" />
                   </div>
-                  <span className="text-2xl font-bold text-white">{stats.pendingTasks}</span>
+                  <span className="text-2xl font-bold text-gray-900">{stats.pendingTasks}</span>
                 </div>
-                <h3 className="font-semibold text-white mb-1">Pending</h3>
-                <p className="text-sm text-gray-300">Tasks to complete</p>
+                <h3 className="font-semibold text-gray-900 mb-1">Pending</h3>
+                <p className="text-sm text-gray-500">Tasks to complete</p>
               </div>
             </div>
 
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12 mx-auto">
               {/* Attendance Card */}
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-white w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 w-full flex flex-col justify-between">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-3 bg-white rounded-xl shadow-lg">
-                    <Clock className="w-5 h-5 text-black"/>
+                  <div className="p-3 bg-blue-50 rounded-xl">
+                    <Clock className="w-5 h-5 text-blue-600"/>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Attendance</h3>
-                    <p className="text-sm text-gray-300">Track your work hours</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Attendance</h3>
+                    <p className="text-sm text-gray-600">Track your work hours</p>
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-300 mb-2">Today's Status</p>
+                  <p className="text-sm text-gray-600 mb-2">Today's Status</p>
                   {isPunchedIn ? (
-                    <div className="flex items-center space-x-2 text-white">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <div className="flex items-center space-x-2 text-gray-900">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-2 text-gray-400">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                       <span className="font-medium">Ready to start your day</span>
                     </div>
                   )}
@@ -498,8 +498,8 @@ const EmployeeDashboard = () => {
                 <button
                   className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
                     isPunchedIn 
-                      ? 'bg-white text-black hover:bg-gray-100' 
-                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                   onClick={isPunchedIn ? handlePunchOut : handlePunchIn}
                 >
@@ -511,23 +511,23 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Work Update Card */}
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 border-l-8 border-gray-300 w-full flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 w-full flex flex-col justify-between">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-3 bg-gray-200 rounded-xl shadow-lg">
-                    <CheckSquare className="w-5 h-5 text-black" />
+                  <div className="p-3 bg-purple-50 rounded-xl">
+                    <CheckSquare className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Work Update</h3>
-                    <p className="text-sm text-gray-300">Log your daily work</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Work Update</h3>
+                    <p className="text-sm text-gray-600">Log your daily work</p>
                   </div>
                 </div>
                 
-                <p className="text-sm text-gray-300 mb-4">
+                <p className="text-sm text-gray-600 mb-4">
                   Submit detailed work updates with time tracking and task details.
                 </p>
 
                 <button
-                  className="w-full bg-white text-black py-3 px-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200"
+                  className="w-full bg-gray-900 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200"
                   onClick={() => setWorkUpdateDialogOpen(true)}
                 >
                   <div className="flex items-center justify-center space-x-2">
@@ -539,132 +539,58 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Tasks Section */}
-            <section className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-600/50 max-w-7xl mx-auto my-16 animate-fade-in">
+            <section className="bg-white rounded-2xl shadow-sm border border-gray-200 max-w-7xl mx-auto my-16">
               <div className="flex items-center justify-between px-10 py-8 border-b border-gray-600/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Briefcase className="w-6 h-6 text-white" />
+                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <Briefcase className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">My Tasks</h2>
-                    <p className="text-sm text-gray-300">Tasks assigned by your manager</p>
+                    <h2 className="text-xl font-bold text-gray-900">My Tasks</h2>
+                    <p className="text-sm text-gray-600">Tasks assigned by your manager</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-gray-600">
                     {getAllTasks().length} task{getAllTasks().length !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
-              
-              <div className="p-10">
+              <div className="p-6">
                 {loading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                    <p className="text-gray-300 mt-4">Loading your tasks...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-gray-600 mt-4">Loading your tasks...</p>
                   </div>
                 ) : getAllTasks().length === 0 ? (
                   <div className="text-center py-8">
-                    <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-300">No tasks assigned yet.</p>
-                    <p className="text-sm text-gray-400 mt-2">Your manager will assign tasks here.</p>
+                    <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-700">No tasks assigned yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-gray-200 text-gray-500 uppercase text-xs tracking-wider">
+                          <th className="py-3 pr-4 font-semibold">Task</th>
+                          <th className="py-3 pr-4 font-semibold">Project</th>
+                          <th className="py-3 pr-4 font-semibold">Status</th>
+                          <th className="py-3 pr-4 font-semibold">Due Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                     {getAllTasks().map((task, idx) => (
-                      <div 
-                        key={task._id || `${task.projectId}-${task.stepName}-${task.title}-${idx}`}
-                        className="bg-white/10 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 p-6 hover:shadow-xl hover:bg-white/15 transition-all duration-300 cursor-pointer group"
-                        onClick={() => handleViewTask(task)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-start space-x-4">
-                              {/* Task Icon */}
-                              <div className={`p-3 rounded-lg ${
-                                task.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                                task.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
-                                'bg-orange-500/20 text-orange-400'
-                              }`}>
-                                {task.status === 'completed' ? (
-                                  <CheckCircle className="w-5 h-5" />
-                                ) : task.status === 'in-progress' ? (
-                                  <Play className="w-5 h-5" />
-                                ) : (
-                                  <Clock className="w-5 h-5" />
-                                )}
-                              </div>
-                              
-                              {/* Task Content */}
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-orange-300 transition-colors">
-                                      {task.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-300 mb-2">
-                                      {task.description || 'No description available'}
-                                    </p>
-                                  </div>
-                                  <div className="flex flex-col items-end space-y-2">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                                      {task.status}
-                                    </span>
-                                    {task.priority && (
-                                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                        {task.priority}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Task Meta Info */}
-                                <div className="flex items-center space-x-6 text-sm text-gray-400 mb-3">
-                                  <div className="flex items-center space-x-1">
-                                    <Briefcase className="w-4 h-4" />
-                                    <span>{task.projectTitle}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <Target className="w-4 h-4" />
-                                    <span>{task.stepName}</span>
-                                  </div>
-                                  {(task.dueDate || task.deadline) && (
-                                    <div className="flex items-center space-x-1">
-                                      <Calendar className="w-4 h-4" />
-                                      <span>Due: {new Date(task.dueDate || task.deadline).toLocaleDateString()}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Comments Preview */}
-                                {Array.isArray(task.comments) && task.comments.length > 0 && (
-                                  <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-500/30">
-                                    <div className="flex items-center space-x-2 mb-2">
-                                      <MessageSquare className="w-4 h-4 text-blue-400" />
-                                      <span className="text-sm font-medium text-blue-200">
-                                        {task.comments.length} Comment{task.comments.length !== 1 ? 's' : ''}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-gray-300">
-                                      Latest: "{task.comments[task.comments.length - 1]?.text?.substring(0, 50)}..."
-                                      <span className="text-blue-400 ml-2">Click to view all</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Action Arrow */}
-                          <div className="ml-4 text-gray-400 group-hover:text-white transition-colors">
-                            <Eye className="w-5 h-5" />
-                          </div>
-                        </div>
-                        
-                        {/* Hover Effect Bar */}
-                        <div className="absolute left-0 bottom-0 h-1 w-full bg-gradient-to-r from-orange-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-xl" />
-                      </div>
-                    ))}
+                          <tr key={task._id || idx} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => handleViewTask(task)}>
+                            <td className="py-3 pr-4 text-gray-900">{task.title}</td>
+                            <td className="py-3 pr-4 text-gray-700">{task.projectTitle}</td>
+                            <td className="py-3 pr-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>{task.status?.replace('_','-')}</span>
+                            </td>
+                            <td className="py-3 pr-4 text-gray-700">{(task.dueDate || task.deadline) ? new Date(task.dueDate || task.deadline).toLocaleDateString('en-GB') : '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

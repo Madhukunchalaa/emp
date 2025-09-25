@@ -244,7 +244,15 @@ const ProjectDetails = () => {
  const handleAddComment = async () => {
   if (!newComment.trim() || !selectedTask) return;
   try {
-    await managerService.addTaskComment(selectedTask._id, newComment.trim());
+    const formData = new FormData();
+    formData.append('text', newComment.trim());
+    
+    // Add file attachments if any
+    if (attachedFile) {
+      formData.append('attachments', attachedFile);
+    }
+    
+    await managerService.addTaskComment(selectedTask._id, formData);
     setNewComment('');
     setAttachedFile(null);
     setSuccess('Comment added successfully');
@@ -599,7 +607,7 @@ const ProjectDetails = () => {
                                       <select
                                         value={task.status}
                                         onChange={(e) => handleUpdateTaskStatus(task._id, e.target.value)}
-                                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                                        className="bg-dark border border-white/20 rounded px-2 py-1 text-white text-sm"
                                       >
                                         <option value="pending">Pending</option>
                                         <option value="in-progress">In Progress</option>
@@ -1060,43 +1068,44 @@ const ProjectDetails = () => {
             
             <div className="p-6">
               <div className="space-y-4">
-                {/* Mock timeline data - replace with actual API data */}
+                {/* Dynamic timeline events */}
+                {/* Task Created */}
                 <div className="flex items-start space-x-4">
                   <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
                   <div className="flex-1">
                     <div className="text-white font-medium">Task Created</div>
-                    <div className="text-gray-400 text-sm">21-Sep-2024 10:30 AM</div>
+                    <div className="text-gray-400 text-sm">{formatDate(selectedTask.createdAt)}</div>
                   </div>
                 </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
-                  <div className="flex-1">
-                    <div className="text-white font-medium">Status Changed: Pending → In Progress</div>
-                    <div className="text-gray-400 text-sm">22-Sep-2024 09:15 AM</div>
-                    <div className="text-gray-300 text-sm mt-1">Task started by John Doe</div>
+
+                {/* Comments as timeline events */}
+                {Array.isArray(selectedTask.comments) && selectedTask.comments.length > 0 && (
+                  selectedTask.comments.map((c, i) => (
+                    <div key={c._id || i} className="flex items-start space-x-4">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full mt-1"></div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium">Comment by {c.author?.name || c.createdBy?.name || 'User'}</div>
+                        <div className="text-gray-400 text-sm">{formatDate(c.createdAt)}</div>
+                        {c.text && (
+                          <div className="text-gray-300 text-sm mt-1">"{c.text}"</div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                {/* Completed event */}
+                {selectedTask.status === 'completed' && (
+                  <div className="flex items-start space-x-4">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
+                    <div className="flex-1">
+                      <div className="text-white font-medium">Task Completed</div>
+                      <div className="text-gray-400 text-sm">{formatDate(selectedTask.updatedAt)}</div>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full mt-1"></div>
-                  <div className="flex-1">
-                    <div className="text-white font-medium">Comment Added</div>
-                    <div className="text-gray-400 text-sm">23-Sep-2024 02:45 PM</div>
-                    <div className="text-gray-300 text-sm mt-1">"Working on the implementation, will finish by tomorrow."</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
-                  <div className="flex-1">
-                    <div className="text-white font-medium">{project.comment}</div>
-                    <div className="text-gray-400 text-sm">24-Sep-2024 11:20 AM</div>
-                    <div className="text-gray-300 text-sm mt-1">Task completed by John Doe</div>
-                  </div>
-                </div>
+                )}
               </div>
-              
+
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <h4 className="text-lg font-semibold text-white mb-4">Add Comment</h4>
                 <div className="space-y-4">
@@ -1179,7 +1188,7 @@ const ProjectDetails = () => {
         <div className="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
         <div className="flex-1">
           <div className="text-white font-medium">
-            Comment by {comment.author?.name || comment.createdBy?.name || 'Unknown'}
+            Comment by {comment.author?.name || comment.createdBy?.name || 'Unknown User'}
           </div>
           <div className="text-gray-400 text-sm">{formatDate(comment.createdAt)}</div>
           <div className="text-gray-300 text-sm mt-1">"{comment.text || comment.content}"</div>
@@ -1224,7 +1233,7 @@ const ProjectDetails = () => {
               avatar={comment.author?.avatar || comment.createdBy?.avatar} 
             />
             <span className="text-white font-medium">
-              {comment.author?.name || comment.createdBy?.name || 'Unknown'}
+              {comment.author?.name || comment.createdBy?.name || 'Unknown User'}
             </span>
           </div>
           <span className="text-gray-400 text-sm">{formatDate(comment.createdAt)}</span>

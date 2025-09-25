@@ -100,7 +100,7 @@ const MyProjects = () => {
         </div>
       </aside>
       {/* Main Content */}
-      <div className="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col">
+      <div className="flex-1 ml-0 min-h-screen flex flex-col">
         {error && (
           <div className="mx-6 mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
             <AlertCircle className="w-5 h-5" />
