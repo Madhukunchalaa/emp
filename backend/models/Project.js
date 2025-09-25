@@ -13,7 +13,14 @@ const taskSchema = new mongoose.Schema({
   comments: [{
     text: { type: String, required: true, trim: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    attachments: [{
+      originalName: { type: String, required: true },
+      filename: { type: String, required: true },
+      url: { type: String, required: true },
+      size: { type: Number },
+      mimeType: { type: String }
+    }]
   }]
 });
 
