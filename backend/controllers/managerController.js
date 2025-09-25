@@ -154,7 +154,7 @@ const getProjectTasks = async (req, res) => {
 // Create project (with custom steps and tasks)
 const createProject = async (req, res) => {
   try {
-    const { title, description, deadline, priority, category, estimatedHours, steps } = req.body;
+    const { title, description, deadline, priority, category, estimatedHours, steps,projectLink } = req.body;
     if (!title || !description || !deadline) {
       return res.status(400).json({ message: 'Title, description, and deadline are required' });
     }
@@ -181,7 +181,8 @@ const createProject = async (req, res) => {
       estimatedHours: estimatedHours ? Number(estimatedHours) : undefined,
       createdBy: req.user.id,
       status: 'pending',
-      steps: steps || []
+      steps: steps || [],
+      projectLink
     });
     
     calculateProjectProgress(project); // Set status if all tasks are completed

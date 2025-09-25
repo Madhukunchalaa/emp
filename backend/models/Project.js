@@ -36,6 +36,7 @@ const projectSchema = new mongoose.Schema({
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   assignedAt: { type: Date },
+  projectLink:{type:String},
   status: {
     type: String,
     enum: ['pending', 'active', 'completed', 'on-hold', 'cancelled', 'assigned', 'scheduled'],
