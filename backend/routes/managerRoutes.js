@@ -19,6 +19,9 @@ router.get('/employees/:id', auth, managerController.getEmployeeProfile);
 router.get('/projects', auth, checkRole(['manager']), managerController.getProjects);
 router.post('/projects', auth, checkRole(['manager']), managerController.createProject);
 router.get('/projects/:id', auth, checkRole(['manager']), managerController.getProjectById);
+router.put('/projects/:id', auth, checkRole(['manager']), managerController.updateProject);
+// or router.patch(...) if you prefer
+
 router.post('/projects/assign', auth, checkRole(['manager']), managerController.assignProjectToEmployee);
 router.post('/tasks/assign', auth, checkRole(['manager']), managerController.assignTaskToEmployee);
 router.put('/project-tasks/:taskId/status', auth, checkRole(['manager']), managerController.updateProjectTaskStatus);

@@ -197,6 +197,57 @@ const createProject = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params; // project ID from URL
+
+    // extract updatable fields from body
+    const {
+      title,
+      description,
+      deadline,
+      priority,
+      category,
+      estimatedHours,
+      steps,
+      status,
+      comment,
+      team,
+      projectLink
+    } = req.body;
+
+    const updateData = {};
+
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (deadline) updateData.deadline = new Date(deadline);
+    if (priority) updateData.priority = priority;
+    if (category) updateData.category = category;
+    if (estimatedHours) updateData.estimatedHours = Number(estimatedHours);
+    if (steps) updateData.steps = steps;
+    if (status) updateData.status = status;
+    if (comment) updateData.comment = comment;
+    if (team) updateData.team = team;
+    if (projectLink) updateData.projectLink = projectLink;
+
+    updateData.updatedAt = Date.now();
+
+    const project = await Project.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true
+    }).populate('createdBy', 'name email');
+
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.json({ message: 'Project updated successfully', project });
+  } catch (err) {
+    console.error('Error updating project:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 
 // Assign a task to a step in a project
 const assignTaskToEmployee = async (req, res) => {
@@ -1066,5 +1117,6 @@ module.exports = {
   getManagerDashboard,
   getTeamLeaders,
   assignProjectToTeamLeader,
-  getTeamLeaderProjects
+  getTeamLeaderProjects,
+  updateProject
 };
