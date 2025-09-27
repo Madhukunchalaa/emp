@@ -485,7 +485,16 @@ const EmployeeDashboard = () => {
                   {isPunchedIn ? (
                     <div className="flex items-center space-x-2 text-gray-900">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium">Punched In at {new Date(today.punchIn).toLocaleTimeString()}</span>
+                   <span className="font-medium">
+  Punched In at{" "}
+  {new Date(today.punchIn).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata", // IST
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  })}
+</span>
+
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2 text-gray-600">

@@ -340,6 +340,13 @@ export const employeeService = {
 export const managerService = {
   getProfile: () => api.get('/manager/profile'),
   updateProfile: (data) => api.put('/manager/profile', data),
+
+
+  //update project
+  getProject: (id) => axios.get(`${API_URL}/projects/${id}`),
+
+  updateProject: (id, data) => api.put(`/manager/projects/${id}`, data),
+
   
   // Employee management
   getEmployees: () => api.get('/manager/employees'),

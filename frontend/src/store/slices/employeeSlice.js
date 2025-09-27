@@ -34,7 +34,7 @@ export const punchIn = createAsyncThunk(
       const response = await api.post('/employee/attendance/punch-in');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error punching in');
+      return rejectWithValue(error.response?.data?.message || 'Already punched in today');
     }
   }
 );
