@@ -5,7 +5,7 @@ const createTransporter = () => {
     service: 'gmail',
     auth: {
       user: 'madhu@smartsolutionsdigi.com',
-      pass: 'wkie lndp xjoh exky',
+      pass: 'xlwn bien njds iliu',
     },
   });
 };

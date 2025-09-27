@@ -10,6 +10,7 @@ const taskSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
+  taskDes:{type: String},
   comments: [{
     text: { type: String, required: true, trim: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

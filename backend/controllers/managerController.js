@@ -252,7 +252,7 @@ const updateProject = async (req, res) => {
 // Assign a task to a step in a project
 const assignTaskToEmployee = async (req, res) => {
   try {
-    const { projectId, stepName, title, assignedTo } = req.body;
+    const { projectId, stepName, title, assignedTo, taskDes } = req.body;
     if (!projectId || !stepName || !title || !assignedTo) {
       return res.status(400).json({ message: 'Project ID, step name, title, and assignedTo are required' });
     }
@@ -266,7 +266,7 @@ const assignTaskToEmployee = async (req, res) => {
       return res.status(404).json({ message: 'Step not found in project' });
     }
     // Add the task
-    step.tasks.push({ title, assignedTo });
+    step.tasks.push({ title, assignedTo, taskDes });
     calculateProjectProgress(project); // Update status if needed
     await project.save();
 
