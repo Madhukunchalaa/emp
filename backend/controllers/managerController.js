@@ -1090,6 +1090,196 @@ const getTeamLeaderProjects = async (req, res) => {
   }
 };
 
+// Get all design tasks
+const getDesignTasks = async (req, res) => {
+  try {
+    const DesignTask = require('../models/DesignTask');
+    const tasks = await DesignTask.find()
+      .populate('assignedTo', 'name email')
+      .populate('assignedBy', 'name email')
+      .sort({ updatedAt: -1 });
+    
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching design tasks:', error);
+    // Return empty array if design tasks don't exist yet
+    res.json([]);
+  }
+};
+
+// Update design task status
+const updateDesignTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+    
+    const DesignTask = require('../models/DesignTask');
+    const task = await DesignTask.findByIdAndUpdate(
+      taskId,
+      { status, updatedAt: new Date() },
+      { new: true }
+    ).populate('assignedTo', 'name email')
+     .populate('assignedBy', 'name email');
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    res.json(task);
+  } catch (error) {
+    console.error('Error updating design task status:', error);
+    res.status(500).json({ message: 'Error updating task status' });
+  }
+};
+
+// Add new task comment (for new task management system)
+const addNewTaskComment = async (req, res) => {
+  try {
+    const { taskId, text } = req.body;
+    
+    console.log('Received comment request:', { taskId, text, files: req.files?.length || 0 });
+    
+    if (!taskId || !text) {
+      return res.status(400).json({ message: 'Task ID and text are required' });
+    }
+    
+    // Handle file attachments
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        attachments.push({
+          originalName: file.originalname,
+          filename: file.filename,
+          url: `/uploads/comments/${file.filename}`,
+          size: file.size,
+          mimeType: file.mimetype
+        });
+      });
+    }
+    
+    // Find the task (could be in Project or DesignTask)
+    let task = null;
+    let taskType = null;
+    
+    // Try to find in projects first
+    const Project = require('../models/Project');
+    const projects = await Project.find({ 'steps.tasks._id': taskId });
+    
+    if (projects.length > 0) {
+      for (const project of projects) {
+        for (const step of project.steps) {
+          const foundTask = step.tasks.id(taskId);
+          if (foundTask) {
+            task = foundTask;
+            taskType = 'project';
+            break;
+          }
+        }
+        if (task) break;
+      }
+    }
+    
+    // If not found in projects, try design tasks
+    if (!task) {
+      const DesignTask = require('../models/DesignTask');
+      task = await DesignTask.findById(taskId);
+      if (task) {
+        taskType = 'design';
+      }
+    }
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Create comment object
+    const comment = {
+      text,
+      author: req.user.id,
+      createdAt: new Date(),
+      attachments: attachments
+    };
+    
+    if (taskType === 'project') {
+      // Add comment to project task
+      task.comments = task.comments || [];
+      task.comments.push(comment);
+      
+      // Save the project
+      const project = projects.find(p => p.steps.some(s => s.tasks.some(t => t._id.toString() === taskId)));
+      if (project) {
+        await project.save();
+      }
+    } else {
+      // Add comment to design task
+      task.comments = task.comments || [];
+      task.comments.push(comment);
+      await task.save();
+    }
+    
+    // Populate author info
+    const author = await User.findById(req.user.id).select('name email');
+    comment.author = author;
+    
+    console.log('Comment added successfully:', comment);
+    res.json(comment);
+  } catch (error) {
+    console.error('Error adding task comment:', error);
+    res.status(500).json({ message: 'Error adding comment' });
+  }
+};
+
+// Get task comments
+const getTaskComments = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    
+    // Try to find in projects first
+    const Project = require('../models/Project');
+    const projects = await Project.find({ 'steps.tasks._id': taskId });
+    
+    let comments = [];
+    
+    if (projects.length > 0) {
+      for (const project of projects) {
+        for (const step of project.steps) {
+          const task = step.tasks.id(taskId);
+          if (task && task.comments) {
+            comments = task.comments;
+            break;
+          }
+        }
+        if (comments.length > 0) break;
+      }
+    }
+    
+    // If not found in projects, try design tasks
+    if (comments.length === 0) {
+      const DesignTask = require('../models/DesignTask');
+      const designTask = await DesignTask.findById(taskId);
+      if (designTask && designTask.comments) {
+        comments = designTask.comments;
+      }
+    }
+    
+    // Populate author info for all comments
+    const populatedComments = await Promise.all(
+      comments.map(async (comment) => {
+        const author = await User.findById(comment.author).select('name email');
+        return {
+          ...comment.toObject(),
+          author
+        };
+      })
+    );
+    
+    res.json(populatedComments);
+  } catch (error) {
+    console.error('Error fetching task comments:', error);
+    res.status(500).json({ message: 'Error fetching comments' });
+  }
+};
+
 module.exports = {
   getAllEmployeeUpdates,
   getProfile,
@@ -1118,5 +1308,9 @@ module.exports = {
   getTeamLeaders,
   assignProjectToTeamLeader,
   getTeamLeaderProjects,
-  updateProject
+  updateProject,
+  getDesignTasks,
+  updateDesignTaskStatus,
+  addNewTaskComment,
+  getTaskComments
 };

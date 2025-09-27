@@ -76,4 +76,10 @@ router.get('/team-leaders', auth, checkRole(['manager']), managerController.getT
 router.post('/projects/assign-to-team-leader', auth, checkRole(['manager']), managerController.assignProjectToTeamLeader);
 router.get('/team-leader-projects', auth, checkRole(['manager']), managerController.getTeamLeaderProjects);
 
+// Task Management Routes
+router.get('/design-tasks', auth, checkRole(['manager']), managerController.getDesignTasks);
+router.put('/design-tasks/:taskId/status', auth, checkRole(['manager']), managerController.updateDesignTaskStatus);
+router.post('/task-comments', auth, checkRole(['manager']), commentUpload.array('files', 5), managerController.addNewTaskComment);
+router.get('/task-comments/:taskId', auth, checkRole(['manager']), managerController.getTaskComments);
+
 module.exports = router; 
