@@ -186,15 +186,16 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       } ${sidebarCollapsed ? 'w-16' : 'w-64'} 
       fixed md:relative inset-y-0 left-0 z-50 bg-gradient-to-b from-gray-800 to-gray-900 shadow-lg transition-all duration-300 flex flex-col`}>
+        
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-4 border-b border-gray-700">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <span className="text-gray-800 font-bold text-lg">SS</span>
                 </div>
-                <span className="text-white text-xl font-semibold">Smart solutions</span>
+                <span className="text-white text-xl font-semibold">Smart Solutions</span>
               </div>
             )}
             <div className="flex items-center space-x-2">
@@ -216,26 +217,32 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
 
         {/* User Info Section */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-b border-gray-700">
+          <div className="p-3 border-b border-gray-700">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">
+              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-xs">
                   {userName ? userName.split(' ').map(n => n[0]).join('') : 'M'}
                 </span>
               </div>
               <div>
-                <p className="text-white font-medium">{userName || 'Manager'}</p>
+                <Link 
+                  to="/dashboard" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white font-medium text-sm hover:text-gray-300 cursor-pointer transition-colors no-underline"
+                >
+                  {userName || 'Manager'}
+                </Link>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-400 text-sm">Online</span>
+                  <span className="text-gray-400 text-xs">Online</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        {/* Navigation Links - Flex container to distribute space evenly */}
+        <nav className="flex-1 px-2 py-3 flex flex-col justify-evenly min-h-0">
           {getNavLinks().map((link) => {
             const IconComponent = link.icon;
             return (
@@ -243,7 +250,7 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors group ${
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors group no-underline ${
                   isActiveRoute(link.path)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -259,11 +266,11 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
           })}
         </nav>
 
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-700 space-y-3">
+        {/* Bottom Section - Compact */}
+        <div className="p-3 border-t border-gray-700 space-y-2">
           {/* Time Display */}
           {!sidebarCollapsed && (
-            <div className="flex items-center space-x-2 text-gray-300 text-sm">
+            <div className="flex items-center space-x-2 text-gray-300 text-xs">
               <Clock className="w-4 h-4" />
               <span>{formatTime(currentTime)}</span>
             </div>
@@ -276,10 +283,10 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
               className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-md hover:bg-gray-700 text-gray-300 relative`}
               title={sidebarCollapsed ? 'Notifications' : ''}
             >
-              <Bell className="w-5 h-5" />
-              {!sidebarCollapsed && <span>Notifications</span>}
+              <Bell className="w-4 h-4" />
+              {!sidebarCollapsed && <span className="text-sm">Notifications</span>}
               {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 h-5 w-5 text-xs flex items-center justify-center bg-red-500 text-white rounded-full">
+                <span className="absolute -top-1 -right-1 h-4 w-4 text-xs flex items-center justify-center bg-red-500 text-white rounded-full">
                   {notificationCount}
                 </span>
               )}
@@ -325,13 +332,13 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
           <div className="relative" ref={profileDropdownRef}>
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} p-2 rounded-md hover:bg-gray-700 text-gray-300`}
+              className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-2'} p-2 rounded-md hover:bg-gray-700 text-gray-300`}
             >
-              <UserAvatar name={userName} size="sm" className="bg-gray-600 text-white" />
+              <UserAvatar name={userName} size="sm" className="bg-gray-600 text-white w-6 h-6" />
               {!sidebarCollapsed && (
                 <>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium truncate">{userName}</p>
+                    <p className="text-xs font-medium truncate">{userName}</p>
                     <p className="text-xs text-gray-400 truncate">{userEmail}</p>
                   </div>
                   <ChevronDown className="w-4 h-4" />
@@ -381,8 +388,8 @@ const ManagerSidebar = ({ userRole = 'manager', children }) => {
         </main>
       </div>
 
-      {/* Audio for notifications */}
-      <audio ref={audioRef} src="/notification.wav" />
+      
+     
     </div>
   );
 };

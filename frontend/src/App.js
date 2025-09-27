@@ -161,6 +161,16 @@ function AppContent() {
             }
           />
           <Route
+            path="/assign-project/:id"
+            element={
+              <PrivateRoute>
+                <ManagerSidebar>
+                  <AssignProject />
+                </ManagerSidebar>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/assign-task"
             element={
               <PrivateRoute>

@@ -5,6 +5,7 @@ import UserAvatar from '../common/userAvathar';
 import { Link } from 'react-router-dom';
 import Chat from '../common/Chat';
 import TodoCalendar from './TodoCalendar';
+import TaskList from './TaskList';
 import jwtDecode from 'jwt-decode';
 // import { Calendar, ChevronLeft, ChevronRight, User, Clock, X, Users, CalendarDays, ArrowLeft } from 'lucide-react';
 
@@ -536,10 +537,16 @@ export default function ManagerDashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
           <div className="flex items-center justify-between p-5 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-800">Employee List</h2>
-            <Link to="/assign-task" className="flex items-center space-x-2 px-4 py-2 bg-white text-black rounded-xl shadow-md hover:bg-gray-100 transition-all duration-200 no-underline">
-              <Plus className="w-4 h-4" />
-              <span>Assign Task</span>
-            </Link>
+            <div className="flex items-center space-x-2">
+              <Link to="/assign-project" className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 transition-all duration-200 no-underline">
+                <Plus className="w-4 h-4" />
+                <span>Create Project</span>
+              </Link>
+              <Link to="/assign-task" className="flex items-center space-x-2 px-4 py-2 bg-white text-black rounded-xl shadow-md hover:bg-gray-100 transition-all duration-200 no-underline">
+                <Plus className="w-4 h-4" />
+                <span>Assign Task</span>
+              </Link>
+            </div>
           </div>
           
           <div className="p-5">
@@ -944,14 +951,15 @@ export default function ManagerDashboard() {
                               >
                                 <Eye className="w-4 h-4" />
                               </Link>
-                              <button 
+                              <Link 
+                                to={`/assign-project/${project._id}`}
                                 className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="Edit Project"
                               >
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                 </svg>
-                              </button>
+                              </Link>
                               <button 
                                 className="text-gray-400 hover:text-gray-800 transition-colors"
                                 title="More Actions"
@@ -1179,6 +1187,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
+        {/* Task Management Section */}
+        <TaskList />
 
       </div>
 

@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { punchIn, punchOut, fetchAttendance } from '../../store/slices/employeeSlice';
+import { formatToIST, formatDateToIST } from '../../utils/timezone';
 
 const Attendance = () => {
   const dispatch = useDispatch();
@@ -63,40 +64,11 @@ const Attendance = () => {
   };
 
   const formatTime = (date) => {
-    try {
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) {
-        return 'Invalid Time';
-      }
-      return dateObj.toLocaleTimeString('en-IN', { 
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Kolkata'
-      });
-    } catch (error) {
-      console.error('Time formatting error:', error);
-      return 'Invalid Time';
-    }
+    return formatToIST(date);
   };
 
   const formatDate = (date) => {
-    try {
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) {
-        return 'Invalid Date';
-      }
-      return dateObj.toLocaleDateString('en-US', { 
-        timeZone: 'Asia/Kolkata',
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Date formatting error:', error);
-      return 'Invalid Date';
-    }
+    return formatDateToIST(date);
   };
 
   const calculateDuration = (punchIn, punchOut) => {

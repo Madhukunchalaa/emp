@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, User, Clock, X, Users, CalendarDays, ArrowLeft, MessageSquare, Eye } from 'lucide-react';
 import { managerService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { formatToIST, formatDateToIST, formatDateTimeToIST } from '../../utils/timezone';
 
 const AttendanceCalendar = () => {
   const navigate = useNavigate();
@@ -89,50 +90,7 @@ const AttendanceCalendar = () => {
 
   // Helper function to format time properly in IST with AM/PM
   const formatTime = (timeValue) => {
-    if (!timeValue) return 'Not recorded';
-    
-    try {
-      // If it's already a string that looks like time (HH:MM:SS or HH:MM)
-      if (typeof timeValue === 'string' && timeValue.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
-        // Parse the time string and create a date object for proper formatting
-        const [hours, minutes] = timeValue.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hours, minutes, 0, 0);
-        return date.toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-          hour12: true
-        });
-      }
-      
-      // If it's a date string or timestamp
-      const date = new Date(timeValue);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-          hour12: true
-        });
-      }
-      
-      // If it's a number (timestamp)
-      if (typeof timeValue === 'number') {
-        return new Date(timeValue).toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-          hour12: true
-        });
-      }
-      
-      // Fallback: return the original value
-      return timeValue.toString();
-    } catch (error) {
-      console.error('Error formatting time:', error, 'Value:', timeValue);
-      return timeValue.toString();
-    }
+    return formatToIST(timeValue);
   };
 
   // Check authentication on component mount
@@ -559,13 +517,12 @@ const AttendanceCalendar = () => {
               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-black">
-                    {selectedDate.toLocaleDateString('en-IN', { 
+                    {formatDateTimeToIST(selectedDate, {
                       weekday: 'long', 
                       year: 'numeric', 
                       month: 'long', 
-                      day: 'numeric',
-                      timeZone: 'Asia/Kolkata'
-                    })}
+                      day: 'numeric'
+                    })} (IST)
                   </h3>
                   <button
                     onClick={() => {
@@ -636,7 +593,7 @@ const AttendanceCalendar = () => {
                           </p>
                           {dayData.punchIn && (
                             <p className="text-xs text-green-600 mt-1">
-                              {new Date(dayData.punchIn).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                              {formatDateToIST(dayData.punchIn)} (IST)
                             </p>
                           )}
                         </div>
@@ -650,7 +607,7 @@ const AttendanceCalendar = () => {
                           </p>
                           {dayData.punchOut && (
                             <p className="text-xs text-red-600 mt-1">
-                              {new Date(dayData.punchOut).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                              {formatDateToIST(dayData.punchOut)} (IST)
                             </p>
                           )}
                         </div>
@@ -730,7 +687,7 @@ const AttendanceCalendar = () => {
                               />
                               <div>
                                 <h6 className="font-semibold text-black">{update.employee?.name}</h6>
-                                <p className="text-xs text-gray-500">{new Date(update.date).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+                                <p className="text-xs text-gray-500">{formatToIST(update.date)} (IST)</p>
                               </div>
                             </div>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -1023,13 +980,12 @@ const AttendanceCalendar = () => {
             <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-300">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-black">
-                  {selectedDate.toLocaleDateString('en-IN', { 
+                  {formatDateTimeToIST(selectedDate, {
                     weekday: 'long', 
                     year: 'numeric',
                     month: 'long', 
-                    day: 'numeric',
-                    timeZone: 'Asia/Kolkata'
-                  })}
+                    day: 'numeric'
+                  })} (IST)
                 </h3>
                 <button
                   onClick={() => {

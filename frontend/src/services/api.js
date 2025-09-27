@@ -343,7 +343,7 @@ export const managerService = {
 
 
   //update project
-  getProject: (id) => axios.get(`${API_URL}/projects/${id}`),
+  getProject: (id) => api.get(`/manager/projects/${id}`),
 
   updateProject: (id, data) => api.put(`/manager/projects/${id}`, data),
 
@@ -389,6 +389,12 @@ export const managerService = {
   
   // Testing
   testAssign: (data) => api.post('/manager/test-assign', data),
+
+  // Task Management
+  getDesignTasks: () => api.get('/manager/design-tasks'),
+  updateDesignTaskStatus: (taskId, data) => api.put(`/manager/design-tasks/${taskId}/status`, data),
+  addTaskComment: (data) => api.post('/manager/task-comments', data),
+  getTaskComments: (taskId) => api.get(`/manager/task-comments/${taskId}`),
 
   // Todos
   getTodos: (params) => api.get('/todos', { params }),

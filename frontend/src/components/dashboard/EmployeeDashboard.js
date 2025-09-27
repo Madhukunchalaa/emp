@@ -35,6 +35,7 @@ import { employeeService } from '../../services/api';
 import Chat from '../common/Chat';
 import jwtDecode from 'jwt-decode';
 import { userService } from '../../services/api';
+import { formatToIST } from '../../utils/timezone';
 
 const EmployeeDashboard = () => {
   const dispatch = useDispatch();
@@ -486,13 +487,7 @@ const EmployeeDashboard = () => {
                     <div className="flex items-center space-x-2 text-gray-900">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                    <span className="font-medium">
-  Punched In at{" "}
-  {new Date(today.punchIn).toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata", // IST
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  })}
+  Punched In at {formatToIST(today.punchIn)} (IST)
 </span>
 
                     </div>
