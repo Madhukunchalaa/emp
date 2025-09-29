@@ -190,7 +190,7 @@ const TaskList = () => {
       
       let response;
       if (task.type === 'project') {
-        response = await managerService.updateTaskStatus(taskId, { status: newStatus });
+        response = await managerService.updateTaskStatus(taskId, newStatus);
       } else {
         response = await managerService.updateDesignTaskStatus(taskId, { status: newStatus });
       }
