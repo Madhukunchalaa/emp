@@ -846,6 +846,39 @@ const updateProjectTaskStatus = async (req, res) => {
   }
 };
 
+// Delete a task within a project by taskId
+const deleteProjectTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    const project = await Project.findOne({ "steps.tasks._id": taskId });
+    if (!project) {
+      return res.status(404).json({ message: 'Task not found in any project' });
+    }
+
+    let removed = false;
+    for (const step of project.steps) {
+      const task = step.tasks.id(taskId);
+      if (task) {
+        // Safely remove subdocument by pulling from array
+        step.tasks.pull({ _id: taskId });
+        removed = true;
+        break;
+      }
+    }
+
+    if (!removed) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    await project.save();
+    return res.json({ message: 'Task deleted successfully', deletedTaskId: taskId });
+  } catch (error) {
+    console.error('Error deleting project task:', error);
+    return res.status(500).json({ message: 'Error deleting task' });
+  }
+};
+
 // Add a manager comment to a specific task within a project
 const addTaskComment = async (req, res) => {
   try {
@@ -1132,6 +1165,22 @@ const updateDesignTaskStatus = async (req, res) => {
   }
 };
 
+// Delete design task by id
+const deleteDesignTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const DesignTask = require('../models/DesignTask');
+    const deleted = await DesignTask.findByIdAndDelete(taskId);
+    if (!deleted) {
+      return res.status(404).json({ message: 'Design task not found' });
+    }
+    return res.json({ message: 'Design task deleted successfully', deletedTaskId: taskId });
+  } catch (error) {
+    console.error('Error deleting design task:', error);
+    return res.status(500).json({ message: 'Error deleting design task' });
+  }
+};
+
 // Add new task comment (for new task management system)
 const addNewTaskComment = async (req, res) => {
   try {
@@ -1311,6 +1360,8 @@ module.exports = {
   updateProject,
   getDesignTasks,
   updateDesignTaskStatus,
+  deleteDesignTask,
   addNewTaskComment,
-  getTaskComments
+  getTaskComments,
+  deleteProjectTask
 };

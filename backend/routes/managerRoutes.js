@@ -25,6 +25,7 @@ router.put('/projects/:id', auth, checkRole(['manager']), managerController.upda
 router.post('/projects/assign', auth, checkRole(['manager']), managerController.assignProjectToEmployee);
 router.post('/tasks/assign', auth, checkRole(['manager']), managerController.assignTaskToEmployee);
 router.put('/project-tasks/:taskId/status', auth, checkRole(['manager']), managerController.updateProjectTaskStatus);
+router.delete('/project-tasks/:taskId', auth, checkRole(['manager']), managerController.deleteProjectTask);
 router.post('/project-tasks/:taskId/comments', auth, checkRole(['manager']), commentUpload.array('attachments', 5), managerController.addTaskComment);
 router.put('/tasks/:taskId/approve', auth, checkRole(['manager']), managerController.approveRejectTask);
 router.get('/dashboard', auth, checkRole(['manager']), managerController.getManagerDashboard);
@@ -79,7 +80,8 @@ router.get('/team-leader-projects', auth, checkRole(['manager']), managerControl
 // Task Management Routes
 router.get('/design-tasks', auth, checkRole(['manager']), managerController.getDesignTasks);
 router.put('/design-tasks/:taskId/status', auth, checkRole(['manager']), managerController.updateDesignTaskStatus);
-router.post('/task-comments', auth, checkRole(['manager']), commentUpload.array('files', 5), managerController.addNewTaskComment);
+router.delete('/design-tasks/:taskId', auth, checkRole(['manager']), managerController.deleteDesignTask);
+router.post('/task-comments', auth, commentUpload.array('files', 5), managerController.addNewTaskComment);
 router.get('/task-comments/:taskId', auth, checkRole(['manager']), managerController.getTaskComments);
 
 module.exports = router; 

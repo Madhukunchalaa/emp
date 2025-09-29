@@ -6,6 +6,7 @@ const { auth } = require('../middleware/auth');
 // Register route
 router.post('/register', register);
 
+
 // Login route
 router.post('/login', login);
 
