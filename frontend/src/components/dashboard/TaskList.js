@@ -676,13 +676,15 @@ const TaskList = () => {
                         selectedTask.comments.map((comment, index) => (
                           <div key={index} className="border border-gray-200 rounded-lg p-4">
                             <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                {comment.author?.name?.charAt(0) || 'U'}
+                              <div className=" h-8  flex items-center justify-center text-white font-semibold text-sm">
+                              <span className="font-medium text-gray-900">
+  {comment.author?.name || comment.createdBy?.name || selectedTask.assignedTo?.name || 'Unknown User'}
+</span>
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <span className="font-medium text-gray-900">
-                                    {comment.author?.name || 'Unknown User'}
+                                    {  comment.createdBy?.name}
                                   </span>
                                   <span className="text-sm text-gray-500">
                                     {formatToIST(comment.createdAt)}
@@ -698,7 +700,7 @@ const TaskList = () => {
                                       {comment.attachments.map((attachment, attIndex) => (
                                         <a
                                           key={attIndex}
-                                          href={`http://localhost:5000${attachment.url}`}
+                                        href={`${process.env.REACT_APP_API_URL || 'https://emp-4-4pbd.onrender.com'}${attachment.url}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="flex items-center space-x-2 p-2 bg-gray-50 rounded hover:bg-gray-100"
