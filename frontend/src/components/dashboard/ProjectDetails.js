@@ -241,7 +241,7 @@ const ProjectDetails = () => {
     setShowTimelineModal(true);
   };
 
- const handleAddComment = async () => {
+  const handleAddComment = async () => {
   if (!newComment.trim() || !selectedTask) return;
   try {
     const formData = new FormData();
@@ -252,7 +252,7 @@ const ProjectDetails = () => {
       formData.append('attachments', attachedFile);
     }
     
-    await managerService.addTaskComment(selectedTask._id, formData);
+    await managerService.addProjectTaskComment(selectedTask._id, formData);
     setNewComment('');
     setAttachedFile(null);
     setSuccess('Comment added successfully');
@@ -612,7 +612,6 @@ const ProjectDetails = () => {
                                         <option value="pending">Pending</option>
                                         <option value="in-progress">In Progress</option>
                                         <option value="completed">Completed</option>
-                                        <option value="overdue">Overdue</option>
                                       </select>
                                       <button
                                         onClick={() => {

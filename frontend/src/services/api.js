@@ -366,7 +366,7 @@ export const managerService = {
   updateTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
   updateProjectTaskStatus: (taskId, status) => api.put(`/manager/project-tasks/${taskId}/status`, { status }),
   deleteProjectTask: (taskId) => api.delete(`/manager/project-tasks/${taskId}`),
-  addTaskComment: (taskId, formData) => api.post(`/manager/project-tasks/${taskId}/comments`, formData, {
+  addProjectTaskComment: (taskId, formData) => api.post(`/manager/project-tasks/${taskId}/comments`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
