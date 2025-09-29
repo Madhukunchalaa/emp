@@ -889,6 +889,11 @@ const addTaskComment = async (req, res) => {
       return res.status(400).json({ message: 'Comment text is required' });
     }
 
+    // Ensure req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: user not found' });
+    }
+
     // Find the project containing this task
     const project = await Project.findOne({ "steps.tasks._id": taskId });
     if (!project) {
@@ -896,31 +901,29 @@ const addTaskComment = async (req, res) => {
     }
 
     // Handle file attachments
-    const attachments = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        attachments.push({
-          originalName: file.originalname,
-          filename: file.filename,
-          url: `/uploads/comments/${file.filename}`,
-          size: file.size,
-          mimeType: file.mimetype
-        });
-      });
-    }
+    const attachments = (req.files || []).map(file => ({
+      originalName: file.originalname,
+      filename: file.filename,
+      url: `/uploads/comments/${file.filename}`,
+      size: file.size,
+      mimeType: file.mimetype
+    }));
 
-    // Locate the task and push the new comment
+    // Locate the task
     let taskFound = null;
     for (const step of project.steps) {
       const task = step.tasks.id(taskId);
       if (task) {
         task.comments = task.comments || [];
-        task.comments.push({ 
-          text, 
-          author: req.user._id, 
+
+        // Push comment with proper author
+        task.comments.push({
+          text,
+          author: req.user._id, // Make sure req.user is correct (employee or manager)
           createdAt: new Date(),
-          attachments: attachments
+          attachments
         });
+
         taskFound = task;
         break;
       }
@@ -932,13 +935,13 @@ const addTaskComment = async (req, res) => {
 
     await project.save();
 
-    // Populate the author for the response
+    // Populate the author info for response
     await project.populate({
       path: 'steps.tasks.comments.author',
       select: 'name email avatar'
     });
 
-    // Optionally notify assigned employee
+    // Emit notification if assigned employee exists
     const io = req.app.get('io');
     if (io && taskFound.assignedTo) {
       io.to(taskFound.assignedTo.toString()).emit('notification', {
@@ -947,16 +950,20 @@ const addTaskComment = async (req, res) => {
       });
     }
 
-    res.status(201).json({ 
-      message: 'Comment added', 
-      taskId, 
-      comment: taskFound.comments[taskFound.comments.length - 1] 
+    // Return only the newly added comment with populated author
+    const newComment = taskFound.comments[taskFound.comments.length - 1];
+    res.status(201).json({
+      message: 'Comment added',
+      taskId,
+      comment: newComment
     });
+
   } catch (error) {
     console.error('Error adding task comment:', error);
     res.status(500).json({ message: 'Error adding comment' });
   }
 };
+
 
 // Get all employee updates (for /api/manager/updates)
 const getEmployeeUpdates = async (req, res) => {
