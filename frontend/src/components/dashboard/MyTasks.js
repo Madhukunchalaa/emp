@@ -306,9 +306,15 @@ const MyTasks = () => {
                           {comment.attachments && comment.attachments.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
                               {comment.attachments.map((attachment, idx) => (
-                                <span key={idx} className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">
+                                <a 
+                                  key={idx}
+                                  href={`http://localhost:5000${attachment.url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 hover:text-orange-200 px-2 py-1 rounded underline"
+                                >
                                   📎 {attachment.originalName || attachment.name}
-                                </span>
+                                </a>
                               ))}
                             </div>
                           )}

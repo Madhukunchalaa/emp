@@ -319,9 +319,9 @@ const Projects = () => {
                     <span className="text-xs text-gray-300 truncate block">{project.client}</span>
                   </td>
                   <td className="px-4 py-4 text-center">
-                    {project.project_link ? (
+                    {project.projectLink ? (
                       <a
-                        href={project.project_link}
+                        href={project.projectLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-blue-500 hover:text-blue-400 hover:underline truncate block max-w-full"

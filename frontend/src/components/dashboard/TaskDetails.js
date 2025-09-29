@@ -64,7 +64,9 @@ const TaskDetails = () => {
                   stepName: step.name,
                   projectId: project._id,
                   projectDescription: project.description,
-                  assignedTo: projectTask.assignedTo || user
+                  assignedTo: projectTask.assignedTo || user,
+                  taskDes:projectTask.taskDes
+                
                 };
                 break;
               }
@@ -114,20 +116,20 @@ const TaskDetails = () => {
 
   const handleAddReply = async () => {
     if (!newReply.trim() || !task) return;
-    
     try {
-      // For now, we'll add this as a comment to the task
-      // In a real implementation, you'd have a separate replies system
-      await managerService.addTaskComment(task._id, newReply.trim(), attachedFiles);
-      
+      const formData = new FormData();
+      formData.append('taskId', task._id);
+      formData.append('text', newReply.trim());
+      attachedFiles.forEach(f => formData.append('files', f));
+
+      // Use the task-comments endpoint designed for FormData
+      await managerService.addTaskComment(formData);
+
       setNewReply('');
       setAttachedFiles([]);
       setReplyingTo(null);
       setSuccess('Reply added successfully');
-      
-      // Refresh task details
       await fetchTaskDetails();
-      
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Failed to add reply:', err);
@@ -276,6 +278,7 @@ const TaskDetails = () => {
                     <div>
                       <div className="text-sm text-gray-400">Project</div>
                       <div className="font-medium text-white">{task.projectTitle}</div>
+                     
                     </div>
                   </div>
                   
@@ -296,6 +299,8 @@ const TaskDetails = () => {
                           name={task.assignedTo?.name || user?.name || 'You'} 
                           avatar={task.assignedTo?.avatar || user?.avatar} 
                         />
+                         <div className="text-sm text-gray-400">Description</div>
+                      <div className="font-medium text-white">{task.description}</div>
                         <span className="font-medium text-white">
                           {task.assignedTo?.name || user?.name || 'You'}
                         </span>
@@ -366,10 +371,10 @@ const TaskDetails = () => {
                                 {formatDate(comment.createdAt)}
                               </span>
                               <button
-                                onClick={() => setReplyingTo(comment._id)}
+                                onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
                                 className="text-blue-400 hover:text-blue-300 text-sm"
                               >
-                                Reply
+                                {replyingTo === comment._id ? 'Cancel' : 'Reply'}
                               </button>
                             </div>
                           </div>
@@ -392,6 +397,51 @@ const TaskDetails = () => {
                                   </a>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {replyingTo === comment._id && (
+                            <div className="mt-4 space-y-3 bg-gray-800/40 border border-gray-700 rounded-lg p-3">
+                              <textarea
+                                value={newReply}
+                                onChange={(e) => setNewReply(e.target.value)}
+                                placeholder="Write a reply..."
+                                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
+                                rows="3"
+                              />
+                              <div className="flex items-center justify-between">
+                                <label
+                                  htmlFor={`file-upload-reply-${comment._id}`}
+                                  className="flex items-center space-x-2 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-lg text-gray-200 cursor-pointer transition-colors"
+                                >
+                                  <Upload className="w-4 h-4" />
+                                  <span>Attach Files</span>
+                                </label>
+                                <input
+                                  id={`file-upload-reply-${comment._id}`}
+                                  type="file"
+                                  onChange={handleFileUpload}
+                                  className="hidden"
+                                  multiple
+                                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                                />
+                                <button
+                                  onClick={handleAddReply}
+                                  disabled={!newReply.trim()}
+                                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm disabled:opacity-50"
+                                >
+                                  Send Reply
+                                </button>
+                              </div>
+                              {attachedFiles.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {attachedFiles.map((file, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
+                                      {file.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

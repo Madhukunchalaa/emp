@@ -16,7 +16,7 @@ import {
 const AssignTask = () => {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
+    taskDes: '',
     projectId: '',
     assignedTo: '',
     priority: 'medium',
@@ -79,7 +79,7 @@ const AssignTask = () => {
     setMessage('');
     setLoading(true);
 
-    console.log('Form data:', formData); // Debug log
+
 
     // Validation
     if (formData.assignmentType === 'schedule') {
@@ -97,7 +97,7 @@ const AssignTask = () => {
     try {
       const taskData = {
         title: formData.title,
-        description: formData.description,
+        taskDes: formData.taskDes,
         projectId: formData.projectId,
         assignedTo: formData.assignedTo,
         priority: formData.priority,
@@ -122,7 +122,7 @@ const AssignTask = () => {
       // Reset form
       setFormData({
         title: '',
-        description: '',
+        taskDes: '',
         projectId: '',
         assignedTo: '',
         priority: 'medium',
@@ -297,8 +297,8 @@ const AssignTask = () => {
               <div>
                 <label className="block font-semibold text-gray-700 mb-2">Task Description *</label>
                 <textarea
-                  name="description"
-                  value={formData.description}
+                  name="taskDes"
+                  value={formData.taskDes}
                   onChange={handleChange}
                   required
                   rows={4}

@@ -40,6 +40,7 @@ const TaskList = () => {
   const [commentFiles, setCommentFiles] = useState([]);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [addingComment, setAddingComment] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch all tasks from projects and design tasks
   const fetchAllTasks = async () => {
@@ -74,7 +75,7 @@ const TaskList = () => {
                   allTasks.push({
                     _id: task._id,
                     title: task.title,
-                    description: task.description || '',
+                    description: task.description || task.taskDes || '',
                     project: project.title,
                     projectId: project._id,
                     step: step.name,
@@ -280,6 +281,36 @@ const TaskList = () => {
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     setCommentFiles(prev => [...prev, ...files]);
+  };
+
+  // Handle delete task
+  const handleDeleteTask = async (taskId) => {
+    if (!taskId) return;
+    const confirmDel = window.confirm('Are you sure you want to delete this task? This action cannot be undone.');
+    if (!confirmDel) return;
+    try {
+      setDeleting(true);
+      // Determine task type to route deletion correctly
+      const current = tasks.find(t => t._id === taskId) || selectedTask;
+      if (current?.type === 'design') {
+        await managerService.deleteDesignTask(taskId);
+      } else {
+        await managerService.deleteProjectTask(taskId);
+      }
+      // Remove from local state
+      setTasks(prev => prev.filter(t => t._id !== taskId));
+      if (selectedTask && selectedTask._id === taskId) {
+        setShowTaskModal(false);
+        setSelectedTask(null);
+      }
+      setSuccess('Task deleted successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Delete task error:', err);
+      setError(err.response?.data?.message || 'Failed to delete task');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   // Get status color
@@ -516,12 +547,22 @@ const TaskList = () => {
                 <h3 className="text-2xl font-bold text-gray-900">{selectedTask.title}</h3>
                 <p className="text-gray-600">{selectedTask.project} • {selectedTask.step}</p>
               </div>
-              <button
-                onClick={() => setShowTaskModal(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDeleteTask(selectedTask._id)}
+                  disabled={deleting}
+                  className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  title="Delete Task"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={() => setShowTaskModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}
@@ -563,10 +604,10 @@ const TaskList = () => {
                   </div>
 
                   {/* Description */}
-                  {selectedTask.description && (
+                  {(selectedTask.description || selectedTask.taskDes) && (
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-3">Description</h4>
-                      <p className="text-gray-700">{selectedTask.description}</p>
+                      <p className="text-gray-700">{selectedTask.description || selectedTask.taskDes}</p>
                     </div>
                   )}
 
@@ -655,16 +696,20 @@ const TaskList = () => {
                                     <p className="text-sm font-medium text-gray-600">Attachments:</p>
                                     <div className="space-y-1">
                                       {comment.attachments.map((attachment, attIndex) => (
-                                        <div key={attIndex} className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+                                        <a
+                                          key={attIndex}
+                                          href={`http://localhost:5000${attachment.url}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center space-x-2 p-2 bg-gray-50 rounded hover:bg-gray-100"
+                                        >
                                           <Paperclip className="w-4 h-4 text-gray-400" />
-                                          <span className="text-sm text-gray-700">{attachment.originalName}</span>
+                                          <span className="text-sm text-gray-700">{attachment.originalName || attachment.name}</span>
                                           <span className="text-xs text-gray-500">
                                             ({formatFileSize(attachment.size)})
                                           </span>
-                                          <button className="text-blue-600 hover:text-blue-800 text-sm">
-                                            <Download className="w-4 h-4" />
-                                          </button>
-                                        </div>
+                                          <Download className="w-4 h-4 text-blue-600" />
+                                        </a>
                                       ))}
                                     </div>
                                   </div>
@@ -707,12 +752,14 @@ const TaskList = () => {
                       ))}
                     </div>
                   </div>
+                  {/* Removed incorrect description display using time formatter */}
 
                   {/* Task Stats */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 mb-3">Task Statistics</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
+                          
                         <span className="text-gray-600">Created:</span>
                         <span>{formatToIST(selectedTask.createdAt)}</span>
                       </div>

@@ -35,7 +35,6 @@ import { employeeService } from '../../services/api';
 import Chat from '../common/Chat';
 import jwtDecode from 'jwt-decode';
 import { userService } from '../../services/api';
-import { formatToIST } from '../../utils/timezone';
 
 const EmployeeDashboard = () => {
   const dispatch = useDispatch();
@@ -486,10 +485,7 @@ const EmployeeDashboard = () => {
                   {isPunchedIn ? (
                     <div className="flex items-center space-x-2 text-gray-900">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                   <span className="font-medium">
-  Punched In at {formatToIST(today.punchIn)} (IST)
-</span>
-
+                   
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2 text-gray-600">
@@ -768,7 +764,7 @@ const EmployeeDashboard = () => {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-black mb-1">{selectedTask.title}</h4>
-                    <p className="text-sm text-gray-600">{selectedTask.description || selectedTask.content}</p>
+                    <p className="text-sm text-gray-600">{selectedTask.description || selectedTask.taskDes || selectedTask.content || 'No description available'}</p>
                     {selectedTask.taskType === 'team-leader' && (
                       <div className="mt-2">
                         <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-300 text-black">
